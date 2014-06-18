@@ -1,0 +1,9 @@
+name = Stanford CAPx
+description = Provides the ability to import profiles into existing entity types
+core = 7.x
+package = Stanford CAPx
+project stanford_capx
+dependency
+files[] = includes/autoload.php
+files[] = includes/vendor/autoload.php
+

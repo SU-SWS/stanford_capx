@@ -1,0 +1,69 @@
+<?php
+/**
+ * @file
+ * @author [author]
+ *
+ */
+
+// Make sure this is loaded.
+require_once "includes/autoloader.php";
+require_once "includes/vendor/autoload.php";
+
+use CAPx\APILib\HTTPClient as Client;
+
+/**
+ * Implements hook_help().
+ */
+function stanford_capx_help($path, $arg) {
+  switch ($path) {
+    case 'admin/capx':
+      return '<p>' . t('Contact %email', array('%email' => l('email', 'mailto:no-reply@stanford.edu'))) . '</p>';
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function stanford_capx_permission() {
+  return array(
+    'administer capx' =>  array(
+      'title' => t('Administer CAPx'),
+      'description' => t('Administer and Configure CAPx settings.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function stanford_capx_menu() {
+
+  $items['admin/config/capx'] = array(
+    'title' => 'Administer CAPx',
+    'page callback' => 'stanford_capx_admin_config',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_SUGGESTED_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config() {
+  $output = "";
+
+  $client = new Client();
+  $response = $client->api('auth')->authenticate('xxx', 'xxx');
+  $token = $response->get_auth_api_token();
+
+  $org_client = new Client();
+  $org_client->set_api_token($token);
+  $orgs = $org_client->api('layouts')->faculty();
+
+  dpm($orgs);
+
+  return $output;
+}

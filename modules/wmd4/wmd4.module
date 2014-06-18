@@ -1,0 +1,555 @@
+<?php
+
+/**
+ * 
+ * Authenticates users through Stanford WebAuth
+ * 
+ */
+
+include_once(dirname(__FILE__) . '/wmd4.util.inc');
+//define('WEBAUTH_DOMAIN', 'stanford.edu');
+
+/**
+ * Implementation of hook_boot()
+ *
+ * Called during the Drupal boot process, after the session is loaded, but before cached pages are returned
+ *
+ * Checks if a non-anonymous user session was loaded, and if so, checks if it is a SUNet user, and if so, checks
+ * if REMOTE_USER is set and matches the user's SUNet ID, and if so, makes sure the user's roles are up to date.
+ *
+ * If the session is for a SUNet user without a matching REMOTE_USER, the session is cleared in favor of anonymous
+ */
+function wmd4_boot() {
+
+    global $user;
+    global $base_url;
+
+    // if we have a logged-in user, check for validity
+    if (isset($user) && $user->uid > 0) {
+        $q_login = _wmd4_login_q();
+	// thwart an authenticated user who is trying to run the login routine
+        if (isset($_REQUEST['q']) && $_REQUEST['q'] == $q_login) {
+	    drupal_set_message('User is already logged in.');
+	    $_REQUEST['q'] = variable_get('site_403','');
+	} else {	 
+            // see if user is SUNET 
+	    $sunetid = db_query("SELECT authname FROM {authmap} WHERE uid = :uid and module = :module",array(':uid'=>$user->uid,':module'=>'wmd4'))->fetchField();
+	    if ($sunetid !== FALSE) {
+	        // make sure our SUNET user's id matches WEBAUTH_USER; log out user if mismatch
+	        if (empty($_SERVER['WEBAUTH_USER']) || $sunetid != $_SERVER['WEBAUTH_USER']) {
+	            _wmd4_user_logout();
+		} else {
+                    // SUNET user id okay; check if we need to reverify user and groups
+                    if (_wmd4_interval_check()) {
+                        $groups = _wmd4_check_access_and_groups();
+                        if ($groups === FALSE) {
+                            _wmd4_user_logout();
+                        } else {
+			    // we want to update groups in hook_init
+			    $_SESSION['wmd4_update_groups'] = $groups;
+                        }
+		    }
+		}
+	    }
+        }
+    }
+}
+
+/**
+ * Implementation of hook_perm 
+ */
+function wmd4_permission() {
+    return array('administer webauth'=>array(
+	'title' => t('Administer WebAuth Access via WMD4'),
+	'description' => t('Configure WebAuth options, list authenticated users/groups, and map Workgroups to roles'),
+	'restrict access' => TRUE,
+    ));
+}
+
+/**
+ * Implementation of hook_init()
+ *
+ */
+function wmd4_init() {
+
+    // if we've returned from the login form with a 401 error, then display a messagei
+    if (strpos($_SERVER['REQUEST_URI'],'wa_login') !== FALSE && isset($_SERVER['REDIRECT_STATUS']) &&  $_SERVER['REDIRECT_STATUS'] == 401) {
+        drupal_set_message('There was a problem authenticating the user with WebAuth.');
+    }
+
+    // if we have a post_logout cookie set, this means the module logged out the user. display a message
+    if (isset($_COOKIE['wmd4_auto_logout'])) {
+	global $cookie_domain;
+        $base_path = substr($_SERVER['SCRIPT_NAME'],0,strpos($_SERVER['SCRIPT_NAME'],'index.php'));
+	if ($_COOKIE['wmd4_auto_logout'] == 'auto') {
+	    drupal_set_message('The user has been automatically logged out because the WebAuth identification was no longer valid.');
+	}
+        if (variable_get('wmd4_close_browser_warning',1) == 1) {
+            drupal_set_message('You must close your browser to logout completely, or click <a href="http://weblogin.stanford.edu/logout">here</a> and follow instructions to clear all WebAuth logins.');
+        }
+	setcookie('wmd4_auto_logout','', time()-3600, $base_path, $cookie_domain);
+        $post_logout = variable_get('wmd4_post_logout','');
+        if (!empty($post_logout)) {
+            drupal_goto($post_logout);
+        }
+    }
+   
+    // if anon user, save the current page (or default) to return to after login
+    // otherwise tell browser not to cache pages for logged in users
+    global $user;
+    $path = _wmd4_login_q();
+    if ((!empty($_REQUEST['q']) && $_REQUEST['q'] != $path) && (empty($user) || $user->uid == 0)) {
+        _wmd4_save_return_url();
+    } else {
+        header("Cache-Control: no-store, no-cache, must-revalidate");
+	if (isset($_SESSION['wmd4_update_groups'])) {
+	    $groups = $_SESSION['wmd4_update_groups'];
+	    unset($_SESSION['wmd4_update_groups']);
+	    global $user;
+            _wmd4_update_groups($user,$groups);
+	}
+    }
+
+    // if the site is in maintenance mode, bypass webauth/login menu and login webauth user here
+    if (variable_get('maintenance_mode', 0) && isset($_COOKIE['wmd4_login']) && $_GET['q'] == 'webauth/login') {
+        _wmd4_login();
+    }
+
+}
+
+/**
+ * Implementation of hook_menu()
+ *
+ */
+function wmd4_menu() {
+    $items = array();
+    // Setup our authentication URL
+    $path = _wmd4_login_q();
+    // the webauth/login url will pass through the .htaccess protected directory before running 
+    // the webauth_login function
+    $items[$path] = array(
+        'page callback' => '_wmd4_login',
+        'access callback' => '_wmd4_allow_login',
+        'type' => MENU_CALLBACK,
+    );
+    $items['admin/config/people/webauth'] = array(
+        'title' => 'WebAuth',
+	'type' => MENU_NORMAL_ITEM,
+        'description' => 'Authenticate through Stanford WebAuth',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wmd4_admin_settings'),
+        'access arguments' => array('administer webauth'),
+        'file' => 'wmd4.admin.inc',
+    );
+    $items['admin/config/people/webauth/settings'] = array(
+        'title' => 'WebAuth Settings',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+	'access arguments' => array('administer webauth'),
+        'weight' => -10,
+    );
+    $items['admin/config/people/webauth/authorizations'] = array(
+        'title' => 'Authorizations',
+        'description' => 'Edit the users and groups that are required for access.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wmd4_admin_users'),
+        'access arguments' => array('administer webauth'),
+        'file' => 'wmd4.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 1,
+    );
+    $items['admin/config/people/webauth/mappings'] = array(
+        'title' => 'Role Mappings',
+        'description' => 'Edit the groups that can use WebAuth for content access.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wmd4_admin_groups'),
+        'access arguments' => array('administer webauth'),
+        'file' => 'wmd4.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+	'weight' => 2,
+    );
+    $items['admin/config/people/webauth/ldap_vars'] = array(
+        'title' => 'LDAP Variables',
+        'description' => 'Edit the LDAP variables to be returned on login.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wmd4_admin_ldap'),
+        'access arguments' => array('administer webauth'),
+        'file' => 'wmd4.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 3,
+    );
+    $items['admin/config/people/webauth/check_htaccess'] = array(
+	'title' => 'Check Main .htaccess',
+	'description' => 'Checks and, if necessary, updates the main .htaccess file.',
+        'page callback' => '_wmd4_update_main_htaccess_page',
+        'access arguments' => array('administer webauth'),
+        'type' => MENU_LOCAL_TASK,
+	'file' => 'wmd4.util.inc',
+	'weight' => 3,
+    );
+
+    return $items;
+}
+
+/**
+ * determine if user can access user login;
+ * only allow anonymous users to login with webauth
+ *
+ */
+function _wmd4_allow_login () {
+    global $user;
+    if (!empty($user) && $user->uid > 0) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+}
+
+/**
+ * function to create the user account and login if new
+ * or just login if existing
+ *
+ */
+function _wmd4_login() {
+
+    // check that we've really visited the protected login resource
+    global $cookie_domain, $base_path, $base_url;
+    $tmpfound = FALSE;
+    if (isset($_COOKIE['wmd4_login'])) {
+        $tmpfile = $_COOKIE['wmd4_login'];
+        $tmpfound = (strstr($tmpfile,'/') === FALSE && strlen($tmpfile) <= variable_get('wmd4_maxfname',255) && 
+            is_file(conf_path().'/webauth/tmp/'. $tmpfile));
+    }
+    if (!$tmpfound) {
+        $param_array = array('cookie_domain'=>$cookie_domain,'base_path'=>$base_path);
+        if (isset($_GET['destination'])) {
+            $param_array['destination'] = $_GET['destination'];
+            unset($_GET['destination']);
+        }
+        $url = $base_url . '/' . conf_path() . '/webauth/wa_login.php';
+        drupal_goto($url,array('query'=>$param_array));
+    } else {
+        @unlink(conf_path().'/webauth/tmp/'.$_COOKIE['wmd4_login']);
+        setcookie('wmd4_login','', time()-3600, $base_path, $cookie_domain);
+    }
+
+    $login_ok = FALSE;
+    $wa_return = '';
+    if (!empty($_SESSION['wa_return_url'])) $wa_return = $_SESSION['wa_return_url'];
+
+    $uname = FALSE;
+    // make sure all the following conditions are met before allowing login:
+    // REQUEST_URI is set to the calculated correct URI for login
+    // and that we have a REMOTE_USER set and equal to the REDIRECT_WEBAUTH_USER
+    if (_wmd4_check_login_uri() && !empty($_SERVER['REMOTE_USER']) &&
+            $_SERVER['REMOTE_USER'] == $_SERVER['WEBAUTH_USER'] && strpos($_SERVER['REDIRECT_STATUS'], '200') > -1) {
+        $uname = $_SERVER['REMOTE_USER'];
+
+        // see if the user exists, and if so, if they have a Drupal username (alias) different
+        // from their SUNet ID
+        //$uid = db_query("SELECT uid FROM {wmd4_id} WHERE sunetid = :sunetid",array(':sunetid'=>$uname))->fetchField();
+        //if ($uid !== FALSE) {
+	//    $uname = db_query("SELECT name FROM {users} where uid = :uid",array(':uid'=>$uid))->fetchField();
+        //}
+        if ($uname !== FALSE) {
+            $form_state = array();
+	    $form_state['values']['name'] = $uname;
+	    $form_state['values']['pass'] = user_password();
+	    $form_state['weblogin']['server'] = WEBAUTH_DOMAIN;
+	    drupal_form_submit('user_login', $form_state);
+	    $login_ok = TRUE;
+        }
+    }
+    if ($login_ok) {
+	drupal_goto($wa_return);
+    } else {
+	drupal_set_message('WebAuth Login Failed');
+	drupal_goto(variable_get('site_403',''));
+    }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function wmd4_theme($existing, $type, $theme, $path) {
+    return array(
+        'wmd4_htaccess' => array(
+            'variables' => array(
+                'groups' => NULL, 
+                'require_valid_user' => NULL, 
+                'users' => NULL, 
+                'privgroups' => NULL, 
+                'ldap_vars' => NULL, 
+                'rewrite_url' => NULL
+            ),
+            'template' => 'wmd4_htaccess',
+        ),
+        'wmd4_login_block' => array(
+            'variables' => array(
+                'login_url' => NULL,
+            ),
+            'template' => 'wmd4_login_block',
+        ),
+    );
+}
+
+/** 
+ * Implementation of hook_form_alter
+ *
+ * Update the user_login page and user_login block with a link to Weblogin
+ *
+ */
+function wmd4_form_alter(&$form, &$form_state, $form_id) {
+    global $user;
+    switch ($form_id) {
+	case 'user_pass_reset':
+	    $uid = $form_state['build_info']['args'][0];
+	    $sunetid = db_query("SELECT authname FROM {authmap} WHERE uid = :uid",array(':uid'=>$uid))->fetchField();
+            if ($sunetid !== FALSE) {
+		$form['message'] = array('#markup' => 'This account is for SUNetID ' .$sunetid . '. Please login via WebAuth.');
+		$form['help'] = array('#markup'=>'');
+                $form['webauth_link'] = _wmd4_build_login_form_element();
+	        unset($form['actions']['submit']);
+            }
+	    break;
+        case 'user_profile_form':
+            $account = $form['#user'];
+            if ($user->uid == $account->uid) {
+                // If we are editing our own account.
+                if (!empty($account->roles)) {
+                    if (in_array(variable_get('wmd4_default_role', ''), array_keys($account->roles))) {
+                        // Hide elements for SUNet Users.
+                        $form['account']['pass']['#type'] = 'hidden';
+			$form['account']['current_pass']['#type'] = 'hidden';
+			unset($form['account']['current_pass_required_values']['#value']['mail']);
+                    }
+                }
+            }
+            break;
+        case 'user_login':
+            if (isset($form_state['weblogin']['server']) && $form_state['weblogin']['server'] == WEBAUTH_DOMAIN) {
+                 $form['#validate'] = array(
+                    'user_login_name_validate',
+                    '_wmd4_login_validate',
+                    'user_login_final_validate',
+                 );
+            } else {
+
+                // create a WebAuth login link
+                $webauth_login = _wmd4_build_login_link(); // $_webauth_session->getLoginUrl();
+                // create a wrapper for the webauth link so we can de-emphasize the local user login form
+                $form['webauth_login_wrapper']['#title']       = t('WebAuth Login');
+                $form['webauth_login_wrapper']['#type']        = 'fieldset';
+                $form['webauth_login_wrapper']['#collapsible'] = TRUE;
+                $form['webauth_login_wrapper']['#collapsed']   = FALSE;
+                $form['webauth_login_wrapper']['webauth_login_link']['#markup'] = theme('wmd4_login_block',array('login_url' => $webauth_login));
+
+                // create a wrapper for the form, so we can de-emphasize the local user login form
+                $form['local_login_wrapper']['#title']       = variable_get('wmd4_local_label','Local User Login');
+                $form['local_login_wrapper']['#type']        = 'fieldset';
+                $form['local_login_wrapper']['#collapsible'] = TRUE;
+                $form['local_login_wrapper']['#collapsed']   = TRUE;
+
+                // copy and move the form fields into the wrapper
+                $form['local_login_wrapper']['name'] = $form['name'];
+                $form['local_login_wrapper']['pass'] = $form['pass'];
+                $form['local_login_wrapper']['actions'] = $form['actions'];
+                unset($form['name']);
+                unset($form['pass']);
+                unset($form['actions']);
+            }
+            break;
+    } 
+}
+
+function wmd4_user_login(&$edit, &$account) {
+    if ($account->uid > 1 && in_array(variable_get('wmd4_default_role',''), array_keys($account->roles))) {
+        $groups = _wmd4_check_access_and_groups();
+        if ($groups === FALSE) {
+            _wmd4_user_logout();
+        } else {
+            _wmd4_update_groups($account,$groups);
+       }
+    }
+}
+function wmd4_user_insert(&$edit, $account, $category) {
+    // if inserting a new user record based on 1st webauth login
+    if (_wmd4_check_login_uri()) {
+        //db_insert('wmd4_id')->fields(array('uid'=>$account->uid,'sunetid'=>$account->name))->execute();
+        $mail = $account->name . '@' . WEBAUTH_DOMAIN;
+        if (!empty($_SERVER['REDIRECT_WEBAUTH_LDAP_MAIL'])) $mail = $_SERVER['REDIRECT_WEBAUTH_LDAP_MAIL'];
+        db_update('users')->fields(array('mail' => $mail))->condition('uid',$account->uid)->execute();
+    }
+}
+
+function wmd4_user_presave(&$edit, $account, $category) {
+//    if (_wmd4_check_login_uri()) {
+//        $groups = _wmd4_check_access_and_groups();
+//        if ($groups !== FALSE) {
+//           $new_data = _wmd4_update_groups($account, $groups, FALSE);
+//           $edit['roles'] = $new_data['new']['roles'];
+//           $edit['data']['webauth_assigned_roles'] = serialize($new_data['data']['webauth_assigned_roles']);
+//        }
+//    }
+}
+
+function wmd4_user_delete($account) {
+    db_delete('wmd4_roles_history')->condition('uid',$account->uid)->execute();
+    //db_delete('wmd4_id')->condition('uid',$account->uid)->execute();
+}
+
+function wmd4_user_logout($account) {
+    if (!empty($account) && in_array(variable_get('wmd4_default_role', ''), array_keys($account->roles))) {
+        // set a cookie to display a message after logout
+        global $cookie_domain;
+        $base_path = substr($_SERVER['SCRIPT_NAME'],0,strpos($_SERVER['SCRIPT_NAME'],'index.php'));
+        setcookie("wmd4_auto_logout","manual",0,$base_path,$cookie_domain);
+    }
+}
+
+function _wmd4_login_validate($form, &$form_state) {
+    $name = $form_state['values']['name'];
+    //watchdog('debug','logging in name: '.$name);
+    user_external_login_register($name, 'wmd4');
+    // Replacement user_login_authenticate_validate() function must set $form_state['uid']
+    // for user_login_final_validate() not to set_message an error.
+    $account = user_external_load($name);
+    $form_state['uid'] = $account->uid;
+}
+
+/**
+ * Function to write out our .htaccess file.
+ */
+function wmd4_write_htaccess() {
+
+  $groups = array();
+  $user_list = '';
+  $rewrite_url = '';
+
+  // Get all the available groups
+  $result = db_query("SELECT DISTINCT(wa_group) AS `group` FROM {wmd4_roles} WHERE rid > :rid", array(':rid' => 2));
+  while ($group = $result->fetchField()) {
+    $groups[] = $group;
+  }
+
+  $user_list = array();
+  $users = explode("\n", variable_get('wmd4_require_users', ''));
+  foreach ($users as $u) {
+    $u = trim($u);
+    if ($u != '') {
+      $user_list[] = $u;
+    }
+  }
+
+  $privgroup_list = array();
+  $privgroups = explode("\n", variable_get('wmd4_require_privgroups', ''));
+  foreach ($privgroups as $p) {
+    $p = trim($p);
+    if ($p != '') {
+      $privgroup_list[] = $p;
+    }
+  }
+
+  $ldap_list = array();
+  $ldapvars = explode("\n", variable_get('wmd4_require_ldapvars',''));
+  foreach ($ldapvars as $p) {
+    $p = trim($p);
+    if ($p != '') {
+       $ldap_list[] = $p;
+    }
+  }
+
+  // Theme contents of the .htaccess file.
+  $htaccess_file = theme('wmd4_htaccess', array('groups' => $groups, 'require_valid_user' => variable_get('webauth_require_valid_user', 0), 'users' => $user_list, 'privgroups' => $privgroup_list, 'ldap_vars' => $ldap_list, 'rewrite_url' => $rewrite_url));
+  // Get the path or create it inside the files dir.
+  $webauth_path = substr($_SERVER['SCRIPT_FILENAME'],0,strpos($_SERVER['SCRIPT_FILENAME'],'index.php')) . conf_path() . '/webauth';
+
+  // Set .htaccess file location
+  $webauth_htaccess = $webauth_path . '/.htaccess';
+
+  // If webauth dir doesn't exist yet, create it.
+  if (@is_dir($webauth_path) === FALSE) {
+    // Create dir.
+    mkdir($webauth_path, 0755);
+    @chmod($webauth_path, 0775);
+  }
+
+  // Copy necessary check.php file over.
+  $default_check_file = drupal_get_path('module', 'wmd4') . '/default/check.php';
+  copy($default_check_file, $webauth_path . '/check.php');
+  $default_login_file = drupal_get_path('module', 'wmd4') . '/default/wa_login.php';
+  copy($default_login_file, $webauth_path . '/wa_login.php');
+  chmod($webauth_path.'/wa_login.php',0664);
+  // Save .htaccess file to location.
+  $fp = fopen($webauth_htaccess, 'w');
+  fwrite($fp, $htaccess_file);
+  fclose($fp);
+
+  //create webauth_tmp if necessary
+  $webauth_tmp_path = $webauth_path . '/tmp';
+  if (@is_dir($webauth_tmp_path) === FALSE) {
+    // create dir
+    mkdir($webauth_tmp_path, 0775);
+    // create deny all .htaccess file
+    $fp = fopen($webauth_tmp_path . '/.htaccess','w');
+    fwrite($fp, 'deny from all');
+    fclose($fp);
+  }
+}
+
+/**
+ * Implementation of hook_block_info
+ */
+function wmd4_block_info() {
+
+    $blocks['webauth_login'] = array(
+	'info' => t('WebAuth Login'),
+	'cache' => DRUPAL_NO_CACHE,
+	'status' => 1,
+	'region' => 'sidebar_first',
+	'weight' => -10,
+	'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+	'pages' => 'user/*'.chr(10).'user',
+    );
+    return $blocks;
+}
+
+function wmd4_block_view($delta = '') {
+    switch ($delta) {
+        case 'webauth_login':
+	    $block['subject'] = t('WebAuth Login');
+	    $block['content'] = _wmd4_webauth_login_block($delta);
+	    return $block;
+	    break;
+    }
+}
+
+function _wmd4_webauth_login_block($delta) { 
+    switch ($delta) {
+        case 'webauth_login':
+	    if (_wmd4_allow_login()) {
+		return theme('wmd4_login_block',array('login_url' => _wmd4_build_login_link()));
+		//return _wmd4_build_login_link();
+	    }
+	    break;
+    }
+}
+
+function wmd4_cron() {
+
+    // cleanup old tmp files
+    $seconds_old = 36000;
+    $directory = conf_path() . '/webauth/tmp';
+
+    if( !$dirhandle = @opendir($directory) )
+        return;
+
+    while( false !== ($filename = readdir($dirhandle)) ) {
+        if( $filename != "." && $filename != ".." ) {
+            $filename = $directory. "/". $filename;
+            if( @filemtime($filename) < (time()-$seconds_old) ) {
+                @unlink($filename);
+            }
+        }
+    }
+}
+

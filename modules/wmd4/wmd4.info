@@ -1,0 +1,8 @@
+name = WMD4
+description = Webauth 4.x Module for Drupal - authenticates Stanford users through apache mod_webauth 4.x
+package = Stanford
+version = 7.x-4.4
+core = 7.x
+configure = admin/config/people/webauth
+files[] = wmd4.util.inc
+

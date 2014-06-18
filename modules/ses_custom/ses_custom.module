@@ -1,0 +1,499 @@
+<?php
+
+/*
+ * implementation of hook_form_alter
+ */
+function ses_custom_form_alter(&$form, &$form_state, $form_id) {
+    // hide the email field on the user account form and
+    // load some jQuery to auto-add the primary affiliation to the secondary list
+    if ($form_id == 'user_profile_form') {
+        drupal_add_js(drupal_get_path('module', 'ses_custom') . '/ses_custom.js');
+        $form['account']['mail']['#type'] = 'hidden';
+        $form['field_personnel_type']['#disabled'] = TRUE;
+        $form['field_primary_affiliations']['#disabled'] = TRUE;
+    }
+}
+
+/*
+ * implementation of hook_user_insert called when user logs in
+ * for first time or system creates new user account during cron
+ */
+/*
+function ses_custom_user_insert(&$edit, $account, $category)
+{
+    $xyz = print_r($edit,TRUE);
+    $xy2 = print_r($account,TRUE);
+    watchdog('debug','inside hook_user_insert $edit:<pre>'.$xyz.'</pre> account:<pre>'.$xy2.'</pre>');
+    if (module_exists('wmd4') && isset($edit['authname_wmd4'])) {
+        watchdog('debug','this part should not run during batch');
+        $sunetid = db_query("SELECT authname FROM {authmap} WHERE uid = :uid",array(':uid'=>$account->uid))->fetchField();
+        if ($sunetid !== FALSE) {
+            $ldap_array = array();
+            include_once(drupal_get_path('module','wmd4').'/wmd4.util.inc');
+            $ldap_vars = _wmd4_get_ldap_variables();
+            $xyz = print_r($ldap_vars,TRUE);
+            watchdog('debug','ldap vars for user: <pre>'.$xyz.'</pre>');
+            $displayname = '';
+            if ($ldap_vars !== FALSE) {
+                foreach ($ldap_vars as $ldap_var) {
+                    if (substr($ldap_var,0,19) == 'wa_ldap_displayname') {
+                        $displayname = trim(substr($ldap_var,strpos($ldap_var,':')+1));
+                    }
+                }
+            }
+            if (!empty($displayname)) user_save($account,array('name'=>$displayname));
+        }
+    }
+}
+*/
+ 
+/*
+ * implementation of hook_ses_cap_lite_preprocess_all
+ *
+ * return FALSE if we want to abort the profile update
+ *
+ */
+function ses_custom_ses_cap_lite_preprocess_all() {
+
+  // these are set in the settings.php file to use the Workgroups API
+  // cancel the update if we don't have them
+  // TODO: replace with use of encrypt and the variables table
+  global $ses_mais_crt_path, $ses_mais_key_path;
+  if (empty($ses_mais_crt_path) || empty($ses_mais_key_path)) {
+      watchdog('ses_custom','Missing cert file and/or key file for MAIS Workgroup API access');
+      return FALSE;
+  }
+
+  // set up some globals for our hooks
+  global $ses_custom_uid_array, $ses_custom_count, $ses_custom_dupes;
+  $ses_custom_uid_array = array();
+  $ses_custom_count = 0;
+  $ses_custom_dupes = array();
+
+  // read in our wmd4 array matching Drupal uids to SUNet IDs
+  $result = db_query("SELECT authname,uid FROM {authmap}");
+  foreach ($result as $row) {
+    $ses_custom_uid_array[$row->authname] = array('uid'=>$row->uid,'current'=>FALSE,);
+  }
+  return TRUE;
+
+}
+
+/*
+ * implementation of hook_ses_cap_lite_preprocess_wg
+ * 
+ * return the workgroup count
+ *
+ */
+function ses_custom_ses_cap_lite_preprocess_wg($group) {
+
+    global $ses_custom_uid_array, $ses_custom_count, $ses_custom_dupes;
+
+    // get the Affiliation and Personnel Type of this workgroup
+    $affil_data = _ses_custom_get_workgroup_affiliation($group);
+    if ($affil_data === FALSE) {
+        watchdog('ses_custom','Unable to determine affiliation and personnel data for workgroup: ' . $group);
+        return 0; // return 0 members
+    }
+
+    global $ses_mais_crt_path, $ses_mais_key_path;
+    // get the workgroup members as an array
+    $wg_members = _ses_custom_get_workgroup_members($group,$ses_mais_crt_path, $ses_mais_key_path);
+    //if (strpos($group,'Dean') !== FALSE) $wg_members = FALSE;
+    if ($wg_members === FALSE) { 
+        watchdog('ses_custom','Unable to get workgroup members for ' . $group);
+        $wg_count = 0;
+    } else {
+        $wg_count = count($wg_members);
+        // for each person in the workgroup, get their SUNet ID
+        foreach ($wg_members as $wg_member) {
+            $ses_custom_count += 1;
+            $sunet = $wg_member['sunet'];
+            if (array_key_exists($sunet,$ses_custom_dupes)) {
+                watchdog('ses_custom','Duplicate: '. $sunet . ' first found in '.$ses_custom_dupes[$sunet]. ' also found in '.$group);
+            } else {
+                $ses_custom_dupes[$sunet] = $group;
+            }
+            $uid = NULL;
+            if (array_key_exists($sunet,$ses_custom_uid_array)) {
+                $uid = $ses_custom_uid_array[$sunet]['uid'];
+            }
+            $uid = _ses_custom_update_single_account($sunet,$uid,$affil_data,$wg_member);
+            if (!empty($uid)) $ses_custom_uid_array[$sunet] = array('uid'=>$uid,'current'=>TRUE);
+        } // for each member
+    } // if workgroup has members
+    return $wg_count;
+}
+
+// update or create a user account for each person in our workgroup
+function _ses_custom_update_single_account($sunet = '', $uid = NULL, $affil_data = array(), 
+                                           $wg_member = array()) {
+
+    if (empty($sunet)|| empty($affil_data)) return FALSE;
+
+    $user = NULL;
+    // if they already have an account, load it, otherwise create account
+    if (!empty($uid)) {
+        $user = user_load($uid);
+    } else {
+        //set up the user fields
+        $role_array = array(DRUPAL_AUTHENTICATED_RID => 'authenticated user');
+        $rid = variable_get('wmd4_default_role');
+        if (!empty($rid)) $role_array[$rid] = 'SUNet User';
+        if (empty($wg_member)) {
+           $wg_member['account_name'] = $sunet;
+           $wg_member['directory_name'] = $sunet;
+        }
+        $fields = array(
+            'name' => $wg_member['account_name'],
+            'mail' => $sunet.'@stanford.edu',
+            'pass' => user_password(8),
+            'status' => 1,
+            'init' => $sunet,
+            'roles' => $role_array,
+        ); 
+        //the first parameter is left blank so a new user is created
+        watchdog('user','creating user ' . $wg_member['account_name']);
+        $user = user_save('', $fields);
+        $uid = $user->uid;
+        // update tables for external users
+        //db_insert('wmd4_id')->fields(array('uid'=>$user->uid,'sunetid'=>$sunet))->execute();
+        db_insert('authmap')->fields(array('uid'=>$user->uid,'authname'=>$sunet,'module'=>'wmd4'))->execute();
+    }  // if create user
+
+    // make sure our affiliations and personnel type, and directory name are correct
+
+    // see if secondary affils already includes the primary; secondary affiliation must
+    // include primary affiliation for exposed views filters
+    $secondary_okay = FALSE;
+    if (!empty($user->field_secondary_affiliations)) {
+        foreach ($user->field_secondary_affiliations[LANGUAGE_NONE] as $key => $val_array) {
+            if (strcmp($val_array['value'], $affil_data['affil'])===0) {
+                $secondary_okay = TRUE; // secondary affiliation includes the primary
+                break;
+            }
+        }
+    }
+
+    // update the user's primary and secondary affiliations, personnel type and directory name
+    $new_array = array();
+    if (isset($user->field_secondary_affiliations)) {
+        $new_array = $user->field_secondary_affiliations;
+    }
+    if (empty($new_array) || !is_array($new_array)) $new_array = array();
+    if (!$secondary_okay) {
+        // add primary affiliation to the secondary affiliation array if necessary
+        $new_array[LANGUAGE_NONE][] = array('value'=>$affil_data['affil']);
+    }
+    $edit = array('status'=>1,
+        'name'=>$wg_member['account_name'],
+        'field_personnel_type' => array('und'=>array(array('value'=>$affil_data['ptype']))),
+        'field_primary_affiliations' => array('und'=>array(array('value'=>$affil_data['affil']))),
+        'field_secondary_affiliations'=>$new_array,
+        'field_account_directory_name'=>array('und'=>array(array('value'=>$wg_member['directory_name']))));
+    $user = user_save($user,$edit);
+    return $uid;
+}
+
+/* 
+ * implementation of hook_ses_cap_lite_postsave_profile
+ *
+ * save the node id of the profile record in the user account
+ * and make sure the old profile is unpublished and that we have
+ * appropriate redirects
+ *
+ */
+function ses_custom_ses_cap_lite_postsave_profile($bundle, $entity_id, $sunet) {
+
+    global $ses_custom_uid_array;
+    if (array_key_exists($sunet,$ses_custom_uid_array)) {
+        $uid = $ses_custom_uid_array[$sunet]['uid'];
+    
+        $this_user = user_load($uid);
+        // set the reference to the cap profile in the user object
+        $edit = array(
+            'field_stanford_profile_record' => array(LANGUAGE_NONE=>array(array('target_id'=>intval($entity_id)))),
+        );
+        user_save($this_user,$edit);
+
+        // find a published SES profile node for this SUNet ID
+        $old_nid = db_query("SELECT entity_id FROM {field_data_field_sunet}, {node} WHERE field_sunet_value = :sunet AND node.nid = field_data_field_sunet.entity_id",array(':sunet'=>$sunet))->fetchField();
+        if ($old_nid !== FALSE && $old_nid !== '718') { // don't ask
+            // given old and new profile nids, see if we already have a redirect
+            $old_nid_str = 'node/' . $old_nid;
+            $cap_nid_str = 'node/' . $entity_id;
+            // dependency on the redirect module right here
+            $redirect = db_query("SELECT rid from {redirect} WHERE source = :old_nid AND redirect = :cap_nid",array(':old_nid'=>$old_nid_str, ':cap_nid'=>$cap_nid_str))->fetchField();
+            if ($redirect === FALSE) {
+                // if no redirect is found, create one
+                $redirect = new stdClass();
+                module_invoke('redirect', 'object_prepare', $redirect,
+                                  array(
+                                      'source' => $old_nid_str,
+                                      'source_options' => array(),
+                                      'redirect' => $cap_nid_str,
+                                      'redirect_options' => array(),
+                                      'language' => LANGUAGE_NONE,
+                                       ));
+                module_invoke('redirect', 'save', $redirect);
+            }
+            // make sure the old node is unpublished
+            $old_node = node_load($old_nid);
+            if ($old_node->status !== 0) {
+                $old_node->status = 0;
+                node_save($old_node);
+            }
+        }
+    } else {
+        watchdog('ses_custom','Warning: profile saved for ' . $sunet. ' but no corresponding user account found.');
+        //TODO something with this ldap code when we switch from storing profile info in node to storing 
+        //     profile data in user account; when there is no cap profile, get contact info from ldap
+//        $ldapContact = _ses_custom_get_ldap_contact($sunet);
+//        if ($ldapContact !== FALSE) {
+//            $fields = array();
+//            $cap_data = array('primaryContact' => $ldapContact);
+//            $fields['field_profile_cap_contact'] = _ses_custom_update_cap_contact_field(
+//                _ses_custom_build_capDataItem($cap_data,'primaryContact'));
+//            $user = user_save($user,$fields);
+//        }
+    }
+    return TRUE;
+}
+
+/*
+ * implementation of postprocess hook when all cap profiles are done
+ *
+ * we want to go through our list of accounts and block any user no longer in a workgroup
+ *
+ */
+function ses_custom_ses_cap_lite_postprocess_all() {
+    global $ses_custom_uid_array, $ses_custom_count;
+    foreach ($ses_custom_uid_array as $sunet => $subarray) {
+        if ($subarray['current'] === FALSE) {
+            $old_user = user_load(intval($subarray['uid']));
+            if ($old_user !== FALSE) {
+                if (isset($old_user->field_stanford_profile_record[LANGUAGE_NONE][0]['target_id'])) {
+                    $profile_nid = $old_user->field_stanford_profile_record[LANGUAGE_NONE][0]['target_id'];
+                    $old_node = node_load($profile_nid);
+                    if ($old_node !== FALSE && $old_node->status !== 0) {
+                        $old_node->status = 0;
+                        node_save($old_node);
+                    }
+                }
+                if ($old_user->status !== 0) {
+                    $edit = array('status'=>0);
+                    user_save($old_user,$edit);
+                }
+            }
+        }
+    }
+    watchdog('ses_custom','Number of user accounts processed: '.$ses_custom_count);
+    return TRUE;
+}
+
+function _ses_custom_get_workgroup_affiliation($workgroup_name=NULL) {
+    if (empty($workgroup_name)) return FALSE;
+    $dash = strpos($workgroup_name,'-');
+    if ($dash === FALSE) return FALSE;
+
+    $affil = substr($workgroup_name,0,$dash);
+    $ptype = substr($workgroup_name,$dash+1);
+    if (strcmp($affil,'earthsci:deans') === 0) {
+        $affil_str = "Dean's Office";
+        $ptype_str = 'Administrative Staff';
+    } else {
+        switch ($affil) {
+            case 'earthsci:eess':
+                $affil_str = 'EESS';
+                break;
+            case 'earthsci:eiper':
+                $affil_str = 'E-IPER';
+                break;
+            case 'earthsci:ere':
+                $affil_str = 'ERE';
+                break;
+            case 'earthsci:esys':
+                $affil_str = 'Earth Systems';
+                break;
+            case 'earthsci:geophysics':
+                $affil_str = 'Geophysics';
+                break;
+            case 'earthsci:ges':
+                $affil_str = 'GES';
+                break;
+            default:
+                $affil_str = FALSE;
+        }
+        switch ($ptype) {
+            case 'faculty-affiliated':
+                $ptype_str = 'Faculty - Affiliated';
+                break;
+            case 'faculty-emeritus':
+                $ptype_str = 'Faculty - Emeritus';
+                break;
+            case 'faculty-regular':
+                $ptype_str = 'Faculty - Regular';
+                break;
+            case 'postdocs':
+                $ptype_str = 'Post Doctoral Scholar';
+                break;
+            case 'staff-admin':
+                $ptype_str = 'Administrative Staff';
+                break;
+            case 'staff-research':
+                $ptype_str = 'Research Staff';
+                break;
+            case 'staff-teaching':
+                $ptype_str = 'Teaching Staff';
+                break;
+            case 'students-graduate':
+                $ptype_str = 'Students - Graduate';
+                break;
+            case 'students-undergraduate':
+                $ptype_str = 'Students - Undergraduate';
+                break;
+            default:
+                $ptype_str = FALSE;
+        }
+    }
+    if ($ptype_str === FALSE || $affil_str === FALSE) return FALSE;
+ 
+    return array('affil'=>$affil_str,'ptype'=>$ptype_str);
+}
+
+function _ses_custom_get_workgroup_members($workgroup_name,$cert_file=NULL,$key_file=NULL) {
+
+    // make sure we are passed paths to the cert files
+    if (empty($cert_file) || empty($key_file)) {
+        return FALSE;
+    }
+
+    // create the URL to access the workgroup, from variables set in settings.php
+    // $ses_mais_uat is true if we are working against the MAIS test system
+    global $ses_mais_uat;
+    $mais_host = 'workgroupsvc';
+    if ($ses_mais_uat) $mais_host .= '-uat';
+    $url = "https://" . $mais_host . ".stanford.edu/v1/workgroups/" . $workgroup_name;
+
+    // create a curl session to get the workgroup data
+    $ch = curl_init();
+
+    $options = array(
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_USERAGENT => 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)',
+        CURLOPT_URL => $url ,
+        CURLOPT_SSLCERT => $cert_file ,
+        CURLOPT_SSLKEY => $key_file,
+    );
+    curl_setopt_array($ch , $options);
+
+    $output = curl_exec($ch);
+
+    if ($output === FALSE) {
+        // if $output is false, report a curl error
+        $curl_error = 'Curl Error: ' . curl_error($ch);
+        watchdog('ses_custom',$curl_error);
+        return FALSE;
+    } else {
+        // if we have output, parse it and create an array to return
+
+        $members = array();
+        // parse the xml
+        $p = xml_parser_create();
+        $vals = array();
+        $index = array();
+        xml_parse_into_struct($p, $output, $vals, $index);
+        xml_parser_free($p);
+
+        // if there are no members in the workgroup, return empty array
+        if (empty($index['MEMBER']) || count($index['MEMBER']) < 1) return $members;
+
+        // for each person in the workgroup, get their SUNet ID, directory name, and display name
+        if (isset($index['ADMINISTRATORS']) && is_array($index['ADMINISTRATORS'])) {
+            $first_admin = $index['ADMINISTRATORS'][0];
+        } else {
+            $first_admin = 10000;
+        }
+        foreach ($index['MEMBER'] as $key) {
+            if ($key < $first_admin) {
+                $sunet = $vals[$key]['attributes']['ID'];
+                $directory_name = $vals[$key]['attributes']['NAME'];
+                $comma = strpos($directory_name,',');
+                if ($comma === FALSE) {
+                    $account_name = $directory_name;
+                } else {
+                    $account_name = substr($directory_name,$comma+2) . ' ' . substr($directory_name,0,$comma);
+                }
+                $members[$sunet] = array('sunet'=>$sunet, 'directory_name'=>$directory_name, 'account_name'=>$account_name);
+            }
+        }
+        // return our list of people from the workgroup
+        return $members;
+    }
+    // if we somehow got here without returning anything, return false
+    return FALSE;
+}
+
+function _ses_custom_get_ldap_contact($sunet) {
+
+    global $ses_ldap_cred;
+    if (empty($ses_ldap_cred)) {
+      watchdog('ses_custom','Missing LDAP credentials file');
+      return FALSE;
+    }
+
+    $ldapError = '';
+    $ldapok = FALSE;
+    $result_out = array();
+    $ldap = ldap_connect("ldap://ldap.stanford.edu");
+    if ($ldap) {
+            $ldapok = ldap_bind($ldap);
+    }
+    if (!$ldapok) {
+        watchdog('ses_custom','Unable to connect to Stanford LDAP Server.');
+        return FALSE;
+    }
+    $ldapok = ldap_set_option($ldap,LDAP_OPT_PROTOCOL_VERSION,3);
+    if ($ldapok) {
+        putenv('KRB5CCNAME=FILE:'.$ses_ldap_cred);
+        $ldapok = ldap_sasl_bind($ldap,"","","GSSAPI");
+    }
+    if ($ldapok) {
+        $dn = "cn=people,dc=stanford,dc=edu";
+        $ldapok = FALSE;
+        $filter = "(|(uid=".$sunet."))";
+        $result = ldap_search($ldap, $dn, $filter);
+        if ($result)
+        {
+            $info = ldap_get_entries($ldap,$result);
+            if (isset($info) && is_array($info) & isset($info[0])) {
+                if (isset($info[0]['telephonenumber']['count'])) {
+                    if ($info[0]['telephonenumber']['count'] > 0) {
+                        $phoneNumbers = array();
+                        for ($i=0; $i<$info[0]['telephonenumber']['count']; $i++) {
+                            $phoneNumbers[] = $info[0]['telephonenumber'][$i];
+                        }
+                    }
+                    $result_out['phoneNumbers'] = $phoneNumbers;
+                }
+                if (isset($info[0]['mail'])) {
+                    $result_out['email'] = $info[0]['mail'][0];
+                }
+                $ldapok = TRUE;
+            }
+        }
+    }
+    ldap_close($ldap);
+    if (!$ldapok) {
+        $msg = 'LDAP lookup for '.$sunet.' failed.';
+        if (!empty($ldapError)) $msg .= ': '.$ldapError;
+        watchdog('ses_custom',$msg);
+        $result_out = FALSE;
+    }
+    return $result_out;
+}
+
+?>

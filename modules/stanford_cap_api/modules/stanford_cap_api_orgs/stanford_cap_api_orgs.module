@@ -1,0 +1,229 @@
+<?php
+
+/**
+ * @file
+ * Main code for Stanford CAP API OrgCodes.
+ */
+
+/**
+ * Organizations vocabulary machine name.
+ */
+define('CAP_ORGS_VOCAB', 'stanford_org_code_hierarchy');
+
+/**
+ * Imports organizations from CAP API.
+ */
+function stanford_cap_api_orgs_import($batch = FALSE) {
+  $organizations = stanford_cap_api_orgs_get();
+  if ($batch) {
+    $operations = array();
+    variable_set('stanford_cap_api_orgs_import_started', REQUEST_TIME);
+  }
+
+  if ($organizations) {
+    foreach ($organizations as $organization) {
+      stanford_cap_api_orgs_save_organization($organization, NULL, $operations);
+    }
+    if ($batch) {
+      $batch = array(
+        'title' => t('Importing CAP data'),
+        'operations' => $operations,
+        'finished' => '_stanford_cap_api_orgs_batch_finished',
+        'progress_message' => t('Importing organizations: @current of @total.'),
+      );
+      batch_set($batch);
+    }
+    else {
+      variable_set('stanford_cap_api_orgs_imported', TRUE);
+    }
+  }
+}
+
+/**
+ * Get information about organizations hierarchy from CAP API.
+ *
+ * Organizations have tree structure. To import them we must specify top level
+ * organization code. This can be code of root entry - Stanford University(AA00)
+ * itself, or code of one of departments, like School of Medicine(VAAA).
+ *
+ * @param string $top
+ *   Top level organization code.
+ *
+ * @return array
+ *   Organizations hierarchy.
+ */
+function stanford_cap_api_orgs_get($top = 'AA00') {
+  // Organizations endpoint.
+  $endpoint = '/cap/v1/orgs';
+  $params = array('orgCodes' => $top);
+
+  return stanford_cap_api_request($endpoint, $params);
+}
+
+/**
+ * Save organization fetched from CAP API.
+ *
+ * @param array $organization
+ *   Array containing organization description.
+ * @param int $parent_data
+ *   Parent term ID.
+ */
+function stanford_cap_api_orgs_save_organization($organization, $parent_data = NULL, &$operations = NULL) {
+  $voc = taxonomy_vocabulary_machine_name_load(CAP_ORGS_VOCAB);
+  // Some organizations can have 16 and more orgCodes,
+  // which is making EFQ useless.
+  $result = db_select('field_data_field_org_codes', 'field_org_codes')
+    ->fields('field_org_codes', array('entity_id'))
+    ->condition('entity_type', 'taxonomy_term')
+    ->condition('bundle', CAP_ORGS_VOCAB)
+    ->condition('field_org_codes_value', $organization['orgCodes'])
+    ->groupBy('entity_id')
+    ->execute()
+    ->fetchCol();
+  if (!empty($result) && count($result) == 1) {
+    // We have this organization.
+    $org_term_tid = array_shift($result);
+    $org_term = taxonomy_term_load($org_term_tid);
+  }
+  elseif (empty($result)) {
+    $org_term = new stdClass();
+  }
+  elseif (!empty($result) && count($result) > 1) {
+    $message = 'Something is wrong, there is more then one organization with the same set of orgCodes. Term ids returned by query: @tids. Organization data from CAP API: @organization';
+    $vars = array(
+      '@tids' => implode(', ', $result),
+      '@organization' => print_r($organization, TRUE),
+    );
+    watchdog('stanford_cap_api_orgs', $message, $vars);
+    return;
+  }
+  $org_term->name = $organization['name'];
+  $org_term->vid = $voc->vid;
+  $org_term->description = '';
+  $org_term->vocabulary_machine_name = CAP_ORGS_VOCAB;
+  // NOt batch mode - $parent_data is term ID.
+  if (!isset($operations)) {
+    $org_term->parent = $parent_data;
+  }
+  if (isset($organization['weight'])) {
+    $org_term->weight = $organization['weight'];
+  }
+  $org_term_wrapper = entity_metadata_wrapper('taxonomy_term', $org_term);
+  $org_term_wrapper->field_browsable = $organization['browsable'];
+  $org_term_wrapper->field_type = $organization['type'];
+  $org_term_wrapper->field_org_codes = $organization['orgCodes'];
+  $org_term_wrapper->field_alias = $organization['alias'];
+  if (!empty($organization['url'])) {
+    $org_term_wrapper->field_url = array('url' => $organization['url']);
+  }
+  if (isset($operations)) {
+    $operations[] = array(
+      '_stanford_cap_api_orgs_import_batch_save',
+      array($org_term_wrapper->value(), $parent_data),
+    );
+  }
+  else {
+    $org_term_wrapper->save();
+  }
+  if (isset($organization['children'])) {
+    if (!isset($operations)) {
+      $tid = $org_term_wrapper->tid->value();
+    }
+    foreach ($organization['children'] as $key => $child) {
+      $child['weight'] = $key;
+      if (isset($operations)) {
+        stanford_cap_api_orgs_save_organization($child, $organization['orgCodes'], $operations);
+      }
+      else {
+        stanford_cap_api_orgs_save_organization($child, $tid);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function stanford_cap_api_orgs_cron() {
+  // Run cron tasks between 1 and 5 hours.
+  $tz = variable_get('date_default_timezone');
+  $date = new DateObject('now', $tz);
+  $hour_of_day = (int) $date->format('G');
+  if ($hour_of_day >= 1 && $hour_of_day <= 5) {
+    stanford_cap_api_orgs_import();
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Attaching additional submit handler to settings form in order to import
+ * organizations on initial setup.
+ */
+function stanford_cap_api_orgs_form_stanford_cap_api_settings_form_alter(&$form, &$form_state) {
+  if (!variable_get('stanford_cap_api_orgs_imported', FALSE)) {
+    $form['#submit'][99] = 'stanford_cap_api_orgs_stanford_cap_api_settings_form_submit';
+    ksort($form['#submit']);
+  }
+}
+
+/**
+ * Submit handler callback.
+ */
+function stanford_cap_api_orgs_stanford_cap_api_settings_form_submit($form, $form_state) {
+  if ($form_state['values']['stanford_cap_api_import_profile_fields'] == CAP_FIELDS_IMPORT_LIST) {
+    $form_state['rebuild'] = TRUE;
+  }
+  else {
+    stanford_cap_api_orgs_import(TRUE);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Adding info about organizations.
+ */
+function stanford_cap_api_orgs_form_stanford_cap_api_details_form_alter(&$form, &$form_state) {
+  $voc = taxonomy_vocabulary_machine_name_load(CAP_ORGS_VOCAB);
+  $orgs_count = db_select('taxonomy_term_data', 't')
+    ->condition('vid', $voc->vid)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  $form['organizations'] = array(
+    '#markup' => theme('cap_info_item', array('info' => $orgs_count, 'message' => t('Organizations imported.'))),
+  );
+}
+
+/**
+ * Finished callback for organizations import.
+ */
+function _stanford_cap_api_orgs_batch_finished() {
+  variable_set('stanford_cap_api_orgs_imported', TRUE);
+  drupal_set_message(t('Organizations import took %time seconds.', array('%time' => REQUEST_TIME - variable_get('stanford_cap_api_orgs_import_started'))));
+  variable_del('stanford_cap_api_orgs_import_started');
+}
+
+/**
+ * Helper for batch organizations import.
+ *
+ * Fills in parent property based on parent organization code/codes.
+ *
+ * @param object $org_term
+ *   Organization taxonomy term object.
+ * @param array $parent_codes
+ *   Array of parent organization codes.
+ */
+function _stanford_cap_api_orgs_import_batch_save($org_term, $parent_codes) {
+  $result = db_select('field_data_field_org_codes', 'field_org_codes')
+    ->fields('field_org_codes', array('entity_id'))
+    ->condition('entity_type', 'taxonomy_term')
+    ->condition('bundle', CAP_ORGS_VOCAB)
+    ->condition('field_org_codes_value', $parent_codes)
+    ->groupBy('entity_id')
+    ->execute()
+    ->fetchCol();
+  $org_term->parent = array_shift($result);
+  taxonomy_term_save($org_term);
+}

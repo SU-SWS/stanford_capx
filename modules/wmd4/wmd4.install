@@ -1,0 +1,467 @@
+<?php
+
+/**
+ * Implementation of hook_install
+ */
+function wmd4_install() {
+
+    $maxfname = system('getconf NAME_MAX /tmp');
+    if ($maxfname === FALSE) $maxfname = 255;
+    variable_set('wmd4_maxfname',intval($maxfname));
+
+    db_update('system')
+	->fields(array('weight' => -1000))
+        ->condition('name','wmd4')
+	->condition('type','module')
+	->execute();
+    include_once(dirname(__FILE__) . '/wmd4.util.inc');
+    _wmd4_update_main_htaccess();
+
+    // Setup our webauth data path
+    $webauth_path = conf_path() . '/webauth';
+    variable_set('wmd4_path', $webauth_path);
+
+    // Add default roles
+    $roles = array(
+        '' => 'SUNet User',
+        'stanford:student' => 'Stanford Student',
+        'stanford:staff' => 'Stanford Staff',
+        'stanford:faculty' => 'Stanford Faculty',
+    );
+
+    foreach ($roles as $role) {
+        $role_exists = (bool) db_query("SELECT COUNT(*) FROM {role} WHERE name = :name",array(':name' => $role))->fetchField();
+        if (!$role_exists) {
+	   db_insert('role')->fields(array('name'=>$role))->execute();
+           drupal_set_message("Added Role $role");
+        }
+    }
+
+    // if WMD 3.x tables exist, copy them to the new tables
+    $old_tables = db_query("SHOW TABLES LIKE 'webauth_roles%'")->rowCount();
+    if ($old_tables == 2) {
+        db_query("INSERT INTO {wmd4_roles} (warid, rid, wa_group) SELECT warid, rid, wa_group FROM {webauth_roles}");
+        db_query("INSERT INTO {wmd4_roles_history} (warid, uid, rid) SELECT warid, uid, rid FROM {webauth_roles_history}");
+    } else {
+        // otherwise map webauth roles to new roles
+        foreach ($roles as $group => $role) {
+            $rid = db_query("SELECT rid FROM {role} WHERE name = :name", array(':name'=>$role))->fetchField();
+            if (!empty($group)) {
+                if ($rid) {
+		    db_insert('wmd4_roles')->fields(array('rid'=>$rid, 'wa_group'=>$group))->execute();
+                    drupal_set_message("Added Group mapping for $role => $group");
+                } else {
+                    watchdog('webauth', "Unknown error occurred trying to get rid for @role", array('@role' => $role), WATCHDOG_ERROR);
+                }
+            }
+        }
+    }
+
+    $rid = db_query("SELECT rid FROM {role} WHERE name = :name",array(':name' => 'SUNet User'))->fetchField();
+    variable_set('wmd4_default_role', $rid);
+
+    variable_set('wmd4_require_valid_user',1);
+    require_once(drupal_get_path('module','wmd4').'/wmd4.module');
+    wmd4_write_htaccess();
+    copy(drupal_get_path('module', 'wmd4') . '/default/htaccess.txt', $webauth_path . '/.htaccess');
+
+    // if there are any old WMD users, add them to our table
+    if ($rid !== FALSE) {
+        $result = db_query("SELECT uid from {users_roles} where rid = :rid",array(':rid'=>$rid));
+	foreach ($result as $uid) {
+	    // see if we can identify the sunetid from the user name
+	    $sunetid = db_query("SELECT name from {users} WHERE uid = :uid",array(':uid'=>$uid->uid))->fetchField();
+	    if ($sunetid !== FALSE) {
+	        if (strpos($sunetid,'@'.WEBAUTH_DOMAIN) !== FALSE) {
+		    $sunetid = substr($sunetid,0,strpos($sunetid,'@'));
+		    @db_update('users')->fields(array('name'=>$sunetid))->condition('uid',$uid->uid)->execute();
+		} else {
+		    $sunetid = FALSE;
+                }
+	    }
+            // if we don't have the sunetid, try to recognize it from the authmap
+	    if ($sunetid === FALSE) {
+		$sunetid = db_query("SELECT authname from {authmap} WHERE uid = :uid",array(':uid'=>$uid->uid))->fetchField();
+		if ($sunetid !== FALSE) {
+		    if (strpos($sunetid,'@'.WEBAUTH_DOMAIN) !== FALSE) {
+		        $sunetid = substr($sunetid,0,strpos($sunetid,'@'));
+		    } else {
+			$sunetid = FALSE;
+		    }
+                }
+            }
+	    if ($sunetid !== FALSE) {
+      	        if (db_query("SELECT uid FROM {authmap} WHERE uid = :uid",array(':uid'=>$uid->uid))->fetchField() !== FALSE) {
+		    @db_update('authmap')->fields(array('module'=>'wmd4','authname'=>$sunetid))->condition('uid',$uid->uid)->execute();
+	        } else {
+		    @db_insert('authmap')->fields(array('uid'=>$uid->uid, 'module'=>'wmd4','authname'=>$sunetid))->execute();
+	        }
+	        //@db_insert('wmd4_id')->fields(array('uid'=>$uid->uid,'sunetid'=>$sunetid))->execute();
+	    }
+        }
+    }
+
+    // make sure there's not an old webauth directory with an .htaccess file to gum up the works
+    $old_wmd_path = substr($_SERVER['SCRIPT_FILENAME'],0,strpos($_SERVER['SCRIPT_FILENAME'],'index.php')) . 'webauth';
+    @unlink($old_wmd_path.'/.htaccess');
+    $wa_glob = glob($old_wmd_path.'/*');
+    if (!empty($wa_glob)) array_map("unlink", $wa_glob);
+    @rmdir($old_wmd_path);
+
+}
+
+function _wmd4_get_uid_array() {
+    $result = db_query("SELECT uid FROM {authmap} WHERE module = '%s'",'wmd4');
+    $uid_array = array();
+    foreach ($result as $row) {
+	$uid_array[] = $row->uid;
+    }
+    return $uid_array;
+}
+
+/** 
+ * Implementation of hook_enable
+ * 
+ * unblock all users that were blocked by disable
+ */
+function wmd4_enable() {
+    // we don't want to send mass emails
+    $save = variable_get('user_mail_status_activated_notify',0);
+    variable_set('user_mail_status_activated_notify',0);
+    $uids = _wmd4_get_uid_array();
+    user_user_operations_unblock($uids);
+    variable_set('user_mail_status_activated_notify',$save);
+
+    // scramble the passwords for all SUnet users in case they managed to reset them while module was disabled
+    foreach ($uids as $uid) {
+        db_update('users')
+            ->fields(array('pass' => user_password(25)))
+            ->condition('uid',$uid)
+            ->execute();
+    }
+}
+
+/**
+ * Implementation of hook_disable
+ *
+ * block all users that were created by WMD
+ */
+function wmd4_disable() {
+
+    // we don't want to send mass emails
+    $save = variable_get('user_mail_status_blocked_notify',0);
+    variable_set('user_mail_status_blocked_notify',0);
+    $uids = _wmd4_get_uid_array();
+    user_user_operations_block($uids);
+    variable_set('user_mail_status_blocked_notify',$save);
+}
+
+
+/**
+ * Implemention of hook_uninstall
+ */ 
+function wmd4_uninstall() {
+
+    // delete roles from users that were assigned automatically
+    $result = db_query("SELECT * FROM {wmd4_roles_history}");
+    foreach ($result as $wmd) {
+        db_delete('users_roles')->condition('uid',$wmd->uid)->condition('rid',$wmd->rid)->execute();
+    }
+
+    // remove changes made to the main .htaccess file
+    $d6_htaccess = substr($_SERVER['SCRIPT_FILENAME'],0,strpos($_SERVER['SCRIPT_FILENAME'],'index.php')) . '.htaccess';
+    $farray = file($d6_htaccess);
+    foreach ($farray as $key => $value) {
+	if (strpos($value,'AuthType WebAuth') !== FALSE && variable_get('wmd4_add_authtype',0) == 1) {
+	    unset($farray[$key]);
+	} elseif (strpos($value,'require valid-user') !== FALSE && variable_get('wmd4_add_validuser',0) == 1) {
+	    unset($farray[$key]);
+	} elseif (strpos($value,'WebAuthOptional on') !== FALSE && variable_get('wmd4_add_webauthoptional',0) == 1) {
+	    unset($farray[$key]);
+	}
+    }
+    $fh = fopen($d6_htaccess,'w');
+    if ($fh !== FALSE) {
+	foreach ($farray as $value) {
+	    fwrite($fh, $value);
+	}
+        fclose($fh);
+    }
+
+    // delete our Drupal variables, unless we're using sqlite which chokes on this
+    if (db_driver() != 'sqlite') {
+        db_delete('variable')->condition('name','wmd4_%','like')->execute();
+    }
+
+    // remove our webauth subdirectory
+    $webauth_path = substr($_SERVER['SCRIPT_FILENAME'],0,strpos($_SERVER['SCRIPT_FILENAME'],'index.php')) . conf_path() . '/webauth';
+    @unlink($webauth_path.'/check.php');
+    @unlink($webauth_path.'/.htaccess');
+    @unlink($webauth_path.'/wa_login.php');
+    $webauth_tmp_path = $webauth_path . '/tmp';
+    @unlink($webauth_tmp_path.'/.htaccess');
+    $wa_glob = glob($webauth_tmp_path.'/*');
+    if (!empty($wa_glob)) array_map("unlink", $wa_glob);
+    @rmdir($webauth_tmp_path);
+    @rmdir($webauth_path);
+
+    // finally, delete all users created by wmd
+    //$uids = _wmd4_get_uid_array();
+    //foreach ($uids as $uid) {
+	//user_delete($uid);
+    //}
+}
+ 
+/**
+ * Implementation of hook_schema
+ */
+function wmd4_schema() {
+    $schema = array();
+
+    $schema['wmd4_id'] = array(
+        'description' => 'Association of SUNetIDs to Drupal uids to allow user-defined aliases.',
+        'fields' => array(
+            'uid' => array(
+                'description' => 'the Drupal uid',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'sunetid' => array(
+                'description' => 'the SUNet ID of the user',
+                'type' => 'varchar',
+                'length' => 8,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+        ),
+        'primary_key' => array('uid'),
+    );
+
+    $schema['wmd4_roles'] = array(
+        'description' => 'Mapping of webauth roles to drupal roles.',
+        'fields' => array(
+            'warid' => array(
+                'description' => 'The primary identifier for a webauth role id.',
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'rid' => array(
+                'description' => 'The Drupal role id.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'wa_group' => array(
+                'description' => 'The webauth group.',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+        ),
+        'indexes' => array(
+            'rid' => array('rid'),
+            'wa_group' => array('wa_group'),
+        ),
+        'primary key' => array('warid'),
+    );
+
+    $schema['wmd4_roles_history'] = array(
+        'description' => 'Mapping of whether webauth assigned a role or not..',
+        'fields' => array(
+            'warid' => array(
+                'description' => 'The role mapping id.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'uid' => array(
+                'description' => 'The Drupal user id.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'rid' => array(
+                'description' => 'The Drupal role id.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+        ),
+        'indexes' => array(
+            'user_role' => array('uid', 'rid'),
+            'uid' => array('uid'),
+            'warid' => array('warid'),
+        ),
+    );
+
+    return $schema;
+}
+
+/**
+ * Implementation of hook_requirements
+ */
+function wmd4_requirements($phase) {
+
+    $requirements = array();
+
+    // only check requirements on module installation
+    if ($phase == 'runtime') {
+        $weight = db_query("SELECT weight FROM {system} WHERE name = :name AND type = :type",array(':name'=>'wmd4',':type'=>'module'))->fetchField();
+        $result = db_query("SELECT name FROM {system} WHERE weight < :weight AND status = 1 and type = 'module'",array(':weight'=>$weight));
+	$m_array = array();
+        foreach($result as $row) {
+	    $m_array[] = $row->name;
+	}
+	if (!empty($m_array)) {	
+	    $requirements['wmd4'] = array('title'=>'WebAuth Status');
+	    $requirements['wmd4']['description']=t('The following modules are weighted less than WMD4, which may pose a security risk: ').implode(',',$m_array);;
+	    $requirements['wmd4']['severity'] = REQUIREMENT_ERROR;   
+	}
+        return $requirements;
+    } else if ($phase == 'install') {
+	
+    
+    // set up the requirements array to be returned
+    $requirements['wmd4'] = array('title' => 'WMD4 Requirements');
+    $ok = TRUE;
+
+    // make sure we're running Drupal 7.x
+    if (substr(VERSION,0,1) !== '7') {
+        $requirements['wmd4']['description'] = t('This version of WMD4 requires Drupal version 7.x');
+        $ok = FALSE;
+    }
+
+    // make sure we are not running behind the proxy server
+    if ($ok && isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        $requirements['wmd4']['description'] = t('WMD4 does not work with the old proxy service configuration. Contact ITS to reconfigure your site.');
+        $ok = FALSE;
+    }
+
+    // make sure clean-urls is on
+    if ($ok && variable_get('clean_url', FALSE) == FALSE) {
+	$requirements['wmd4']['description'] = t('WMD4 requires that Clean URLs be turned on.');
+	$ok = FALSE;
+    }
+
+    // make sure that OpenSSL is available
+    if ($ok) {
+        // make sure we have open ssl enabled
+        $sslfound = FALSE;
+        $exs = get_loaded_extensions();
+        foreach($exs as $key => $value) {
+            if ($value === 'openssl') {
+                $sslfound = TRUE;
+                break;
+            }
+        }
+        if (!$sslfound) {
+            $requirements['wmd4']['description'] = t('WMD4 requires that PHP have OpenSSL support enabled.');
+	    $ok = FALSE;
+        }
+    }
+
+    // make sure the sites/default directory is writable
+    if ($ok && !is_writable(conf_path())) {
+        $requirements['wmd4']['description'] = t('WMD4 requires that directory ' . conf_path() . ' be writable.');
+        $ok = FALSE;
+    }
+
+    if ($ok) {
+	// create a webauth protected test directory and try to access it
+        $directory = conf_path().'/wmd4_test';
+        if (!is_dir($directory) && @mkdir($directory)) {
+            @chmod($directory, 0775); // Necessary for non-webserver users.
+        }
+	// make sure the test directory is writable
+  	$is_writable = is_writable($directory);  
+	$is_directory = is_dir($directory);  
+        if (!$is_writable || !$is_directory) {    
+	    $description = '';
+            $requirements['wmd4']['description'] = t('Unable to create test directory. Make sure sites/default directory is writable.');
+	    $ok = FALSE;
+        } else {
+            // create index.html and .htaccess files in the test directory
+            $fh = fopen($directory.'/index.html','a');
+            if ($fh !== FALSE) {
+                fwrite($fh,'TEST'.chr(13).chr(10));
+                fclose($fh);
+	    } else {
+	        $requirements['wmd4']['description'] = t('Unable to write test index.html');
+	        $ok = FALSE;
+	    }
+	    if ($ok) {
+	        $fh = fopen($directory .'/.htaccess','a');
+	        if ($fh !== FALSE) {
+	    	    fwrite($fh,'AuthType WebAuth'.chr(13).chr(10));
+		    fwrite($fh,'require valid-user'.chr(13).chr(10));
+		    fwrite($fh,'WebAuthOptional on'.chr(13).chr(10));
+		    fclose($fh);
+		} else {
+		    $requirements['wmd4']['description'] = t('Unable to write test .htaccess');
+		    $ok = FALSE;
+		}
+	    }
+	    // we've created files in our test directory. now create a socket and read the test file
+	    if ($ok) {
+	        $sock = fsockopen('ssl://'.$_SERVER['HTTP_HOST'], 443, $errno, $errstr, 10);
+                if (!$sock) {
+                    $requirements['wmd4']['description'] = t('Unable to open socket');
+                    $ok = FALSE;
+                }
+	    }
+	    if ($ok) {
+	        $d6_script = substr($_SERVER['SCRIPT_NAME'],0,strpos($_SERVER['SCRIPT_NAME'],'index.php'));
+                fwrite($sock, "GET " . $d6_script . "sites/default/wmd4_test/index.html HTTP/1.1\r\n");
+                fwrite($sock, "Host: ".$_SERVER['HTTP_HOST']."\r\n");
+                fwrite($sock, "Connection: close\r\n");
+                fwrite($sock, "Accept: */*\r\n");
+                fwrite($sock, "\r\n");
+                fwrite($sock, "\r\n");
+	        $rHeader = fgets($sock);
+	        // if we can not read the test file through the socket assume that WMD4 is not supported
+	        if (strpos($rHeader,'200') === FALSE) {
+	            $ok = FALSE;
+                    $requirements['wmd4']['description'] = t('WMD4 Not Supported on this Server');
+		}
+                fclose($sock);
+	    }
+        }
+	// delete test files and directory
+        @unlink($directory.'/index.html');
+        @unlink($directory.'/.htaccess');
+	sleep(1);  // needed to ensure test directory is empty
+        @rmdir($directory);
+
+	// now we know WMD4 is supported, but we still need a writable .htaccess file
+        if ($ok) {
+            $d6_htaccess = substr($_SERVER['SCRIPT_FILENAME'],0,strpos($_SERVER['SCRIPT_FILENAME'],'index.php')) . '.htaccess';
+            if (!is_writable($d6_htaccess)) {
+                $requirements['wmd4']['description'] = t('WMD4 is supported, but the .htaccess file ' . $d6_htaccess . ' must be writable.');
+                $ok = FALSE;
+            }
+        }
+
+	// make sure an older version of WMD is not installed and active
+	if ($ok) {
+	    $modules = module_list(FALSE,FALSE,FALSE);
+	    if (isset($modules['webauth'])) {
+	        $requirements['wmd4']['description'] = t('WMD4 is supported, but an earlier version of WMD is intalled and must be disabled.');
+	        $ok = FALSE;
+	    }
+	}
+    }
+
+    // return whether we've met all the requirements or not
+    if ($ok) {
+        $requirements['wmd4']['severity'] = REQUIREMENT_OK;
+    } else {
+        $requirements['wmd4']['severity'] = REQUIREMENT_ERROR;
+    }
+
+    return $requirements;
+    }
+}

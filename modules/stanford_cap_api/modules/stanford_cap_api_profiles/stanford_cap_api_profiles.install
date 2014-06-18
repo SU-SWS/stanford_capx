@@ -1,0 +1,195 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function stanford_cap_api_profiles_schema() {
+  $schema['cap_api_fields'] = array(
+    'description' => 'Stores field name which was created while synchronizing CAP profiles with CAP server.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'field_name' => array(
+        'description' => 'Field name.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique key' => array('field_name'),
+  );
+
+  $schema['cap_api_fields_map'] = array(
+    'description' => 'Stores field name which was created while synchronizing CAP profiles with CAP server.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'field_name' => array(
+        'description' => 'Field name.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'field_path' => array(
+        'description' => 'Field path used by profile layout to identify this field.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_type' => array(
+        'description' => 'Entity type this field attached to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'bundle' => array(
+        'description' => 'Entity bundle this field attached to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique key' => array('field_name', 'field_path', 'entity_type', 'bundle'),
+  );
+
+  $schema['cap_api_profiles'] = array(
+    'description' => 'Stores information about CAP profiles.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'profile_id' => array(
+        'description' => 'Profile ID.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'description' => 'Node ID.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'etag' => array(
+        'description' => 'Etag.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'sync' => array(
+        'description' => 'Does this profile needs to be synced?',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+    ),
+    'primary key' => array('id', 'profile_id', 'nid'),
+  );
+
+  $schema['cap_api_sync_groups'] = array(
+    'description' => 'Stores information about CAP profiles groups that should be synced.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Group name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'type' => array(
+        'description' => 'Group type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'count' => array(
+        'description' => 'How many profiles in this group.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ),
+      'lastsynced' => array(
+        'description' => 'Last synced timestamp.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'unsigned' => TRUE,
+      ),
+    ),
+    'primary key' => array('id', 'name'),
+  );
+
+  $schema['cap_api_field_hashes'] = array(
+    'description' => 'Stores field name which was overridden by user input and wont be synchronized while synchronizing CAP profiles with CAP server.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'profile_id' => array(
+        'description' => 'Profile ID.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'field_name' => array(
+        'description' => 'Field name.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'hash' => array(
+        'type' => 'blob',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of the field data to be used as hash string.',
+      ),
+    ),
+    'primary key' => array('id', 'profile_id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_enable().
+ *
+ * Reads CLOBs field list into variable for later use.
+ */
+function stanford_cap_api_profiles_enable() {
+  $file_name = '/stanford_cap_api_profiles_text_fields_list';
+  $file = new SplFileObject(DRUPAL_ROOT . '/' . drupal_get_path('module', 'stanford_cap_api_profiles') . $file_name, 'r');
+  $fields_list = array();
+  foreach ($file as $field) {
+    $fields_list[] = trim($field);
+  }
+  variable_set('stanford_cap_api_profiles_text_fields_list', array_filter($fields_list));
+}

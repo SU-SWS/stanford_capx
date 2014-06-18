@@ -1,0 +1,633 @@
+<?php
+/**
+ * @file
+ * Code for the Stanford Earth CAP API lite module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function ses_cap_lite_menu() {
+    $items = array();
+    $items['admin/config/people/cap_lite'] = array(
+        'title' => 'CAP Lite Configuration',
+        'type' => MENU_NORMAL_ITEM,
+        'description' => 'Configure CAP Lite module to access Stanford CAP API',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('ses_cap_lite_settings'),
+        'access arguments' => array('administer cap lite'),
+        'file' => 'ses_cap_lite.admin.inc',
+    );
+    $items['admin/config/people/cap_lite/settings'] = array(
+        'title' => 'Settings',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'access arguments' => array('administer cap lite'),
+        'weight' => -10,
+    );
+    $items['admin/config/people/cap_lite/mappings'] = array(
+        'title' => 'Field Map',
+        'description' => 'Map CAP API items to content fields.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('ses_cap_lite_mappings'),
+        'access arguments' => array('administer cap lite'),
+        'file' => 'ses_cap_lite.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 1,
+    );
+    $items['admin/config/people/cap_lite/workgroups'] = array(
+        'title' => 'Workgroups',
+        'description' => 'Add workgroups for processing profiles.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('ses_cap_lite_workgroups'),
+        'access arguments' => array('administer cap lite'),
+        'file' => 'ses_cap_lite.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 2,
+    );
+    $items['admin/config/people/cap_lite/get_cap_schema'] = array(
+      'title'=>'CAP Schema',
+      'page callback' => '_ses_cap_lite_get_cap_schema',
+      'access arguments' => array('administer cap lite'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 3,
+    );
+    $items['admin/config/people/cap_lite/update_all'] = array(
+        'title'=>'Update from CAP',
+        'page callback' => 'ses_cap_lite_update_profiles',
+        'access arguments' => array('administer CAP API Lite'),
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+/* this is a function called from the config forms that outputs
+   the CAP schema so that the developer knows what fields to use
+ */
+function _ses_cap_lite_get_cap_schema() {
+
+   module_load_include('inc','ses_cap_lite','ses_cap_lite.callback');
+
+    $data = ses_cap_lite_request('/cap/v1/schemas/profile');
+    $output = 'The information is presented for planning and development work.<br />';
+    $output .= '<strong>CAP fields:</strong><br />';
+    $var_count = array();
+    foreach ($data['properties'] as $key => $peele) {
+        $output .= $key . ' => ' . $peele['title'] . '<br />';
+        $var_count[$key] = array();
+    }
+    $xyz = print_r($data,TRUE);
+    $output .= '<br /><br />CAP SCHEMA: <pre>'.$xyz.'</pre>';
+
+    return $output;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function ses_cap_lite_permission() {
+    $permissions = array(
+        'administer cap lite' => array(
+            'title' => t('Administer CAP API Lite'),
+        ),
+    );
+    return $permissions;
+}
+
+/**
+ * Authenticate with CAP and return an authentication token.
+ *
+ * Note: this module is a slightly modified version of the one provided by
+ * Trellon; updated to include support for encryption
+ *
+ * @param string $user
+ *   User name to use to authenticate in CAP API instead of saved one.
+ * @param string $pass
+ *   Password to use to authenticate in CAP API instead of saved one.
+ * @param string $auth_uri
+ *   Authentication URI to use to authenticate in CAP API instead of saved one.
+ *
+ * @return string
+ *   An authentication token that can be used for API calls or FALSE.
+ */
+function ses_cap_lite_auth($user = '', $pass = '', $auth_uri = '') {
+
+    $token_expire = variable_get('ses_cap_lite_token_expire', REQUEST_TIME-1);
+    if ($token_expire <= REQUEST_TIME || !empty($user) || !empty($pass)) {
+
+        $auth_uri = empty($auth_uri) ? variable_get('ses_cap_lite_auth_uri', 'https://authz.stanford.edu/oauth/token') : $auth_uri;
+        if (empty($user)) {
+            $user = variable_get('ses_cap_lite_clientid','');
+            if (module_exists('encrypt')) $user = decrypt($user);
+        }
+        if (empty($pass)) {
+            $pass = variable_get('ses_cap_lite_password','');
+            if (module_exists('encrypt')) $pass = decrypt($pass);
+        }
+        $params = array(
+            'grant_type' => 'client_credentials',
+        );
+
+        if (empty($user) || empty($pass)) {
+            return FALSE;
+        }
+
+        // Append user/pass, some system doesn't support http_build_url.
+        $uri = parse_url($auth_uri);
+        $host = $user . ':' . $pass . '@' . $uri['host'];
+        $auth_url = str_replace($uri['host'], $host, $auth_uri);
+        $auth_url = url($auth_url, array('query' => $params, 'external' => TRUE));
+        $response = drupal_http_request($auth_url);
+        // check for error
+        if (property_exists($response, 'error')) {
+            $error_msg = 'Failed to authenticate at CAP API service. Error code is'
+                . ' %code, error message is "%msg", request string was "%request".'
+                . ' Additional data from response: @data';
+            $vars = array(
+                '%code' => $response->code,
+                '%msg' => isset($response->status_message) ? $response->status_message : $response->error,
+                '%request' => $auth_url,
+                '@data' => isset($response->data) ? $response->data : '',
+            );
+            watchdog('ses_cap_lite', $error_msg, $vars, WATCHDOG_WARNING);
+            return FALSE;
+        }
+
+        // Log bad API authentication.
+        $data = json_decode($response->data, TRUE);
+        if (array_key_exists('error', $data)) {
+            $error_msg = 'Error found in CAP API response. Error message is "%msg",'
+                . ' response data was "%data".';
+            $vars = array(
+                '%msg' => $data['error_description'],
+                '%data' => print_r($data, TRUE),
+            );
+            watchdog('ses_cap_lite', $error_msg, $vars, WATCHDOG_WARNING);
+            return FALSE;
+        }
+
+        // Authentication successful, return the access token.
+        if (array_key_exists('access_token', $data)) {
+            variable_set('ses_cap_lite_token_expire', REQUEST_TIME + $data['expires_in']);
+            $token = $data['access_token'];
+            if (module_exists('encrypt')) $token = encrypt($token);
+            variable_set('ses_cap_lite_token',$token); 
+            return $data['access_token'];
+        }
+
+        return FALSE;
+    } else {
+        $token = variable_get('ses_cap_lite_token','');
+        if (module_exists('encrypt')) $token = decrypt($token);
+        return $token;
+    }
+}
+
+/**
+ * Issue an API call against an API endpoint.
+ *
+ * Note: this function is pretty much identical to the one provided by Trellon.
+ *
+ * @param string $endpoint
+ *   Endpoint string.
+ * @param array $params
+ *   Additional parameters for request.
+ * @param bool $raw
+ *   Indicates in which form data should be returned, case TRUE JSON will be
+ * returned, array otherwise.
+ *
+ * @return array
+ *   Decoded JSON response or FALSE.
+ */
+function ses_cap_lite_request($endpoint, $params = array(), $raw = FALSE) {
+    $api_base = variable_get('ses_cap_lite_base_url', 'https://api.stanford.edu');
+
+    $access_token = ses_cap_lite_auth();
+    // Unable to fetch an auth token.
+    if (empty($access_token)) {
+        return FALSE;
+    }
+
+    $params['access_token'] = $access_token;
+
+    $request_url = url($api_base . $endpoint, array(
+        'query' => $params,
+        'external' => TRUE,
+    ));
+
+    $response = drupal_http_request($request_url);
+    // Error could be here as well.
+    if (property_exists($response, 'error')) {
+        $error_msg = 'Failed to fetch data from CAP API service. Error code is'
+            . ' %code, error message is "%msg", request string was "%request".';
+        $vars = array(
+            '%code' => $response->code,
+            '%msg' => isset($response->status_message) ? $response->status_message : $response->error,
+            '%request' => $request_url,
+        );
+        watchdog('ses_cap_lite', $error_msg, $vars, WATCHDOG_WARNING);
+        return FALSE;
+    }
+
+    // Log bad API authentication.
+    $data = json_decode($response->data, TRUE);
+    if (empty($data)) {
+        // JSON from response cannot be decoded.
+        $message = '';
+        switch (json_last_error()) {
+            case JSON_ERROR_NONE:
+                $message .= 'No errors';
+                break;
+            case JSON_ERROR_DEPTH:
+                $message .= 'Maximum stack depth exceeded.';
+                break;
+            case JSON_ERROR_STATE_MISMATCH:
+                $message .= 'Underflow or the modes mismatch.';
+                break;
+            case JSON_ERROR_CTRL_CHAR:
+                $message .= 'Unexpected control character found.';
+                break;
+            case JSON_ERROR_SYNTAX:
+                $message .= 'Syntax error, malformed JSON.';
+                break;
+            case JSON_ERROR_UTF8:
+                $message .= 'Malformed UTF-8 characters, possibly incorrectly encoded.';
+                break;
+            default:
+                $message .= 'Unknown error.';
+                break;
+        }
+        if (function_exists('json_last_error_msg')) {
+            $message .= ' Additional error info "' . json_last_error_msg() . '".';
+        }
+        $message .= ' Request string was "%request".';
+        $vars = array('%request' => $request_url);
+        watchdog('ses_cap_lite', $message, $vars, WATCHDOG_WARNING);
+        return FALSE;
+    } else {
+        if (array_key_exists('error', $data)) {
+            $error_msg = 'Error found in CAP API response. Error message is "%msg", response data was "%data".';
+            $vars = array(
+                '%msg' => $data['error_description'],
+                '%data' => print_r($data, TRUE),
+            );
+            watchdog('ses_cap_lite', $error_msg, $vars, WATCHDOG_WARNING);
+            return FALSE;
+        } else {
+            if ($raw) {
+                return $response->data;
+            } else {
+                return $data;
+            }
+        }
+    }
+}
+
+/**
+ * Implements hook_theme() to make sure we call the custom theming for this form
+ */
+function ses_cap_lite_theme() {
+  return array(
+    'ses_cap_lite_mappings' => array(
+      'render element' => 'form',
+      'file' => 'ses_cap_lite.admin.inc',
+    ),
+  );
+}
+
+// write a message to the output and to Drupal watchdog
+function _ses_cap_lite_output_and_watchdog($output, $msg) {
+      $output .= $msg . '<br />';
+      watchdog('ses_cap_lite',$msg);
+      return $output;
+}
+
+/*
+ * Update all our profiles
+ *
+ */
+function ses_cap_lite_update_profiles() {
+
+    // make sure we have enough time to finish
+    drupal_set_time_limit(240);
+
+    $output = '';
+
+    // see if we have a bundle and variable mapping defined, otherwise what's the point?
+    $bundle = variable_get('ses_cap_lite_bundle','');
+    if (empty($bundle)) {
+        _ses_cap_lite_output_and_watchdog($output,'No bundle has been configure to receive profiles.');
+        return $output;
+    }
+
+    // get our available CAP field definitions and our mappings to Drupal fields
+    module_load_include('inc','ses_cap_lite','ses_cap_lite.callback');
+    $cap_fields = _ses_cap_lite_profile_fields();
+    $weighted_fields = _ses_cap_lite_get_weighted_field_mapping($bundle);
+    if (empty($weighted_fields)) {
+        _ses_cap_lite_output_and_watchdog($output,'No variable mappings defined for bundle: '.$bundle);
+        return $output;
+    }
+    
+    // let other modules do any needed preprocessing and abort the update
+    if (sizeof(module_implements('ses_cap_lite_preprocess_all')) > 0) {
+        $proceeds = module_invoke_all('ses_cap_lite_preprocess_all');
+        foreach ($proceeds as $proceed) {
+            if ($proceed === FALSE) {
+                $output = _ses_cap_lite_output_and_watchdog($output,'CAP Profile updates aborted by client module.');
+                return $output;
+            }
+        }
+    }
+
+    // get our list of workgroups and turn into an array
+    $wg_text = trim(variable_get('ses_cap_lite_workgroups',''));
+    $wg_array = array();
+    if (!empty($wg_text)) $wg_array = explode("\n", $wg_text);
+
+    $profile_updated_count = 0;
+    $profile_failed_count = 0;
+
+    // process each workgroup in the list
+    foreach ($wg_array as $group) {
+        $group = trim($group);
+        $output = _ses_cap_lite_output_and_watchdog($output,'Updating profiles for workgroup: '.$group);
+
+        // the CAP API has a default page size of 10, meaning it will 
+        // return 10 profiles at a time. We don't know the size of each
+        // workgroup here, so we'll ask for 1000 at a time which gives us
+        // a reasonable expectation of getting all the profiles in one gulp
+        // (the largest SES workgroup has ~120 people
+        $wg_count = 1000;
+
+        // let other modules do any needed workgroup preprocessing;
+        // since another module may (and will in the case of SES)
+        // make calls to the Workgroup API, it can return the workgroup
+        // size in its preprocessing hook
+        if (sizeof(module_implements('ses_cap_lite_preprocess_wg')) > 0) {
+            $wg_counts = module_invoke_all('ses_cap_lite_preprocess_wg',$group);
+            $wg_max = 0;
+            foreach ($wg_counts as $wg_size) {
+                $wg_max = ($wg_size > $wg_max) ? $wg_size : $wg_max;
+            }
+            if ($wg_max > 0) $wg_count = $wg_max;
+        }
+
+        // call the CAP API to get all the profiles in the workgroup
+        $cap_array = array();
+        $params = array('privGroups' => $group,'ps'=>$wg_count);
+        $data = ses_cap_lite_request('/profiles/v1',$params);
+
+        // if we have profiles, process them one at a time and keep count
+        if ($data !== FALSE && !empty($data['values'])) {
+            foreach ($data['values'] as $cap_profile) {
+                if (_ses_cap_lite_update_single_profile($cap_fields,$weighted_fields,$cap_profile,$output)) {
+                    $profile_updated_count += 1;
+                } else {
+                    $profile_failed_count += 1;
+                }
+            }
+        }
+
+        // allow other modules to do any workgroup postprocessing
+        if (sizeof(module_implements('ses_cap_lite_postprocess_wg')) > 0) {
+            module_invoke_all('ses_cap_lite_postprocess_wg',$group);
+        }
+    }
+
+    // allow other modules to do any final postprocessing
+    if (sizeof(module_implements('ses_cap_lite_postprocess_all')) > 0) {
+        module_invoke_all('ses_cap_lite_postprocess_all');
+    }
+
+    // how did we do?
+    $output = _ses_cap_lite_output_and_watchdog($output,'Profiles imported or updated: ' . $profile_updated_count);
+    $output = _ses_cap_lite_output_and_watchdog($output,'Profiles import/update failed: ' . $profile_failed_count);
+    return $output;
+}
+
+/*
+ * process a single profile
+ *
+ */
+function _ses_cap_lite_update_single_profile($cap_fields = array(), $weighted_fields = array(),
+                                             $cap_data = array(),&$output) {
+    module_load_include('inc','ses_cap_lite','ses_cap_lite.callback');
+
+    // where are we putting our profile data?
+    $bundle = variable_get('ses_cap_lite_bundle','');
+
+    // if we have no cap data, or it has no profile id, or no sunet id 
+    // or we have no bundle to update, then there is nothing more to do
+    if (empty($cap_data)|| empty($cap_data['profileId']) || 
+        empty($cap_data['uid']) || empty($bundle)) {
+        return FALSE;
+    }
+
+    // get our CAP field to Drupal field mappings
+    $mapping = variable_get('ses_cap_lite_mappings',array());
+    if (empty($mapping[$bundle])) {
+        _ses_cap_lite_output_and_watchdog($output,'No variable mappings defined for bundle: '.$bundle);
+        return FALSE;
+    }
+
+    $profile_entity_id = -1;
+    $profile_id = $cap_data['profileId'];
+    $sunet = $cap_data['uid'];
+
+    // see if any hooked modules have a specific node or user account to update
+    drupal_alter('ses_cap_lite_profile_entity',$profile_entity_id, $profile_id, $sunet, $bundle);
+
+    // see if we have already recorded an entity for this profile and bundle
+    $recorded_entity_id = db_query("SELECT entity_id FROM {ses_cap_lite_profiles} WHERE profile_id = :profile_id AND bundle = :bundle",array(':profile_id'=>$cap_data['profileId'],':bundle'=>$bundle))->fetchField();
+
+    // $profile_obj will eventually contain the entity we want to update with profile data
+    $profile_obj = NULL;
+
+    // if a hooked module gave us an entity_id and it conflicts with one this module created,
+    // delete this module's recorded entity in favor of the hooked module's object of desire.
+    if ($profile_entity_id > -1) {
+        if ($recorded_entity_id !== FALSE && $recorded_entity_id !== $profile_entity_id) {
+            _ses_cap_lite_delete_profile_entity($recorded_entity_id, $bundle);
+        }
+        $profile_obj = _ses_cap_lite_load_profile_entity($profile_entity_id, $bundle);
+        if ($profile_obj === FALSE) {
+            _ses_cap_lite_output_and_watchdog($output,'Unable to load requested node for ' . $sunet . ' profile.');
+            return FALSE;
+        }
+    // otherwise try loading the recorded object; default to new object if unable to load
+    } else if ($recorded_entity_id !== FALSE) {
+        $profile_obj = _ses_cap_lite_load_profile_entity($recorded_entity_id, $bundle);
+        if ($profile_obj === FALSE) {
+            _ses_cap_lite_delete_profile_entity($recorded_entity_id,$bundle);
+            $profile_obj = _ses_cap_lite_create_profile_entity($bundle,$cap_data['displayName'],
+                               $sunet,$cap_data['profileId']);
+        }
+    // otherwise we just need to create a new object
+    } else {
+		$profile_obj = _ses_cap_lite_create_profile_entity($bundle,$cap_data['displayName'],
+				   $sunet,$cap_data['profileId']);
+	    }
+
+	    $fields = array('name'=>$cap_data['displayName']);
+	    // fill fields with profile data
+
+	    if (empty($weighted_fields)) {
+		_ses_cap_lite_output_and_watchdog($output,'No field mappings found for bundle: '.$bundle . ' for ' . $sunet . ' profile.');
+		return FALSE;
+	    }
+	   
+	    $previous_field = '';
+	    foreach ($weighted_fields as $cap_field => $entity_field)
+	    {
+		if (!empty($entity_field['select'])) {
+		    $field_value = '';
+		    $callback = $cap_fields[$cap_field]['build_callback'];
+		    if (function_exists($callback)) {
+			$field_value = call_user_func_array($callback,
+							array($cap_data,$cap_field));
+			if ($field_value === FALSE) $field_value = '';
+		    } else {
+			_ses_cap_lite_output_and_watchdog($output,'Output function '.$callback.' for field '.
+			    $cap_field.' for bundle '.$bundle.' not found.');
+			$field_value = '';
+		    }
+		    // what to do if we are appending fields together
+		    if ($entity_field['select'] === $previous_field) {
+			$field_value[LANGUAGE_NONE][0]['value'] = $fields[$previous_field][LANGUAGE_NONE][0]['value'] . '<br />' . $field_value[LANGUAGE_NONE][0]['value'];
+		    }
+		    $fields[$entity_field['select']] = $field_value;
+		    $previous_field = $entity_field['select'];
+		}
+	    } 
+	    
+	    // allow other modules to mess with profile data before saving
+	    if (sizeof(module_implements('ses_cap_lite_presave_profile')) > 0) {
+		module_invoke_all('ses_cap_lite_presave_profile');
+	    }
+	    $saved_entity_id = _ses_cap_lite_save_profile_entity($bundle,$profile_obj,$fields);
+            if (sizeof(module_implements('ses_cap_lite_postsave_profile')) > 0) {
+                module_invoke_all('ses_cap_lite_postsave_profile', $bundle, $saved_entity_id, $sunet);
+            }
+	    return TRUE;
+	}
+
+	// load a user account or a profile node
+	function _ses_cap_lite_load_profile_entity($profile_entity_id, $bundle) {
+	    if ($bundle == 'user') {
+		$profile_obj = user_load($profile_entity_id);
+	    } else {
+		$profile_obj = node_load($profile_entity_id);
+	    }
+	    return $profile_obj;
+	}
+
+	// delete a user account or a profile node
+	function _ses_cap_lite_delete_profile_entity($profile_entity_id, $bundle) {
+	    if ($bundle === 'user') {
+		user_delete($profile_entity_id);
+	    } else {
+		node_delete($profile_entity_id);
+	    }
+	    _ses_cap_lite_delete_profile_record($profile_entity_id, $bundle);
+	}
+
+	// delete the profile record from our db table
+	function _ses_cap_lite_delete_profile_record($entity_id, $bundle) {
+	    db_delete('ses_cap_lite_profiles')->condition('entity_id',$entity_id)->condition('bundle',$bundle)->execute();
+	}
+
+	// create a new user account or profile node and insert a record in our db table
+	function _ses_cap_lite_create_profile_entity($bundle="page",$displayName="First Last",$sunet='',$profileId) {
+    $newObj = (object) NULL;
+    if ($bundle === 'user') {
+        $fields = array(
+            'name' => $displayName,
+            'mail' => $sunet.'@stanford.edu',
+            'pass' => user_password(8),
+            'status' => 1,
+            'init' => $sunet,
+        );
+        $newObj = user_save('', $fields);
+        $entity_id = $newObj->uid;
+    } else {
+        $newObj->type = $bundle;
+        $newObj->title = $displayName;
+        $newObj->uid = 0;
+        $newObj->created = strtotime("now");
+        $newObj->changed = strtotime("now");
+        $newObj->status = 1;
+        $newObj->comment = 0;
+        $newObj->promote = 0;
+        $newObj->moderate = 0;
+        $newObj->sticky = 0;
+        $newObj->translate = 0;
+        $newObj->language = LANGUAGE_NONE;
+        node_save($newObj);
+        $entity_id = $newObj->nid;
+    }
+    db_insert('ses_cap_lite_profiles')->fields(array('profile_id'=>$profileId,'bundle'=>$bundle,'entity_id'=>$entity_id))->execute();
+    return $newObj;
+}
+
+// save the user account or node containing the profile information
+function _ses_cap_lite_save_profile_entity($bundle,$entityObj,$fields) {
+    $entity_id = FALSE;
+    if ($bundle === 'user') {
+        user_save($entityObj,$fields);
+        $entity_id = $entityObj->uid;
+    } else {
+        foreach ($fields as $field => $value) {
+            $entityObj->{$field} = $value;
+        }
+        node_save($entityObj);
+        $entity_id = $entityObj->nid;
+    }
+    return $entity_id;
+}
+
+// implements hook_delete
+// if a node or user account tracked by our module is deleted,
+// remove its record from our tracking table
+function ses_cap_lite_entity_delete($entity, $type) {
+    $bundle = '';
+    $entity_id = 0;
+    if ($type === 'user') {
+        $bundle = $type;
+        $entity_id = $entity->uid;
+    } else if ($type == 'node') {
+        $bundle = $entity->type;
+        $entity_id = $entity->nid;
+    }
+    if ($entity_id > 0) {
+        _ses_cap_lite_delete_profile_record($entity_id, $bundle);
+    }
+}
+
+// get the selected fields from our mapping variable and sort by weight
+function _ses_cap_lite_get_weighted_field_mapping($bundle) {
+    // get our current mappings for this bundle for default values
+    $mappings = variable_get('ses_cap_lite_mappings',array());
+    $current_map = array();
+    $field_order = array();
+    if (array_key_exists($bundle,$mappings)) {
+        $current_map = $mappings[$bundle];
+        $current_map_sortable = array();
+        foreach ($current_map as $map_key => $map_field) {
+            $current_map_sortable[$map_field['weight']] = $map_key;
+        }
+        ksort($current_map_sortable);
+        foreach ($current_map_sortable as $map_key) {
+            $field_order[$map_key] = $current_map[$map_key];
+        }
+    }
+    return $field_order;
+}
+
+// cron to update profiles once per day
+function ses_cap_lite_cron() {
+    if (time() >= variable_get('ses_cap_lite_next_cron',0)) {
+        $interval = 60 * 60 * 24; // daily
+        variable_set('ses_cap_lite_next_cron', time() + $interval);
+        ses_cap_lite_update_profiles();
+    }
+}

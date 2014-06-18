@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function stanford_cap_api_profiles_layout_schema() {
+
+  $schema['cap_api_groups'] = array(
+    'description' => 'Stores group name which was created while synchronizing CAP profiles layout with CAP server.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Record ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'group_name' => array(
+        'description' => 'Group name.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_type' => array(
+        'description' => 'Entity type this field attached to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'bundle' => array(
+        'description' => 'Entity bundle this field attached to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'mode' => array(
+        'description' => 'View mode.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique key' => array('group_name', 'entity_type', 'bundle'),
+  );
+
+  return $schema;
+}

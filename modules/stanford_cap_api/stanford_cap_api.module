@@ -1,0 +1,322 @@
+<?php
+/**
+ * @file
+ * Code for the Stanford CAP API feature.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function stanford_cap_api_menu() {
+  $items = array();
+
+  $items['admin/config/cap'] = array(
+    'title' => 'Community Academic Profiles',
+    'description' => 'Community Academic Profiles API screens.',
+    'position' => 'right',
+    'weight' => -5,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  if (!variable_get('stanford_cap_api_configured')) {
+    $items['admin/config/cap/config'] = array(
+      'title' => 'CAP API Settings',
+      'description' => 'Provides administrators ability to change CAP API access settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('stanford_cap_api_settings_form'),
+      'access arguments' => array('administer cap api'),
+      'weight' => -10,
+      'file' => 'stanford_cap_api.admin.inc',
+    );
+
+    $items['admin/config/cap/config/settings'] = array(
+      'title' => 'Settings',
+      'description' => 'Provides administrators ability to change CAP API access settings.',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+  }
+  else {
+    $items['admin/config/cap/config'] = array(
+      'title' => 'Details',
+      'description' => "Displays information about the site's connection to the CAP API.",
+      'weight' => -10,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('stanford_cap_api_details_form'),
+      'access arguments' => array('administer cap api'),
+      'file' => 'stanford_cap_api.admin.inc',
+    );
+
+    $items['admin/config/cap/config/details'] = array(
+      'title' => 'Details',
+      'description' => "Displays information about the site's connection to the CAP API.",
+      'weight' => -10,
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+
+    $items['admin/config/cap/config/settings'] = array(
+      'title' => 'Settings',
+      'description' => 'Provides administrators ability to change CAP API access settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('stanford_cap_api_settings_form'),
+      'access arguments' => array('administer cap api'),
+      'weight' => 10,
+      'file' => 'stanford_cap_api.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function stanford_cap_api_permission() {
+  $permissions = array(
+    'administer cap api' => array(
+      'title' => t('Administer CAP API'),
+    ),
+  );
+
+  return $permissions;
+}
+
+/**
+ * Authenticate with CAP and return an authentication token.
+ *
+ * @param string $user
+ *   User name to use to authenticate in CAP API instead of saved one.
+ * @param string $pass
+ *   Password to use to authenticate in CAP API instead of saved one.
+ * @param string $auth_uri
+ *   Authentication URI to use to authenticate in CAP API instead of saved one.
+ *
+ * @return string
+ *   An authentication token that can be used for API calls or FALSE.
+ */
+function stanford_cap_api_auth($user = '', $pass = '', $auth_uri = '') {
+
+  $token_expire = variable_get('stanford_cap_api_token_expire', REQUEST_TIME);
+  if ($token_expire <= REQUEST_TIME || !empty($user) || !empty($pass)) {
+    $auth_uri = empty($auth_uri) ? variable_get('stanford_cap_api_auth_uri', 'https://authz.stanford.edu/oauth/token') : $auth_uri;
+    $user = empty($user) ? variable_get('stanford_cap_api_username', '') : $user;
+    $pass = empty($pass) ? variable_get('stanford_cap_api_password', '') : $pass;
+
+    $params = array(
+      'grant_type' => 'client_credentials',
+    );
+
+    if (empty($user) || empty($pass)) {
+      return FALSE;
+    }
+
+    // Append user/pass, some system doesn't support http_build_url.
+    $uri = parse_url($auth_uri);
+
+    $host = $user . ':' . $pass . '@' . $uri['host'];
+    $auth_url = str_replace($uri['host'], $host, $auth_uri);
+
+    $auth_url = url($auth_url, array('query' => $params, 'external' => TRUE));
+    $response = drupal_http_request($auth_url);
+    // Error could be here as well.
+    if (property_exists($response, 'error')) {
+      $error_msg = 'Failed to authenticate at CAP API service. Error code is'
+        . ' %code, error message is "%msg", request string was "%request".' .
+        ' Additional data from response: @data';
+      $vars = array(
+        '%code' => $response->code,
+        '%msg' => isset($response->status_message) ? $response->status_message : $response->error,
+        '%request' => $auth_url,
+        '@data' => isset($response->data) ? $response->data : '',
+      );
+      watchdog('stanford_cap_api', $error_msg, $vars, WATCHDOG_WARNING);
+
+      return FALSE;
+    }
+
+    // Log bad API authentication.
+    $data = json_decode($response->data, TRUE);
+    if (array_key_exists('error', $data)) {
+      $error_msg = 'Error found in CAP API response. Error message is "%msg",'
+        . ' response data was "%data".';
+      $vars = array(
+        '%msg' => $data['error_description'],
+        '%data' => print_r($data, TRUE),
+      );
+      watchdog('stanford_cap_api', $error_msg, $vars, WATCHDOG_WARNING);
+
+      return FALSE;
+    }
+
+    // Authentication successful, return the access token.
+    if (array_key_exists('access_token', $data)) {
+      variable_set('stanford_cap_api_token_expire', REQUEST_TIME + $data['expires_in']);
+      variable_set('stanford_cap_api_token', $data['access_token']);
+
+      return $data['access_token'];
+    }
+
+    return FALSE;
+  }
+  else {
+    return variable_get('stanford_cap_api_token', '');
+  }
+}
+
+/**
+ * Issue an API call against an API endpoint.
+ *
+ * @param string $endpoint
+ *   Endpoint string.
+ * @param array $params
+ *   Additional parameters for request.
+ * @param bool $raw
+ *   Indicates in which form data should be returned, case TRUE JSON will be
+ * returned, array otherwise.
+ *
+ * @return array
+ *   Decoded JSON response or FALSE.
+ */
+function stanford_cap_api_request($endpoint, $params = array(), $raw = FALSE) {
+  $api_base = variable_get('stanford_cap_api_base_url', 'https://api.stanford.edu');
+
+  $access_token = stanford_cap_api_auth();
+  // Unable to fetch an auth token.
+  if (empty($access_token)) {
+    return FALSE;
+  }
+
+  $params['access_token'] = $access_token;
+
+  $request_url = url($api_base . $endpoint, array(
+    'query' => $params,
+    'external' => TRUE,
+  ));
+
+  $response = drupal_http_request($request_url);
+  // Error could be here as well.
+  if (property_exists($response, 'error')) {
+    $error_msg = 'Failed to fetch data from CAP API service. Error code is'
+      . ' %code, error message is "%msg", request string was "%request".';
+    $vars = array(
+      '%code' => $response->code,
+      '%msg' => isset($response->status_message) ? $response->status_message : $response->error,
+      '%request' => $request_url,
+    );
+    watchdog('stanford_cap_api', $error_msg, $vars, WATCHDOG_WARNING);
+
+    return FALSE;
+  }
+
+  // Log bad API authentication.
+  $data = json_decode($response->data, TRUE);
+  if (empty($data)) {
+    // JSON from response cannot be decoded.
+    $message = '';
+    switch (json_last_error()) {
+      case JSON_ERROR_NONE:
+        $message .= 'No errors';
+        break;
+
+      case JSON_ERROR_DEPTH:
+        $message .= 'Maximum stack depth exceeded.';
+        break;
+
+      case JSON_ERROR_STATE_MISMATCH:
+        $message .= 'Underflow or the modes mismatch.';
+        break;
+
+      case JSON_ERROR_CTRL_CHAR:
+        $message .= 'Unexpected control character found.';
+        break;
+
+      case JSON_ERROR_SYNTAX:
+        $message .= 'Syntax error, malformed JSON.';
+        break;
+
+      case JSON_ERROR_UTF8:
+        $message .= 'Malformed UTF-8 characters, possibly incorrectly encoded.';
+        break;
+
+      default:
+        $message .= 'Unknown error.';
+        break;
+    }
+    if (function_exists('json_last_error_msg')) {
+      $message .= ' Additional error info "' . json_last_error_msg() . '".';
+    }
+    $message .= ' Request string was "%request".';
+    $vars = array('%request' => $request_url);
+    watchdog('stanford_cap_api', $message, $vars, WATCHDOG_WARNING);
+
+    return FALSE;
+  }
+  else {
+    if (array_key_exists('error', $data)) {
+      $error_msg = 'Error found in CAP API response. Error message is "%msg", response data was "%data".';
+      $vars = array(
+        '%msg' => $data['error_description'],
+        '%data' => print_r($data, TRUE),
+      );
+      watchdog('stanford_cap_api', $error_msg, $vars, WATCHDOG_WARNING);
+
+      return FALSE;
+    }
+    else {
+      if ($raw) {
+        return $response->data;
+      }
+      else {
+        return $data;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function stanford_cap_api_theme() {
+  $path = drupal_get_path('module', 'stanford_cap_api') . '/templates';
+
+  return array(
+    'cap_status_item' => array(
+      'variables' => array(
+        'status' => FALSE,
+        'message' => '',
+        'additional' => NULL,
+      ),
+      'path' => $path,
+      'template' => 'status_item',
+    ),
+    'cap_info_item' => array(
+      'variables' => array(
+        'info' => NULL,
+        'message' => '',
+        'additional' => NULL,
+      ),
+      'path' => $path,
+      'template' => 'info_item',
+    ),
+  );
+}
+
+/**
+ * Implements hook_batch_alter().
+ *
+ * In case batch was set in stanford_cap_api_settings_form and module is not
+ * configured set batch redirect to details page.
+ */
+function stanford_cap_api_batch_alter(&$batch) {
+  $username = variable_get('stanford_cap_api_username');
+  if (($batch['source_url'] == 'admin/config/cap/config' || $batch['source_url'] == 'admin/config/cap/config/settings')
+    && (empty($username)
+    || !variable_get('stanford_cap_api_profiles_schema_synchronized', FALSE)
+    || !variable_get('stanford_cap_api_profiles_layout_synced', FALSE)
+    || !variable_get('stanford_cap_api_orgs_imported', FALSE))) {
+    $batch['redirect'] = 'admin/config/cap/config/details';
+  }
+}

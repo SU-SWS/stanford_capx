@@ -1,0 +1,18 @@
+# $Id$
+ErrorDocument 401 /user
+
+AuthType WebAuth
+require valid-user
+WebAuthOptional off
+
+WebAuthLdapAttribute displayName
+WebAuthLdapAttribute suAffiliation
+WebAuthLdapAttribute mail
+
+
+WebAuthLdapPrivgroup stanford:student
+
+WebAuthLdapPrivgroup stanford:staff
+
+WebAuthLdapPrivgroup stanford:faculty
+
