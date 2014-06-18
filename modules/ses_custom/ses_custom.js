@@ -12,6 +12,16 @@
             _ses_set_secondary_checkboxes($(this).val());
         });
 
+        console.log(Drupal.settings);
+        console.log(Drupal.settings.allowAdminTab);
+        console.log(Drupal.settings.allowAdditionalTab);
+        if (!Drupal.settings.allowAdminTab) {
+            $('.group-account-main li:last').hide();
+        }
+        if (!Drupal.settings.allowAdditionalTab) {
+            $('.group-account-main li:last').prev().hide();
+        }
+
     });
 
     function _ses_set_secondary_checkboxes(selVal) {

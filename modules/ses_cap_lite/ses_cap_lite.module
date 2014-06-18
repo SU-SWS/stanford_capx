@@ -9,6 +9,8 @@
  */
 function ses_cap_lite_menu() {
     $items = array();
+
+    // configuration pages for CAP Lite
     $items['admin/config/people/cap_lite'] = array(
         'title' => 'CAP Lite Configuration',
         'type' => MENU_NORMAL_ITEM,
@@ -18,12 +20,15 @@ function ses_cap_lite_menu() {
         'access arguments' => array('administer cap lite'),
         'file' => 'ses_cap_lite.admin.inc',
     );
+
+    // general settings - CAP API password, etc.
     $items['admin/config/people/cap_lite/settings'] = array(
         'title' => 'Settings',
         'type' => MENU_DEFAULT_LOCAL_TASK,
         'access arguments' => array('administer cap lite'),
         'weight' => -10,
     );
+    // map CAP API fields to Drupal fields
     $items['admin/config/people/cap_lite/mappings'] = array(
         'title' => 'Field Map',
         'description' => 'Map CAP API items to content fields.',
@@ -34,6 +39,7 @@ function ses_cap_lite_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 1,
     );
+    // list which workgroups to be included for importing CAP profiles
     $items['admin/config/people/cap_lite/workgroups'] = array(
         'title' => 'Workgroups',
         'description' => 'Add workgroups for processing profiles.',
@@ -44,6 +50,7 @@ function ses_cap_lite_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 2,
     );
+    // print out a bunch of CAP API information for development use
     $items['admin/config/people/cap_lite/get_cap_schema'] = array(
       'title'=>'CAP Schema',
       'page callback' => '_ses_cap_lite_get_cap_schema',
@@ -51,13 +58,40 @@ function ses_cap_lite_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 3,
     );
+
+    // update all CAP profiles - calls same routine as daily cront
     $items['admin/config/people/cap_lite/update_all'] = array(
         'title'=>'Update from CAP',
-        'page callback' => 'ses_cap_lite_update_profiles',
+        'page callback' => '_ses_cap_lite_update_profiles',
         'access arguments' => array('administer CAP API Lite'),
         'type' => MENU_CALLBACK,
     );
+    // update a single CAP profile by SUNet ID
+    $items['update_profile/%'] = array(
+        'page callback' => '_ses_cap_lite_update_profiles',
+        'page arguments' => array(1),
+        'access callback' => '_ses_cap_lite_access_update_singleton',
+        'access arguments' => array(1),
+        'type' => MENU_CALLBACK,
+    );
+    // display the raw CAP data for a person by SUNet ID
+    $items['display_cap_data/%'] = array(
+        'page callback' => '_ses_cap_lite_display_cap_data',
+        'page arguments' => array(1),
+        'access arguments' => array('administer cap lite'),
+        'type' => MENU_CALLBACK,
+    );
     return $items;
+}
+
+// simple developer function to retrieve and print out CAP data for a SUNet ID
+function _ses_cap_lite_display_cap_data($sunet = NULL) {
+
+   module_load_include('inc','ses_cap_lite','ses_cap_lite.callback');
+
+    $params = array('uids' => $sunet, 'ps'=>1);
+    $data = ses_cap_lite_request('/profiles/v1',$params);
+    print 'cap data for '.$sunet.'<br /><pre>'; print_r($data); print '</pre>';
 }
 
 /* this is a function called from the config forms that outputs
@@ -302,13 +336,30 @@ function _ses_cap_lite_output_and_watchdog($output, $msg) {
 }
 
 /*
+ * Return true if user can update a single profile
+ *
+ */
+function _ses_cap_lite_access_update_singleton($sunet) {
+
+    global $user;
+    
+    if (in_array('webmaster', array_values($user->roles)) || 
+       (isset($user->init) && $user->init === $sunet)) 
+    {
+        return TRUE;
+    } else {
+        return FALSE;
+    }    
+}
+
+/*
  * Update all our profiles
  *
  */
-function ses_cap_lite_update_profiles() {
+function _ses_cap_lite_update_profiles($single_sunet = NULL) {
 
     // make sure we have enough time to finish
-    drupal_set_time_limit(240);
+    drupal_set_time_limit(360);
 
     $output = '';
 
@@ -330,7 +381,7 @@ function ses_cap_lite_update_profiles() {
     
     // let other modules do any needed preprocessing and abort the update
     if (sizeof(module_implements('ses_cap_lite_preprocess_all')) > 0) {
-        $proceeds = module_invoke_all('ses_cap_lite_preprocess_all');
+        $proceeds = module_invoke_all('ses_cap_lite_preprocess_all',$single_sunet);
         foreach ($proceeds as $proceed) {
             if ($proceed === FALSE) {
                 $output = _ses_cap_lite_output_and_watchdog($output,'CAP Profile updates aborted by client module.');
@@ -339,48 +390,59 @@ function ses_cap_lite_update_profiles() {
         }
     }
 
-    // get our list of workgroups and turn into an array
-    $wg_text = trim(variable_get('ses_cap_lite_workgroups',''));
-    $wg_array = array();
-    if (!empty($wg_text)) $wg_array = explode("\n", $wg_text);
-
+    // set up some counters and flags
     $profile_updated_count = 0;
     $profile_failed_count = 0;
+    $return_url = FALSE;
 
-    // process each workgroup in the list
+    if (!empty($single_sunet)) {
+        $wg_array = array(trim($single_sunet));
+    } else {
+        // get our list of workgroups and turn into an array
+        $wg_text = trim(variable_get('ses_cap_lite_workgroups',''));
+        $wg_array = array();
+        if (!empty($wg_text)) $wg_array = explode("\n", $wg_text);
+    }
+
+    // process each workgroup or sunet in the list
     foreach ($wg_array as $group) {
-        $group = trim($group);
-        $output = _ses_cap_lite_output_and_watchdog($output,'Updating profiles for workgroup: '.$group);
+        if (isset($single_sunet)) {
+            module_invoke_all('ses_cap_lite_preprocess_sunet',$group);
+            $params = array('uids' => $group);
+        } else {
+            $group = trim($group);
+            $output = _ses_cap_lite_output_and_watchdog($output,'Updating profiles for workgroup: '.$group);
 
-        // the CAP API has a default page size of 10, meaning it will 
-        // return 10 profiles at a time. We don't know the size of each
-        // workgroup here, so we'll ask for 1000 at a time which gives us
-        // a reasonable expectation of getting all the profiles in one gulp
-        // (the largest SES workgroup has ~120 people
-        $wg_count = 1000;
-
-        // let other modules do any needed workgroup preprocessing;
-        // since another module may (and will in the case of SES)
-        // make calls to the Workgroup API, it can return the workgroup
-        // size in its preprocessing hook
-        if (sizeof(module_implements('ses_cap_lite_preprocess_wg')) > 0) {
-            $wg_counts = module_invoke_all('ses_cap_lite_preprocess_wg',$group);
-            $wg_max = 0;
-            foreach ($wg_counts as $wg_size) {
-                $wg_max = ($wg_size > $wg_max) ? $wg_size : $wg_max;
+            // the CAP API has a default page size of 10, meaning it will 
+            // return 10 profiles at a time. We don't know the size of each
+            // workgroup here, so we'll ask for 1000 at a time which gives us
+            // a reasonable expectation of getting all the profiles in one gulp
+            // (the largest SES workgroup has ~120 people
+            $wg_count = 1000;
+  
+            // let other modules do any needed workgroup preprocessing;
+            // since another module may (and will in the case of SES)
+            // make calls to the Workgroup API, it can return the workgroup
+            // size in its preprocessing hook
+            if (sizeof(module_implements('ses_cap_lite_preprocess_wg')) > 0) {
+                $wg_counts = module_invoke_all('ses_cap_lite_preprocess_wg',$group);
+                $wg_max = 0;
+                foreach ($wg_counts as $wg_size) {
+                    $wg_max = ($wg_size > $wg_max) ? $wg_size : $wg_max;
+                }
+                if ($wg_max > 0) $wg_count = $wg_max;
             }
-            if ($wg_max > 0) $wg_count = $wg_max;
+
+            // call the CAP API to get all the profiles in the workgroup
+            $params = array('privGroups' => $group,'ps'=>$wg_count);
         }
 
-        // call the CAP API to get all the profiles in the workgroup
-        $cap_array = array();
-        $params = array('privGroups' => $group,'ps'=>$wg_count);
         $data = ses_cap_lite_request('/profiles/v1',$params);
-
+ 
         // if we have profiles, process them one at a time and keep count
         if ($data !== FALSE && !empty($data['values'])) {
             foreach ($data['values'] as $cap_profile) {
-                if (_ses_cap_lite_update_single_profile($cap_fields,$weighted_fields,$cap_profile,$output)) {
+                if (_ses_cap_lite_update_single_profile($cap_fields,$weighted_fields,$cap_profile,$output,$return_url)) {
                     $profile_updated_count += 1;
                 } else {
                     $profile_failed_count += 1;
@@ -389,17 +451,22 @@ function ses_cap_lite_update_profiles() {
         }
 
         // allow other modules to do any workgroup postprocessing
-        if (sizeof(module_implements('ses_cap_lite_postprocess_wg')) > 0) {
+        if (!isset($single_sunet) && sizeof(module_implements('ses_cap_lite_postprocess_wg')) > 0) {
             module_invoke_all('ses_cap_lite_postprocess_wg',$group);
         }
     }
 
     // allow other modules to do any final postprocessing
     if (sizeof(module_implements('ses_cap_lite_postprocess_all')) > 0) {
-        module_invoke_all('ses_cap_lite_postprocess_all');
+        module_invoke_all('ses_cap_lite_postprocess_all',$single_sunet);
     }
 
-    // how did we do?
+    // if we were updating a single profile and have a return URL, then go there
+    if (isset($single_sunet) && $return_url !== FALSE) {
+        drupal_goto($return_url);
+    }
+
+    // otherwise output some stats. how did we do?
     $output = _ses_cap_lite_output_and_watchdog($output,'Profiles imported or updated: ' . $profile_updated_count);
     $output = _ses_cap_lite_output_and_watchdog($output,'Profiles import/update failed: ' . $profile_failed_count);
     return $output;
@@ -410,7 +477,7 @@ function ses_cap_lite_update_profiles() {
  *
  */
 function _ses_cap_lite_update_single_profile($cap_fields = array(), $weighted_fields = array(),
-                                             $cap_data = array(),&$output) {
+                                             $cap_data = array(),&$output,&$return_url) {
     module_load_include('inc','ses_cap_lite','ses_cap_lite.callback');
 
     // where are we putting our profile data?
@@ -432,10 +499,20 @@ function _ses_cap_lite_update_single_profile($cap_fields = array(), $weighted_fi
 
     $profile_entity_id = -1;
     $profile_id = $cap_data['profileId'];
-    $sunet = $cap_data['uid'];
+    $sunet = trim($cap_data['uid']);
+    $cancel_update = FALSE;
 
-    // see if any hooked modules have a specific node or user account to update
-    drupal_alter('ses_cap_lite_profile_entity',$profile_entity_id, $profile_id, $sunet, $bundle);
+    // see if any hooked modules have a specific node or user account to update or need to cancel this account update
+    $entity_data = array('profile_entity_id'=>$profile_entity_id, 'cancel_update'=>$cancel_update, 
+                         'profile_id'=>$profile_id, 'sunet'=>$sunet, 'bundle'=>$bundle);
+    drupal_alter('ses_cap_lite_entity',$entity_data);
+
+    if ($entity_data['cancel_update']) {
+        _ses_cap_lite_output_and_watchdog($output,'Hooked module canceled update for '.$sunet);
+        return FALSE;
+    }
+
+    $profile_entity_id = $entity_data['profile_entity_id'];
 
     // see if we have already recorded an entity for this profile and bundle
     $recorded_entity_id = db_query("SELECT entity_id FROM {ses_cap_lite_profiles} WHERE profile_id = :profile_id AND bundle = :bundle",array(':profile_id'=>$cap_data['profileId'],':bundle'=>$bundle))->fetchField();
@@ -464,80 +541,103 @@ function _ses_cap_lite_update_single_profile($cap_fields = array(), $weighted_fi
         }
     // otherwise we just need to create a new object
     } else {
-		$profile_obj = _ses_cap_lite_create_profile_entity($bundle,$cap_data['displayName'],
-				   $sunet,$cap_data['profileId']);
-	    }
+        $profile_obj = _ses_cap_lite_create_profile_entity($bundle,$cap_data['displayName'],
+                                                           $sunet,$cap_data['profileId']);
+    }
 
-	    $fields = array('name'=>$cap_data['displayName']);
-	    // fill fields with profile data
+    //The account name or node title is the CAP Display Name
+    $fields = array('name'=>$cap_data['displayName']);
 
-	    if (empty($weighted_fields)) {
-		_ses_cap_lite_output_and_watchdog($output,'No field mappings found for bundle: '.$bundle . ' for ' . $sunet . ' profile.');
-		return FALSE;
-	    }
-	   
-	    $previous_field = '';
-	    foreach ($weighted_fields as $cap_field => $entity_field)
-	    {
-		if (!empty($entity_field['select'])) {
-		    $field_value = '';
-		    $callback = $cap_fields[$cap_field]['build_callback'];
-		    if (function_exists($callback)) {
-			$field_value = call_user_func_array($callback,
-							array($cap_data,$cap_field));
-			if ($field_value === FALSE) $field_value = '';
-		    } else {
-			_ses_cap_lite_output_and_watchdog($output,'Output function '.$callback.' for field '.
-			    $cap_field.' for bundle '.$bundle.' not found.');
-			$field_value = '';
-		    }
-		    // what to do if we are appending fields together
-		    if ($entity_field['select'] === $previous_field) {
-			$field_value[LANGUAGE_NONE][0]['value'] = $fields[$previous_field][LANGUAGE_NONE][0]['value'] . '<br />' . $field_value[LANGUAGE_NONE][0]['value'];
-		    }
-		    $fields[$entity_field['select']] = $field_value;
-		    $previous_field = $entity_field['select'];
-		}
-	    } 
-	    
-	    // allow other modules to mess with profile data before saving
-	    if (sizeof(module_implements('ses_cap_lite_presave_profile')) > 0) {
-		module_invoke_all('ses_cap_lite_presave_profile');
-	    }
-	    $saved_entity_id = _ses_cap_lite_save_profile_entity($bundle,$profile_obj,$fields);
-            if (sizeof(module_implements('ses_cap_lite_postsave_profile')) > 0) {
-                module_invoke_all('ses_cap_lite_postsave_profile', $bundle, $saved_entity_id, $sunet);
+    // fill fields with profile data based on our field mappings retrieved by the calling function
+    if (empty($weighted_fields)) {
+        _ses_cap_lite_output_and_watchdog($output,'No field mappings found for bundle: '.$bundle . ' for ' . $sunet . ' profile.');
+        return FALSE;
+    }	   
+    $previous_field = '';
+    foreach ($weighted_fields as $cap_field => $entity_field)
+    {
+        if (!empty($entity_field['select'])) {
+            $field_value = '';
+            // for each mapped field, get its callback function as defined in ses_cap_lite.callback.inc and call it
+            $callback = $cap_fields[$cap_field]['build_callback'];
+            if (function_exists($callback)) {
+                $field_value = call_user_func_array($callback,
+                                                    array($cap_data,$cap_field));
+                if ($field_value === FALSE) $field_value = '';
+            } else {
+                _ses_cap_lite_output_and_watchdog($output,'Output function '.$callback.' for field '.
+                                                  $cap_field.' for bundle '.$bundle.' not found.');
+                $field_value = '';
             }
-	    return TRUE;
-	}
+            // what to do if we are appending fields together
+            if ($entity_field['select'] === $previous_field) {
+                $field_value[LANGUAGE_NONE][0]['value'] = 
+                        $fields[$previous_field][LANGUAGE_NONE][0]['value'] . '<br />' . 
+                        $field_value[LANGUAGE_NONE][0]['value'];
+            }
+            $fields[$entity_field['select']] = $field_value;
+            $previous_field = $entity_field['select'];
+        }
+    } 
+	    
+    // allow other modules to mess with profile data before saving
+    drupal_alter('ses_cap_lite_presave',$fields,$profile_obj);
 
-	// load a user account or a profile node
-	function _ses_cap_lite_load_profile_entity($profile_entity_id, $bundle) {
-	    if ($bundle == 'user') {
-		$profile_obj = user_load($profile_entity_id);
-	    } else {
-		$profile_obj = node_load($profile_entity_id);
-	    }
-	    return $profile_obj;
-	}
+    // save our retrieved fields to its node or user account entity, then give hooked modules a chance to do stuff
+    $saved_entity_id = _ses_cap_lite_save_profile_entity($bundle,$profile_obj,$fields);
+    if (sizeof(module_implements('ses_cap_lite_postsave_profile')) > 0) {
+        module_invoke_all('ses_cap_lite_postsave_profile', $bundle, $saved_entity_id, $sunet);
+    }
 
-	// delete a user account or a profile node
-	function _ses_cap_lite_delete_profile_entity($profile_entity_id, $bundle) {
-	    if ($bundle === 'user') {
-		user_delete($profile_entity_id);
-	    } else {
-		node_delete($profile_entity_id);
-	    }
-	    _ses_cap_lite_delete_profile_record($profile_entity_id, $bundle);
-	}
+    // create or update ses_cap_lite_profiles record
+    if ($saved_entity_id !== FALSE) {
+        $recorded_entity_id = db_query("SELECT entity_id FROM {ses_cap_lite_profiles} WHERE profile_id = :profile_id AND bundle = :bundle",array(':profile_id'=>$cap_data['profileId'],':bundle'=>$bundle))->fetchField();
+        if ($recorded_entity_id !== FALSE) {
+            if ($recorded_entity_id !== $saved_entity_id) {
+                db_update('ses_cap_lite_profiles')->fields(array('entity_id'=>$saved_entity_id))->condition('bundle',$bundle)->condition('profile_id',$cap_data['profileId'])->execute();
+            }
+        } else {
+            db_insert('ses_cap_lite_profiles')->fields(array('profile_id'=>$cap_data['profileId'],'bundle'=>$bundle,'entity_id'=>$saved_entity_id))->execute();
+        }
 
-	// delete the profile record from our db table
-	function _ses_cap_lite_delete_profile_record($entity_id, $bundle) {
-	    db_delete('ses_cap_lite_profiles')->condition('entity_id',$entity_id)->condition('bundle',$bundle)->execute();
-	}
+        // build return URL for single profile update
+        $return_url = 'node/';
+        if ($bundle === 'user') {
+            $return_url = 'user/';
+        }
+        $return_url .= $saved_entity_id;
+    }
 
-	// create a new user account or profile node and insert a record in our db table
-	function _ses_cap_lite_create_profile_entity($bundle="page",$displayName="First Last",$sunet='',$profileId) {
+    return TRUE;
+}
+
+// load a user account or a profile node
+function _ses_cap_lite_load_profile_entity($profile_entity_id, $bundle) {
+    if ($bundle == 'user') {
+        $profile_obj = user_load($profile_entity_id);
+    } else {
+        $profile_obj = node_load($profile_entity_id);
+    }
+    return $profile_obj;
+}
+
+// delete a user account or a profile node
+function _ses_cap_lite_delete_profile_entity($profile_entity_id, $bundle) {
+    if ($bundle === 'user') {
+        user_delete($profile_entity_id);
+    } else {
+        node_delete($profile_entity_id);
+    }
+    _ses_cap_lite_delete_profile_record($profile_entity_id, $bundle);
+}
+
+// delete the profile record from our db table
+function _ses_cap_lite_delete_profile_record($entity_id, $bundle) {
+    db_delete('ses_cap_lite_profiles')->condition('entity_id',$entity_id)->condition('bundle',$bundle)->execute();
+}
+
+// create a new user account or profile node and insert a record in our db table
+function _ses_cap_lite_create_profile_entity($bundle="page",$displayName="First Last",$sunet='',$profileId) {
     $newObj = (object) NULL;
     if ($bundle === 'user') {
         $fields = array(
@@ -565,7 +665,7 @@ function _ses_cap_lite_update_single_profile($cap_fields = array(), $weighted_fi
         node_save($newObj);
         $entity_id = $newObj->nid;
     }
-    db_insert('ses_cap_lite_profiles')->fields(array('profile_id'=>$profileId,'bundle'=>$bundle,'entity_id'=>$entity_id))->execute();
+    //db_insert('ses_cap_lite_profiles')->fields(array('profile_id'=>$profileId,'bundle'=>$bundle,'entity_id'=>$entity_id))->execute();
     return $newObj;
 }
 
@@ -628,6 +728,6 @@ function ses_cap_lite_cron() {
     if (time() >= variable_get('ses_cap_lite_next_cron',0)) {
         $interval = 60 * 60 * 24; // daily
         variable_set('ses_cap_lite_next_cron', time() + $interval);
-        ses_cap_lite_update_profiles();
+        _ses_cap_lite_update_profiles();
     }
 }

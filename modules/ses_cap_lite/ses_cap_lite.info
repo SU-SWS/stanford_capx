@@ -3,4 +3,4 @@ description = Lightweight version of CAP import module
 core = 7.x
 package = Stanford
 project = ses_cap_lite
-version = 1.00
+version = 1.01

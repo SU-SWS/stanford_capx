@@ -204,7 +204,6 @@ function ses_cap_lite_mappings($form, &$form_state) {
         ksort($karray);
         $form_fields[$form_field_type] = $karray;
     } 
-
     // build up the CAP form fields; tell the API not to flatten results array
     $form['capfields']['#tree'] = TRUE;
 
