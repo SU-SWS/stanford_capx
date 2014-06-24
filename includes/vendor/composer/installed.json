@@ -153,5 +153,47 @@
             "rest",
             "web service"
         ]
+    },
+    {
+        "name": "peekmo/jsonpath",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/Peekmo/JsonPath.git",
+            "reference": "b5e14d95473932a236fdbff8f3c8e9f5f533e7eb"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/Peekmo/JsonPath/zipball/b5e14d95473932a236fdbff8f3c8e9f5f533e7eb",
+            "reference": "b5e14d95473932a236fdbff8f3c8e9f5f533e7eb",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "time": "2014-05-18 12:18:50",
+        "type": "project",
+        "installation-source": "source",
+        "autoload": {
+            "psr-0": {
+                "Peekmo\\JsonPath": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Stefan Goessner"
+            },
+            {
+                "name": "Axel Anceau",
+                "email": "axel.anceau@gmail.com"
+            }
+        ],
+        "description": "Library to use JsonPath",
+        "homepage": "https://github.com/Peekmo/JsonPath"
     }
 ]

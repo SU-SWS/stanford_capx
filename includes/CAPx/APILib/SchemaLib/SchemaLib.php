@@ -14,9 +14,9 @@ class SchemaLib extends APILib {
    */
   public function profile() {
 
-    $endpoint = $this->get_endpoint() . "/api/cap/v1/schemas/profile";
-    $options = $this->get_options();
-    return $this->make_request($endpoint, array(), $options);
+    $endpoint = $this->getEndpoint() . "/api/cap/v1/schemas/profile";
+    $options = $this->getOptions();
+    return $this->makeRequest($endpoint, array(), $options);
 
   }
 

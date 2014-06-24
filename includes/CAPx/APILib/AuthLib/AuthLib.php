@@ -12,58 +12,58 @@ use \Guzzle\Http\Client as GuzzleClient;
 class AuthLib extends APILib {
 
   // API OAuth Token
-  protected $auth_api_token;
+  protected $authApiToken;
   // API Token Expires
-  protected $auth_api_token_expires;
+  protected $authApiTokenExpires;
   // Authentication endpoint
   protected $endpoint = "https://authz.stanford.edu/oauth/token";
   // Authentication Parameters
-  protected $auth_params = array('grant_type' => 'client_credentials');
+  protected $authParams = array('grant_type' => 'client_credentials');
 
   /**
-   * [get_auth_api_token description]
+   * [getAuthApiToken description]
    * @return [type] [description]
    */
-  public function get_auth_api_token() {
-    return $this->auth_api_token;
+  public function getAuthApiToken() {
+    return $this->authApiToken;
   }
 
   /**
-   * [set_auth_api_token description]
+   * [setAuthApiToken description]
    */
-  public function set_auth_api_token($token) {
-    $this->auth_api_token = $token;
+  public function setAuthApiToken($token) {
+    $this->authApiToken = $token;
   }
 
   /**
-   * [get_auth_api_token description]
+   * [getAuthApiToken description]
    * @return [type] [description]
    */
-  public function get_auth_api_token_expires() {
-    return $this->auth_api_token_expires;
+  public function getAuthApiTokenExpires() {
+    return $this->authApiTokenExpires;
   }
 
   /**
-   * [set_auth_api_token description]
+   * [setAuthApiToken description]
    */
-  public function set_auth_api_token_expires($time) {
-    $this->auth_api_token_expires = $time;
+  public function setAuthApiTokenExpires($time) {
+    $this->authApiTokenExpires = $time;
   }
 
   /**
-   * [set_auth_params description]
+   * [setAuthParams description]
    * @param [type] $params [description]
    */
-  protected function set_auth_params($params) {
-    $this->auth_params = $params;
+  protected function setAuthParams($params) {
+    $this->authParams = $params;
   }
 
   /**
-   * [get_auth_params description]
+   * [getAuthParams description]
    * @return [type] [description]
    */
-  protected function get_auth_params() {
-    return $this->auth_params;
+  protected function getAuthParams() {
+    return $this->authParams;
   }
 
   /**
@@ -72,16 +72,14 @@ class AuthLib extends APILib {
    */
   public function authenticate($username, $password) {
 
-    // Get the guzzle client.
-    $client = $this->get_client();
-
-    // Get som additional parameters.
-    $parameters = $this->get_auth_params();
-    $endpoint = $this->get_endpoint();
+  // Get some
+    $client = $this->getClient();
+    $parameters = $this->getAuthParams();
+    $endpoint = $this->getEndpoint();
 
     // Contact the server.
-    $request = $client->get($this->get_endpoint(), array(), array('query' => $parameters, 'exceptions' => FALSE));
-    $request->setAuth($username, $password, 'Any');
+    $request = $client->get($this->getEndpoint(), array(), array('query' => $parameters, 'exceptions' => FALSE));
+    $request->setAuth($username, $password, 'any');
 
     $response = $request->send();
 
@@ -89,8 +87,8 @@ class AuthLib extends APILib {
     switch ($code) {
       case '200':
         $json = $response->json();
-        $this->set_auth_api_token($json['access_token']);
-        $this->set_auth_api_token_expires($json['expires_in']);
+        $this->setAuthApiToken($json['access_token']);
+        $this->setAuthApiTokenExpires($json['expires_in']);
         break;
 
       default:

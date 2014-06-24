@@ -22,76 +22,76 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
    */
   public function __construct(GuzzleClient $client, $options = null) {
 
-    $this->set_client($client);
+    $this->setClient($client);
 
     // Merge in any additional options.
     if (is_array($options)) {
-      $opts = $this->get_options();
+      $opts = $this->getOptions();
       $opts = array_merge($opts, $options);
-      $this->set_options($opts);
+      $this->setOptions($opts);
     }
 
   }
 
   /**
-   * [set_client description]
+   * [setClient description]
    * @param [type] $client [description]
    */
-  public function set_client($client) {
+  public function setClient($client) {
     $this->client = $client;
   }
 
   /**
-   * [get_client description]
+   * [getClient description]
    * @return [type] [description]
    */
-  public function get_client() {
+  public function getClient() {
     return $this->client;
   }
 
   /**
-   * [set_endpoint description]
+   * [setEndpoint description]
    * @param  [type] $endpoint [description]
    * @return [type]           [description]
    */
-  public function set_endpoint($endpoint) {
+  public function setEndpoint($endpoint) {
     $this->endpoint = $endpoint;
   }
 
   /**
-   * [get_endpoint description]
+   * [getEndpoint description]
    * @return [type] [description]
    */
-  public function get_endpoint() {
+  public function getEndpoint() {
     return $this->endpoint;
   }
 
   /**
-   * [set_options description]
+   * [setOptions description]
    * @param  [type] $options [description]
    * @return [type]           [description]
    */
-  public function set_options($options) {
+  public function setOptions($options) {
     $this->options = $options;
   }
 
   /**
-   * [get_options description]
+   * [getOptions description]
    * @return [type] [description]
    */
-  public function get_options() {
+  public function getOptions() {
     return $this->options;
   }
 
   /**
-   * [make_request description]
+   * [makeRequest description]
    * @param  [type] $endpoint [description]
    * @param  [type] $params   [description]
    * @param  [type] $options  [description]
    * @return [type]           [description]
    */
-  protected function make_request($endpoint, $params, $options) {
-    $client = $this->get_client();
+  protected function makeRequest($endpoint, $params, $options) {
+    $client = $this->getClient();
     $request = $client->get($endpoint, $params, $options);
     $response = $request->send();
 

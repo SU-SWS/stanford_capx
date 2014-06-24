@@ -15,8 +15,8 @@ class OrgLib extends APILib {
      * @return [type]       [description]
      */
     public function get($vars = null) {
-      $endpoint = $this->get_endpoint();
-      $options = $this->get_options();
+      $endpoint = $this->getEndpoint();
+      $options = $this->getOptions();
 
       if (!is_array($vars)) {
         $endpoint .= "/api/cap/v1/orgs/" . $vars;
@@ -26,22 +26,22 @@ class OrgLib extends APILib {
         $options['query']['orgCodes'] = implode(",", $vars);
       }
 
-      return $this->make_request($endpoint, array(), $options);
+      return $this->makeRequest($endpoint, array(), $options);
     }
 
     /**
-     * [get_profiles description]
+     * [getProfiles description]
      * @param  [type] $params [description]
      * @return [type]         [description]
      */
-    public function get_profiles($params = null) {
-      $endpoint = $this->get_endpoint();
+    public function getProfiles($params = null) {
+      $endpoint = $this->getEndpoint();
       $endpoint .= "/api/cap/v1/orgs/" . $params . "/profiles";
 
-      $options = $this->get_options();
+      $options = $this->getOptions();
       $params = array('path' => $params);
 
-      return $this->make_request($endpoint, array(), $options);
+      return $this->makeRequest($endpoint, array(), $options);
     }
 
 

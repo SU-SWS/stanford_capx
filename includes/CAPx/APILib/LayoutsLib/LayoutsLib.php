@@ -9,30 +9,30 @@ use CAPx\APILib\AbstractAPILib as APILib;
 class LayoutsLib extends APILib {
 
   /**
-   * Wrapper for get_type(faculty)
+   * Wrapper for getType(faculty)
    * @return [type] [description]
    */
   public function faculty() {
-    return $this->get_type('faculty');
+    return $this->getType('faculty');
   }
 
   /**
-   * Wrapper for get_type(staff)
+   * Wrapper for getType(staff)
    * @return [type] [description]
    */
   public function staff() {
-    return $this->get_type('faculty');
+    return $this->getType('staff');
   }
 
   /**
-   * [get_type description]
+   * [getType description]
    * @param  [type] $type [description]
    * @return [type]       [description]
    */
-  public function get_type($type) {
-    $endpoint = $this->get_endpoint() . "/api/cap/v1/layouts/" . $type;
-    $options = $this->get_options();
-    return $this->make_request($endpoint, array(), $options);
+  public function getType($type) {
+    $endpoint = $this->getEndpoint() . "/api/cap/v1/layouts/" . $type;
+    $options = $this->getOptions();
+    return $this->makeRequest($endpoint, array(), $options);
   }
 
 

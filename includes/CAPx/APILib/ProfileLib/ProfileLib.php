@@ -19,8 +19,8 @@ class ProfileLib extends APILib {
    */
   public function search($type, $args, $exact = FALSE, $children = FALSE, $order = '') {
 
-    $endpoint = $this->get_endpoint() . "/api/profiles/v1";
-    $options = $this->get_options();
+    $endpoint = $this->getEndpoint() . "/api/profiles/v1";
+    $options = $this->getOptions();
 
     switch($type) {
       case "ids":
@@ -44,20 +44,20 @@ class ProfileLib extends APILib {
       $options['query']['order'] = $order;
     }
 
-    return $this->make_request($endpoint, array(), $options);
+    return $this->makeRequest($endpoint, array(), $options);
 
   }
 
   /**
-   * [get_profiles description]
+   * [get description]
    * @param  [type] $params [description]
    * @return [type]         [description]
    */
-  public function get($profile_id) {
-    $endpoint = $this->get_endpoint() . "/api/profiles/v1/" . $profile_id;
-    $options = $this->get_options();
+  public function get($profileId) {
+    $endpoint = $this->getEndpoint() . "/api/profiles/v1/" . $profileId;
+    $options = $this->getOptions();
 
-    return $this->make_request($endpoint, array(), $options);
+    return $this->makeRequest($endpoint, array(), $options);
 
   }
 

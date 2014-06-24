@@ -14,11 +14,11 @@ class SearchLib extends APILib {
    */
   public function autocomplete($string = '') {
 
-    $endpoint = $this->get_endpoint() . "/api/cap/v1/search/autocomplete";
-    $options = $this->get_options();
+    $endpoint = $this->getEndpoint() . "/api/cap/v1/search/autocomplete";
+    $options = $this->getOptions();
     $options['query']['q'] = $string;
 
-    return $this->make_request($endpoint, array(), $options);
+    return $this->makeRequest($endpoint, array(), $options);
 
   }
 
@@ -29,11 +29,11 @@ class SearchLib extends APILib {
    */
   public function keyword($string = '') {
 
-    $endpoint = $this->get_endpoint() . "/api/cap/v1/search/keyword";
-    $options = $this->get_options();
+    $endpoint = $this->getEndpoint() . "/api/cap/v1/search/keyword";
+    $options = $this->getOptions();
     $options['query']['q'] = $string;
 
-    return $this->make_request($endpoint, array(), $options);
+    return $this->makeRequest($endpoint, array(), $options);
 
   }
 

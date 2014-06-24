@@ -8,99 +8,99 @@ use \Guzzle\Http\Client as GuzzleClient;
 
 class HTTPClient {
 
-  protected $http_client = null;
+  protected $httpClient = null;
   // Endpoint
-  protected $http_endpoint = 'https://cap.stanford.edu/cap-api';
+  protected $httpEndpoint = 'https://cap.stanford.edu/cap-api';
   // Auth Token
-  protected $http_auth_token;
+  protected $httpAuthToken;
   // HTTP Options
-  protected $http_options;
+  protected $httpOptions;
 
   /**
    * [__construct description]
    */
   public function __construct() {
     $client = new GuzzleClient();
-    $this->set_http_client($client);
+    $this->setHttpClient($client);
   }
 
   /**
-   * [get_http_endpoint description]
+   * [getHttpEndpoint description]
    * @return [type] [description]
    */
-  public function get_http_endpoint() {
-    return $this->http_endpoint;
+  public function getHttpEndpoint() {
+    return $this->httpEndpoint;
   }
 
   /**
-   * [set_http_endpoint description]
+   * [setHttpEndpoint description]
    * @param [type] $end [description]
    */
-  public function set_http_endpoint($end) {
+  public function setHttpEndpoint($end) {
 
     // When the endpoint changes create a new client.
     $client = new GuzzleClient($end);
-    $this->set_http_client($client);
+    $this->setHttpClient($client);
 
-    $this->http_endpoint = $end;
+    $this->httpEndpoint = $end;
   }
 
   /**
-   * [get_http_client description]
+   * [getHttpClient description]
    * @return [type] [description]
    */
-  public function get_http_client() {
+  public function getHttpClient() {
 
-    if (!is_null($this->http_client)) {
-      return $this->http_client;
+    if (!is_null($this->httpClient)) {
+      return $this->httpClient;
     }
 
-    $client = new GuzzleClient($this->get_http_endpoint());
-    $this->set_http_client($client);
+    $client = new GuzzleClient($this->getHttpEndpoint());
+    $this->setHttpClient($client);
     return $client;
   }
 
   /**
-   * [set_http_client description]
+   * [setHttpClient description]
    * @param [type] $client [description]
    */
-  public function set_http_client($client) {
-    $this->http_client = $client;
+  public function setHttpClient($client) {
+    $this->httpClient = $client;
   }
 
   /**
-   * [set_api_token description]
+   * [setApiToken description]
    * @param [type] $token [description]
    */
-  public function set_api_token($token) {
-    $this->http_auth_token = $token;
+  public function setApiToken($token) {
+    $this->httpAuthToken = $token;
   }
 
   /**
-   * [get_api_token description]
+   * [getApiToken description]
    * @return [type] [description]
    */
-  protected function get_api_token() {
-    if (empty($this->http_auth_token)) {
+  protected function getApiToken() {
+    if (empty($this->httpAuthToken)) {
       // Try to authenticate
     }
-    return $this->http_auth_token;
+    return $this->httpAuthToken;
   }
 
   /**
-   * [get_http_options description]
+   * [gethttpOptions description]
    * @return [type] [description]
    */
-  public function get_http_options() {
-    return $this->http_options;
+  public function gethttpOptions() {
+    return $this->httpOptions;
   }
 
   /**
-   * [set_http_options description]
+   * [sethttpOptions description]
    * @param [type] $opts [description]
    */
-  public function set_http_options($opts) {
-    $this->http_options = $opts;
+  public function sethttpOptions($opts) {
+    $this->httpOptions = $opts;
   }
 
   //
@@ -114,11 +114,11 @@ class HTTPClient {
    */
   public function api($name) {
 
-    $client = $this->get_http_client();
-    $options = $this->get_http_options();
+    $client = $this->getHttpClient();
+    $options = $this->gethttpOptions();
 
     // Add access token or we wont be able to communicate.
-    $options['query']['access_token'] = $this->get_api_token();
+    $options['query']['access_token'] = $this->getApiToken();
 
     switch ($name) {
       case "auth":

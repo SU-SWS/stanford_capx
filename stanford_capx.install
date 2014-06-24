@@ -56,79 +56,68 @@ function stanford_capx_uninstall() {
  * Implements hook_schema().
  */
 function stanford_capx_schema() {
-  /*
-   *$schema['node'] = array(
-   *  // example (partial) specification for table "node"
-   *  'description' => 'The base table for nodes.',
-   *  'fields' => array(
-   *    'nid' => array(
-   *      'description' => 'The primary identifier for a node.',
-   *      'type' => 'serial',
-   *      'unsigned' => TRUE,
-   *      'not null' => TRUE),
-   *    'vid' => array(
-   *      'description' => 'The current {node_revision}.vid version identifier.',
-   *      'type' => 'int',
-   *      'unsigned' => TRUE,
-   *      'not null' => TRUE,
-   *      'default' => 0),
-   *    'type' => array(
-   *      'description' => 'The {node_type} of this node.',
-   *      'type' => 'varchar',
-   *      'length' => 32,
-   *      'not null' => TRUE,
-   *      'default' => ''),
-   *    'title' => array(
-   *      'description' => 'The title of this node, always treated as non-markup plain text.',
-   *      'type' => 'varchar',
-   *      'length' => 255,
-   *      'not null' => TRUE,
-   *      'default' => ''),
-   *    ),
-   *  'indexes' => array(
-   *    'node_changed'        => array('changed'),
-   *    'node_created'        => array('created'),
-   *    ),
-   *  'unique keys' => array(
-   *    'nid_vid' => array('nid', 'vid'),
-   *    'vid'     => array('vid')
-   *    ),
-   *  'foreign keys' => array(
-   *    'node_revision' => array(
-   *      'table' => 'node_revision',
-   *      'columns' => array('vid' => 'vid'),
-   *      ),
-   *    'node_author' => array(
-   *      'table' => 'users',
-   *      'columns' => array('uid' => 'uid')
-   *      ),
-   *     ),
-   *  'primary key' => array('nid'),
-   *);
-   */
-  // $schema[''] = array(
-  //   'description' => '',
-  //   'fields' => array(
-  //     '' => array(
-  //       'description' => '',
-  //       'type' => '',
-  //       'unsigned' => ,
-  //       'not null' => ,
-  //       'default' => ),
-  //     ),
-  //   'indexes' => array(
-  //     '' => array(''),
-  //     ),
-  //   'unique keys' => array(
-  //     '' => array('')
-  //     ),
-  //   'foreign keys' => array(
-  //     '' => array(
-  //       'table' => '',
-  //       'columns' => array('' => ''),
-  //       ),
-  //      ),
-  //   'primary key' => array(''),
-  // );
-  // return $schema;
+  $schema = array();
+
+  $schema['capx_profiles'] = array(
+    'description' => 'CAPx Profile Information.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for this table.',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'entity_type' => array(
+        'description' => 'The entity type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'bundle_type' => array(
+        'description' => 'The bundle type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'importer' => array(
+        'description' => 'The importer machine name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_id' => array(
+        'description' => 'The entity ID.',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'profile_id' => array(
+        'description' => 'The profile ID from CAP.',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'etag' => array(
+        'description' => 'Etag.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'sync' => array(
+        'description' => 'Does this profile needs to be synced?',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'bep' => array('bundle_type', 'entity_id', 'profile_id'),
+      'iep' => array('importer', 'entity_id', 'profile_id'),
+    ),
+  );
+
+  return $schema;
 }

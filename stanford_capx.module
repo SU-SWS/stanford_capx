@@ -9,7 +9,9 @@
 require_once "includes/autoloader.php";
 require_once "includes/vendor/autoload.php";
 
-use CAPx\APILib\HTTPClient as Client;
+use CAPx\APILib\HTTPClient;
+use CAPx\Drupal\Importer\EntityImporter;
+use CAPx\Drupal\Mapper\EntityMapper;
 
 /**
  * Implements hook_help().
@@ -55,15 +57,43 @@ function stanford_capx_menu() {
 function stanford_capx_admin_config() {
   $output = "";
 
-  $client = new Client();
-  $response = $client->api('auth')->authenticate('xxx', 'xxx');
-  $token = $response->get_auth_api_token();
+  // $client = new HTTPClient();
+  // $response = $client->api('auth')->authenticate('xxx', 'xxx');
+  // $token = $response->getAuthApiToken();
 
-  $org_client = new Client();
-  $org_client->set_api_token($token);
-  $orgs = $org_client->api('layouts')->faculty();
+  // return $token;
 
-  dpm($orgs);
+  $token = '';
+
+  $importer_config = array();
+  $importer_config['type']    = "uids";
+  $importer_config['values']  = array('sheamck','swberg','jbickar','cjwest','ptchen');
+
+  $mapper_config = array();
+  $mapper_config['entityType']  = 'node';
+  $mapper_config['bundleType']  = 'stanford_person';
+  $mapper_config['fields']      = array();
+  $mapper_config['properties']  = array();
+
+  // Patch the fields together
+  $mapper_config['fields']['body']                            = '$.bio.html';
+  $mapper_config['fields']['field_s_person_email']            = '$.alternateContact.email';
+  $mapper_config['fields']['field_s_person_phone_display']    = '$.alternateContact.phoneNumbers[0]';
+  $mapper_config['fields']['field_s_person_faculty_title']    = '$.education.*.degree';
+  $mapper_config['fields']['field_s_person_first_name']       = '$.names.legal.firstName';
+  $mapper_config['fields']['field_s_person_last_name']        = '$.names.legal.lastName';
+  $mapper_config['fields']['field_s_person_profile_picture']  = '$.profilePhotos.bigger';
+
+  // Put up the properties
+  $mapper_config['properties']['title'] = '$.displayName';
+
+  $mapper = new EntityMapper($mapper_config);
+
+  $client = new HTTPClient();
+  $client->setApiToken($token);
+
+  $importer = new EntityImporter($importer_config, $mapper, $client);
+  $importer->execute();
 
   return $output;
 }
