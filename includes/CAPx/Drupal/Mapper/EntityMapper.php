@@ -51,17 +51,33 @@ class EntityMapper extends MapperAbstract {
     $entity = $this->getEntity();
 
     // Loop through each field and run a field processor on it.
-    foreach ($config['fields'] as $field_name => $remote_data_path) {
-      try {
-        $info = $this->getRemoteDataByJsonPath($data, $remote_data_path);
-      } catch(\Exception $e) {
-        // ... silently continue. Please dont shoot me.
-        continue;
+    foreach ($config['fields'] as $field_name => $remote_data_paths) {
+      $info = array();
+
+      // Allow just one path as a string
+      if (!is_array($remote_data_paths)) {
+        $remote_data_paths = array($remote_data_paths);
+      }
+
+      // Loop through each of the data paths.
+      foreach ($remote_data_paths as $key => $data_path) {
+        try {
+          $info[$key] = $this->getRemoteDataByJsonPath($data, $data_path);
+        } catch(\Exception $e) {
+          // ... silently continue. Please dont shoot me.
+          continue;
+        }
       }
 
       $field_info_instance = field_info_instance($entity->type(), $field_name, $entity->getBundle());
+      $field_info_field = field_info_field($field_name);
+
+      $widget = $field_info_instance['widget']['type'];
+      $field = $field_info_field['type'];
+
       $field_processor = new FieldProcessor($entity, $field_name);
-      $field_processor->field($field_info_instance['widget']['type'])->put($info);
+      $field_processor->field($field)->widget($widget)->put($info);
+
     }
 
     $this->setEntity($entity);

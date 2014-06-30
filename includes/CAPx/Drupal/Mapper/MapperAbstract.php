@@ -37,40 +37,42 @@ abstract class MapperAbstract implements MapperInterface {
    * @param  [type] $path [description]
    * @return [type]       [description]
    */
-  public function getRemoteDataByPath($data, $path) {
-    $parts = explode("/", $path);
-    $return_data = array();
+  // public function getRemoteDataByPath($data, $path) {
+  //   $parts = explode("/", $path);
+  //   $return_data = array();
 
-    foreach($parts as $part) {
+  //   foreach($parts as $part) {
 
-      array_shift($parts);
+  //     array_shift($parts);
 
-      if ($part == "*") {
-        foreach ($data as $sub_data) {
-          $new_path = implode("/", $parts);
-          $tmp = $this->getRemoteDataByPath($sub_data, $new_path);
-          $return_data = array_merge($return_data, $tmp);
-        }
-        return $return_data;
-      }
-      else if (isset($data[$part])) {
-        $data = $data[$part];
-      }
-      else {
-        throw new \Exception("Could not find data for path", 1);
-      }
+  //     if ($part == "*") {
+  //       foreach ($data as $sub_data) {
+  //         $new_path = implode("/", $parts);
+  //         $tmp = $this->getRemoteDataByPath($sub_data, $new_path);
+  //         $return_data = array_merge($return_data, $tmp);
+  //       }
+  //       return $return_data;
+  //     }
+  //     else if (isset($data[$part])) {
+  //       $data = $data[$part];
+  //     }
+  //     else {
+  //       throw new \Exception("Could not find data for path", 1);
+  //     }
 
-    }
+  //   }
 
-    if (!is_array($data)) {
-      $return_data[] = $data;
-    }
+  //   if (!is_array($data)) {
+  //     $return_data[] = $data;
+  //   }
 
-    return $return_data;
-  }
+  //   return $return_data;
+  // }
 
   /**
-   * [getRemoteDataByJsonPath description]
+   * Uses a JSONPath library and notation to find data in a parsed json array.
+   * Documentation on JSON path: http://goessner.net/articles/JsonPath/
+   *
    * @param  [type] $data [description]
    * @param  [type] $path [description]
    * @return [type]       [description]

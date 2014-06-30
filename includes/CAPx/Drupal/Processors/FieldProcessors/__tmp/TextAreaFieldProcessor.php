@@ -6,7 +6,7 @@
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
 
-class TextAreaFieldProcessor extends FieldTypeProcessor {
+class TextAreaFieldProcessor extends FieldProcessor {
 
   /**
    * Default implementation of put
@@ -18,8 +18,15 @@ class TextAreaFieldProcessor extends FieldTypeProcessor {
     $fieldName = $this->getFieldName();
     $fieldInfo = field_info_field($fieldName);
     $field = $entity->{$fieldName};
-    $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
-    $field->set($data);
+
+    if ($fieldInfo['cardinality'] !== "1") {
+      $data = is_array($data) ? $data : array($data);
+    }
+    else {
+      $data = is_array($data) ? array_shift($data) : $data;
+    }
+
+    $field->value->set($data);
   }
 
 

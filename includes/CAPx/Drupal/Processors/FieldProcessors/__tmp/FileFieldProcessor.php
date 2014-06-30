@@ -2,11 +2,15 @@
 /**
  * @file
  * @author [author] <[email]>
+ *
+ * File processor should have an array of data passed in.
+ *
  */
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
+use CAPx\APILib\HTTPClient;
 
-class FileFieldProcessor extends FieldTypeProcessor {
+class FileFieldProcessor extends FieldProcessor {
 
   // The path to save the file to.
   protected $saveDir = "public://capx/profile-files/";
@@ -21,9 +25,6 @@ class FileFieldProcessor extends FieldTypeProcessor {
    * @return [type]       [description]
    */
   public function put($data) {
-
-    // Normalize data because it comes in a bit funky as we take whole array
-    $data = $data[0];
 
     if (!is_array($data)) {
       throw new \Exception("FileFieldProcessor Requires Data to be an array");
@@ -54,7 +55,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
     $file = file_save_data($response->getBody(), $filename, FILE_EXISTS_REPLACE);
 
     if (!$file) {
-      throw new \Exception("Could not save file: " . $data['url']);
+      throw new \Exception("Could not save profile image: " . $data['url']);
     }
 
     // All went well go and save it.
@@ -64,10 +65,8 @@ class FileFieldProcessor extends FieldTypeProcessor {
       array(
         'fid' => $file->fid,
         'file' => $file,
-        'display' => variable_get('capx_display_file_default', 1),
       )
     );
-
   }
 
   /**
@@ -82,7 +81,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
     $response = $guzzle->get($data['url'])->send();
 
     if ($response->getStatusCode() !== 200) {
-      throw new \Exception("Could not fetch file: " . $data['url']);
+      throw new \Exception("Could not fetch profile image: " . $data['url']);
     }
 
     return $response;
@@ -110,36 +109,16 @@ class FileFieldProcessor extends FieldTypeProcessor {
    * @return [type]       [description]
    */
   public function getExtentionByType($type) {
+    switch ($type) {
+      case 'image/png':
+        return ".png";
+        break;
 
-    if (empty($type)) {
-      return false;
+      case "image/jpg":
+      case "image/jpeg":
+      default:
+        return ".jpg";
     }
-     switch ($type) {
-       case 'image/bmp': return '.bmp';
-       case 'image/cis-cod': return '.cod';
-       case 'image/gif': return '.gif';
-       case 'image/ief': return '.ief';
-       case 'image/jpeg': return '.jpg';
-       case 'image/pipeg': return '.jfif';
-       case 'image/tiff': return '.tif';
-       case 'image/x-cmu-raster': return '.ras';
-       case 'image/x-cmx': return '.cmx';
-       case 'image/x-icon': return '.ico';
-       case 'image/x-portable-anymap': return '.pnm';
-       case 'image/x-portable-bitmap': return '.pbm';
-       case 'image/x-portable-graymap': return '.pgm';
-       case 'image/x-portable-pixmap': return '.ppm';
-       case 'image/x-rgb': return '.rgb';
-       case 'image/x-xbitmap': return '.xbm';
-       case 'image/x-xpixmap': return '.xpm';
-       case 'image/x-xwindowdump': return '.xwd';
-       case 'image/png': return '.png';
-       case 'image/x-jps': return '.jps';
-       case 'image/x-freehand': return '.fh';
-       default: return false;
-      // TODO: https://github.com/EllisLab/CodeIgniter/blob/develop/application/config/mimes.php
-     }
-
   }
 
   /**
@@ -157,6 +136,8 @@ class FileFieldProcessor extends FieldTypeProcessor {
   public function setSaveDir($dir) {
     $this->saveDir = $dir;
   }
+
+
 
 
 }

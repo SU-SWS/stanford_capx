@@ -44,11 +44,34 @@ class CAPx {
       ->condition('entity_type', $entityType)
       ->condition('bundle_type', $bundleType)
       ->condition('profile_id', $profileId)
+      ->orderBy('id', 'DESC')
       ->execute()
       ->fetchAssoc();
 
     return isset($query['entity_id']) ? $query['entity_id'] : FALSE;
 
+  }
+
+  /**
+   * Returns the profile Id
+   * @param  [type] $entity [description]
+   * @return [type]         [description]
+   */
+  public static function getProfileIdByEntity($entity) {
+    $id = $entity->getIdentifier();
+    $entityType = $entity->type();
+    $bundleType = $entity->getBundle();
+
+    $query = db_select("capx_profiles", 'capx')
+      ->fields('capx', array('profile_id'))
+      ->condition('entity_type', $entityType)
+      ->condition('bundle_type', $bundleType)
+      ->condition('entity_id', $id)
+      ->orderBy('id', 'DESC')
+      ->execute()
+      ->fetchAssoc();
+
+    return isset($query['profile_id']) ? $query['profile_id'] : FALSE;
   }
 
   /**
@@ -92,6 +115,26 @@ class CAPx {
     if (!$yes) {
       watchdog('CAPx', 'Could not insert record for capx_profiles on profile id: ' . $profileId, array(), WATCHDOG_ERROR);
     }
+  }
+
+  /**
+   * [insertNewProfileRecord description]
+   * @param  [type] $entity must be wrapped in entity_metadata_wrapper
+   * @return [type]         [description]
+   */
+  public static function deleteProfileRecord($entity) {
+
+    // BEAN is returning its delta when using this.
+    //$id = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
+    db_delete('capx_profiles')
+      ->condition('entity_type', $entityType)
+      ->condition('entity_id', $id)
+      ->execute();
   }
 
 }

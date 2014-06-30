@@ -8,6 +8,7 @@
 // Make sure this is loaded.
 require_once "includes/autoloader.php";
 require_once "includes/vendor/autoload.php";
+require_once "stanford_capx.entity.hooks.inc";
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
@@ -71,18 +72,37 @@ function stanford_capx_admin_config() {
 
   $mapper_config = array();
   $mapper_config['entityType']  = 'node';
-  $mapper_config['bundleType']  = 'stanford_person';
+  $mapper_config['bundleType']  = 'faux';
   $mapper_config['fields']      = array();
   $mapper_config['properties']  = array();
 
   // Patch the fields together
-  $mapper_config['fields']['body']                            = '$.bio.html';
-  $mapper_config['fields']['field_s_person_email']            = '$.alternateContact.email';
-  $mapper_config['fields']['field_s_person_phone_display']    = '$.alternateContact.phoneNumbers[0]';
-  $mapper_config['fields']['field_s_person_faculty_title']    = '$.education.*.degree';
-  $mapper_config['fields']['field_s_person_first_name']       = '$.names.legal.firstName';
-  $mapper_config['fields']['field_s_person_last_name']        = '$.names.legal.lastName';
-  $mapper_config['fields']['field_s_person_profile_picture']  = '$.profilePhotos.bigger';
+  $mapper_config['fields']['body']                          = '$.bio.html';
+  $mapper_config['fields']['field_faux_bool_one']           = "$.affiliations.capFaculty";
+  $mapper_config['fields']['field_faux_bool_two']           = "$.affiliations.capStaff";
+  // $mapper_config['fields']['field_faux_date_date']          = "";
+  // $mapper_config['fields']['field_faux_date_date_two']      = "";
+  // $mapper_config['fields']['field_faux_date_iso']           = "";
+  // $mapper_config['fields']['field_faux_date_iso_two']       = "";
+  // $mapper_config['fields']['field_faux_date_unix']          = "";
+  // $mapper_config['fields']['field_faux_date_pop']           = "";
+  $mapper_config['fields']['field_faux_decimal']            = "$.presentations.location.latitude";
+  $mapper_config['fields']['field_faux_email']              = "$.primaryContact.email";
+  $mapper_config['fields']['field_faux_file']               = "$.profilePhotos.big";
+  $mapper_config['fields']['field_faux_float']              = "$.presentations.location.latitude";
+  $mapper_config['fields']['field_faux_image']              = "$.profilePhotos.bigger";
+  $mapper_config['fields']['field_faux_integer']            = "$.professionalOrganizations.startYear.text";
+  $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.html",
+                                                                    "url" => "$.profilePhotos.big.url");
+  // $mapper_config['fields']['field_faux_list_float']         = "";
+  $mapper_config['fields']['field_faux_list_int']           = "$.profileId";
+  $mapper_config['fields']['field_faux_list_text']          = "$.shortTitle.label.text";
+  // $mapper_config['fields']['field_faux_long_text']          = "";
+  // $mapper_config['fields']['field_faux_long_text_summary']  = "";
+  // $mapper_config['fields']['field_faux_tax_term']           = "";
+  // $mapper_config['fields']['field_faux_tax_term_select']    = "";
+  // $mapper_config['fields']['field_faux_tax_term_auto']      = "";
+  // $mapper_config['fields']['field_faux_text']               = "";
 
   // Put up the properties
   $mapper_config['properties']['title'] = '$.displayName';
@@ -94,6 +114,27 @@ function stanford_capx_admin_config() {
 
   $importer = new EntityImporter($importer_config, $mapper, $client);
   $importer->execute();
+
+  // BEANS!
+  // ---------------------------------------------------------------------------
+
+  // $mapper_config = array();
+  // $mapper_config['entityType']  = 'bean';
+  // $mapper_config['bundleType']  = 'profile';
+  // $mapper_config['fields']      = array();
+  // $mapper_config['properties']  = array();
+
+  // // Patch the fields together
+  // $mapper_config['fields']['field_bio'] = '$.bio.html';
+
+  // // Put up the properties
+  // $mapper_config['properties']['title'] = '$.displayName';
+  // $mapper_config['properties']['label'] = '$.displayName';
+
+
+  // $mapper = new EntityMapper($mapper_config);
+  // $importer = new EntityImporter($importer_config, $mapper, $client);
+  // $importer->execute();
 
   return $output;
 }
