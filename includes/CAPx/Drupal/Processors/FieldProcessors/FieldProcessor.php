@@ -56,16 +56,16 @@ class FieldProcessor extends FieldProcessorAbstract {
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
 
-    // @todo:
-    // Allow others to hook in here with their own definitions. Do it by
-    // field name.
+    // @todo: Allow others to hook in here with their own definitions. Do it by field name.
 
     switch ($type) {
 
-      case "datetime":
       case "date":
-      case "datestamp":
         return new DateFieldProcessor($entity, $fieldName, $type);
+      case "datetime":
+        return new DatetimeFieldProcessor($entity, $fieldName, $type);
+      case "datestamp":
+        return new DatestampFieldProcessor($entity, $fieldName, $type);
 
       case "email":
         return new EmailFieldProcessor($entity, $fieldName);
@@ -120,21 +120,11 @@ class FieldProcessor extends FieldProcessorAbstract {
 
     switch ($type) {
 
-      // Special case for when field has ->value[0]...
-      case "text_textarea":
-      case 'text_textarea_with_summary':
-        return new TextAreaWidgetProcessor($entity, $fieldName);
-        break;
-
       // Downloads and saves a file
       case "image_file":
       case "image_image":
         return new ImageFieldWidgetProcessor($entity, $fieldName);
         break;
-
-      // Default to a generic processor.
-      case "text_textfield":
-      case "email_textfield":
 
       default:
         return $this;

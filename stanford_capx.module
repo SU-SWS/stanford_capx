@@ -68,6 +68,7 @@ function stanford_capx_admin_config() {
 
   $importer_config = array();
   $importer_config['type']    = "uids";
+  // @todo: Currently ptchen doesn't return any data. Need to report this somehow.
   $importer_config['values']  = array('sheamck','swberg','jbickar','cjwest','ptchen');
 
   $mapper_config = array();
@@ -77,32 +78,41 @@ function stanford_capx_admin_config() {
   $mapper_config['properties']  = array();
 
   // Patch the fields together
+
+  // This setting is exactly the same as the commented out line below.
   $mapper_config['fields']['body']                          = '$.bio.html';
+  // $mapper_config['fields']['body']                          = array('value' => '$.bio.html');
+
   $mapper_config['fields']['field_faux_bool_one']           = "$.affiliations.capFaculty";
   $mapper_config['fields']['field_faux_bool_two']           = "$.affiliations.capStaff";
-  // $mapper_config['fields']['field_faux_date_date']          = "";
-  // $mapper_config['fields']['field_faux_date_date_two']      = "";
-  // $mapper_config['fields']['field_faux_date_iso']           = "";
-  // $mapper_config['fields']['field_faux_date_iso_two']       = "";
-  // $mapper_config['fields']['field_faux_date_unix']          = "";
-  // $mapper_config['fields']['field_faux_date_pop']           = "";
+
+  $mapper_config['fields']['field_faux_date_date']          = "$.lastModified";
+  $mapper_config['fields']['field_faux_date_date_two']      = "$.lastModified";
+  $mapper_config['fields']['field_faux_date_iso']           = "$.lastModified";
+  $mapper_config['fields']['field_faux_date_iso_two']       = "$.lastModified";
+  $mapper_config['fields']['field_faux_date_unix']          = "$.lastModified";
+  $mapper_config['fields']['field_faux_date_pop']           = "$.lastModified";
+
   $mapper_config['fields']['field_faux_decimal']            = "$.presentations.location.latitude";
   $mapper_config['fields']['field_faux_email']              = "$.primaryContact.email";
   $mapper_config['fields']['field_faux_file']               = "$.profilePhotos.big";
   $mapper_config['fields']['field_faux_float']              = "$.presentations.location.latitude";
   $mapper_config['fields']['field_faux_image']              = "$.profilePhotos.bigger";
   $mapper_config['fields']['field_faux_integer']            = "$.professionalOrganizations.startYear.text";
+
+  // Example of how to handle a field with multiple values
   $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.html",
-                                                                    "url" => "$.profilePhotos.big.url");
-  // $mapper_config['fields']['field_faux_list_float']         = "";
+                                                                    "url"   => "$.profilePhotos.big.url");
+  $mapper_config['fields']['field_faux_list_float']         = "$.universityId";
   $mapper_config['fields']['field_faux_list_int']           = "$.profileId";
   $mapper_config['fields']['field_faux_list_text']          = "$.shortTitle.label.text";
-  // $mapper_config['fields']['field_faux_long_text']          = "";
-  // $mapper_config['fields']['field_faux_long_text_summary']  = "";
+  $mapper_config['fields']['field_faux_long_text']          = "$.currentRoleAtStanford";
+  $mapper_config['fields']['field_faux_long_text_summary']  = array('value' => '$.currentRoleAtStanford',
+                                                                    'summary' => '$.bio.html');
   // $mapper_config['fields']['field_faux_tax_term']           = "";
   // $mapper_config['fields']['field_faux_tax_term_select']    = "";
   // $mapper_config['fields']['field_faux_tax_term_auto']      = "";
-  // $mapper_config['fields']['field_faux_text']               = "";
+  $mapper_config['fields']['field_faux_text']               = "$.shortTitle.label.text";
 
   // Put up the properties
   $mapper_config['properties']['title'] = '$.displayName';

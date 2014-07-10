@@ -17,8 +17,10 @@ class EntityMapper extends MapperAbstract {
    */
   public function execute($entity, $data) {
 
+    // Store this for later.
     $this->setEntity($entity);
 
+    // Settings.
     $config = $this->getConfig();
     $type = $entity->type();
     $bundle = $entity->getBundle();
