@@ -60,7 +60,9 @@ function stanford_capx_admin_config() {
 
   // $client = new HTTPClient();
   // $response = $client->api('auth')->authenticate('xxx', 'xxx');
-  // $token = $response->getAuthApiToken();
+  // if ($response) {
+  //   $token = $response->getAuthApiToken();
+  // }
 
   // return $token;
 
@@ -101,7 +103,7 @@ function stanford_capx_admin_config() {
   $mapper_config['fields']['field_faux_integer']            = "$.professionalOrganizations.startYear.text";
 
   // Example of how to handle a field with multiple values
-  $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.html",
+  $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.text",
                                                                     "url"   => "$.profilePhotos.big.url");
   $mapper_config['fields']['field_faux_list_float']         = "$.universityId";
   $mapper_config['fields']['field_faux_list_int']           = "$.profileId";
