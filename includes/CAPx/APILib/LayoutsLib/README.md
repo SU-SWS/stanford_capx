@@ -7,7 +7,7 @@ are included.
 
 Examples:
 
-  $client = new HTTPClient();
-  $staff = $client->api('layouts')->staff();
-  $faculty = $client->api('layouts')->faculty();
-  $other = $client->api('layouts')->getType('other');
+    $client = new HTTPClient();
+    $staff = $client->api('layouts')->staff();
+    $faculty = $client->api('layouts')->faculty();
+    $other = $client->api('layouts')->getType('other');

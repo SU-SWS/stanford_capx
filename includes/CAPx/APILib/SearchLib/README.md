@@ -6,8 +6,8 @@ with searching for profiles by name.
 
 EXAMPLES:
 
-  $client = new HTTPClient();
-  $autocomplete = $client->api('search')->autocomplete($string);
+    $client = new HTTPClient();
+    $autocomplete = $client->api('search')->autocomplete($string);
 
-  $client = new HTTPClient();
-  $autocomplete = $client->api('search')->keyword($string);
+    $client = new HTTPClient();
+    $autocomplete = $client->api('search')->keyword($string);

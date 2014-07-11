@@ -16,46 +16,51 @@ register this library with PHP as it has not been add to composer as of yet.
 Create a new file titled autoload.php and place it directly outside of the CAPx
 library. In the autoload.php file place the example function below.
 
-  eg:
-  /my/path/autoload.php
-  /my/path/CAPx
+    eg:
+      /my/path/autoload.php
+      /my/path/CAPx
 
 
 Example autoload function:
 
-  define('CAPxPATH', realpath(dirname(__FILE__)));
-  function capx_autoloader($class) {
-      $filename = CAPxPATH . '/' . str_replace('\\', '/', $class) . '.php';
-      if (file_exists($filename)) {
-        include_once($filename);
-      }
-  }
-  spl_autoload_register('capx_autoloader');
+    define('CAPxPATH', realpath(dirname(__FILE__)));
+    function capx_autoloader($class) {
+        $filename = CAPxPATH . '/' . str_replace('\\', '/', $class) . '.php';
+        if (file_exists($filename)) {
+          include_once($filename);
+        }
+    }
+    spl_autoload_register('capx_autoloader');
 
 
 ## Usage
 
-  require_once 'autoload.php' // see Installation section.
-  use CAPx\APILib\HTTPClient;
+    require_once 'autoload.php'; // see Installation section.
+    use CAPx\APILib\HTTPClient;
 
-  $client = new HTTPClient();
+    $client = new HTTPClient();
 
-  $auth = $client->api('auth');
-  $auth->authenticate('username', 'password');
-  $token = $auth->getAuthToken();
-  $client->setAPIToken($token);
+    $auth = $client->api('auth');
+    $auth->authenticate('username', 'password');
+    $token = $auth->getAuthToken();
+    $client->setAPIToken($token);
 
-  $schema = $client->api('schema')->profile();
+    $schema = $client->api('schema')->profile();
 
 
 
 ## Documentation
 
 [Authentication](AuthLib/README.md)
+
 [Layouts](LayoutsLib/README.md)
+
 [Organizations](OrgLib/README.md)
+
 [Profiles](ProfileLib/README.md)
+
 [Schema](SchemaLib/README.md)
+
 [Search](SearchLib/README.md)
 
 

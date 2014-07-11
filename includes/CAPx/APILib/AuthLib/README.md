@@ -10,12 +10,12 @@
 
  EXAMPLE:
 
-  $client = new HTTPClient();
-  $response = $client->api('auth')->authenticate('xxx', 'xxx');
-  $token = $response->getAuthApiToken();
+    $client = new HTTPClient();
+    $response = $client->api('auth')->authenticate('xxx', 'xxx');
+    $token = $response->getAuthApiToken();
 
 For debugging you can get the last response via getLastResponse():
 
-  $client = new HTTPClient();
-  $response = $client->api('auth')->authenticate('xxx', 'xxx');
-  $raw = $response->getLastResponse();
+    $client = new HTTPClient();
+    $response = $client->api('auth')->authenticate('xxx', 'xxx');
+    $raw = $response->getLastResponse();
