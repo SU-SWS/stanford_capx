@@ -118,7 +118,7 @@ abstract class MapperAbstract implements MapperInterface {
       return $this->config[$name];
     }
     else {
-      throw new Exception("No config setting by that name");
+      throw new \Exception("No config setting by that name: " . $name);
     }
   }
 

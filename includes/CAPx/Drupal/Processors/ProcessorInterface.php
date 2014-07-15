@@ -11,10 +11,10 @@ interface ProcessorInterface {
 
   /**
    * [__construct description]
-   * @param EntityMapper $mapper  [description]
+   * @param $mapper  [description]
    * @param Array  $capData [description]
    */
-  public function __construct(EntityMapper $mapper, Array $capData);
+  public function __construct($mapper, $capData);
 
   /**
    * [execute description]

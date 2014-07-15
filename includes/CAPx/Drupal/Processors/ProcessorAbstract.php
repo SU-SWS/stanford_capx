@@ -14,10 +14,10 @@ abstract class ProcessorAbstract implements ProcessorInterface {
 
   /**
    * [__construct description]
-   * @param EntityMapper $mapper  [description]
+   * @param $mapper  [description]
    * @param Array  $capData [description]
    */
-  public function __construct(EntityMapper $mapper, Array $data) {
+  public function __construct($mapper, $data) {
     $this->setMapper($mapper);
     $this->setData($data);
   }
@@ -54,7 +54,7 @@ abstract class ProcessorAbstract implements ProcessorInterface {
    * [setMapper description]
    * @param [type] $map [description]
    */
-  public function setMapper(EntityMapper $map) {
+  public function setMapper($map) {
     $this->mapper = $map;
   }
 

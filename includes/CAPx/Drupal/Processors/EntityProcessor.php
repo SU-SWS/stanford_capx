@@ -69,6 +69,8 @@ class EntityProcessor extends ProcessorAbstract {
 
     // Create an empty entity
     $entity = entity_create($entityType, $properties);
+
+    // Wrap it up baby!
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
     $entity->save();

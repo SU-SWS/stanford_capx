@@ -19,9 +19,7 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
     $fieldName = $this->getFieldName();
     $fieldInfo = field_info_field($fieldName);
     $field = $entity->{$fieldName};
-
-    $keys = array_keys($fieldInfo['columns']);
-    $key = $keys[0];
+    $vocabulary = taxonomy_vocabulary_machine_name_load($fieldInfo['settings']['allowed_values'][0]['vocabulary']);
 
     // No need for anything fancy when there is nothing to parse :)
     if (count($data) == 1 && empty($data[0])) {
@@ -40,13 +38,13 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
     }
 
     // Handle two forms of input.
-    // 2. An array of key => values where the key is the tag name and value is a boolean
     // 1. A string list of values separated by a comma
+    // 2. An array of key => values where the key is the tag name and value is a boolean
 
     $save_data = array();
-    $vocabulary = taxonomy_vocabulary_machine_name_load($fieldInfo['settings']['allowed_values'][0]['vocabulary']);
 
-    // 2. Handle a string of comma separated values
+    // 1. Handle a string of comma separated values
+    // Re package them into an array so that they match the format for step #2
     foreach ($data as $i => $v) {
       if (is_string($v['tid'])) {
         $opts = explode(",", $v['tid']);
@@ -56,7 +54,7 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
       }
     }
 
-    // 1. Handle arrays of name => bool
+    // 2. Handle arrays of name => bool
     foreach ($data as $index_key => $value) {
       if (is_array($value['tid'])) {
 
@@ -69,17 +67,16 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
 
             // If we find a term add the tid to the list
             if (isset($term->tid)) {
-              $save_data[]['tid'] = $term->tid;
+              $save_data[] = $term;
             }
             else {
-              // By default we need to save it.
+              // Create and save a new term
               $term = new \stdClass();
-              $vid = 3;
               $term->name = $termName;
               $term->description = '';
               $term->vid = $vocabulary->vid;
               taxonomy_term_save($term);
-              $save_data[]['tid'] = $term->tid;
+              $save_data[] = $term;
             }
 
           }
@@ -89,7 +86,7 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
 
     // Only want the first value for one card field
     if ($fieldInfo['cardinality'] == "1") {
-      $field->set($save_data[0]['tid']);
+      $field->set($save_data[0]->tid);
     }
     else {
       // For everything else give it all.

@@ -6,6 +6,8 @@
 
 namespace CAPx\Drupal\Mapper;
 use CAPx\Drupal\Processors\FieldProcessors\FieldProcessor;
+use CAPx\Drupal\Processors\PropertyProcessors\PropertyProcessor;
+use CAPx\Drupal\Processors\FieldCollectionProcessor;
 
 class EntityMapper extends MapperAbstract {
 
@@ -21,22 +23,26 @@ class EntityMapper extends MapperAbstract {
     $this->setEntity($entity);
 
     // Settings.
-    $config = $this->getConfig();
-    $type = $entity->type();
-    $bundle = $entity->getBundle();
+    // $config = $this->getConfig();
+    // $type = $entity->type();
+    // $bundle = $entity->getBundle();
 
-    $prop_info = entity_get_property_info($type);
-    $fields = $prop_info['bundles'][$bundle]['properties'];
-    $properties = $prop_info['properties'];
+    // $propInfo = entity_get_property_info($type);
+    // $fields = $propInfo['bundles'][$bundle]['properties'];
+    // $properties = $propInfo['properties'];
 
     // body is placed in both. It should be treated as a field.
-    if (isset($properties['body'])) {
-      unset($properties['body']);
-    }
+    // if (isset($properties['body'])) {
+    //   unset($properties['body']);
+    // }
 
     // Mappy map.
-    $this->mapFields($fields, $data);
-    $this->mapProperties($properties, $data);
+    $this->mapFields($data);
+    $this->mapProperties($data);
+
+    // Field Collections are special. Special means more code. They get their
+    // own mapProcess even though they are sort of a field.
+    $this->mapFieldCollections($data);
 
     return $entity;
   }
@@ -47,38 +53,39 @@ class EntityMapper extends MapperAbstract {
    * @param  [type] $data   [description]
    * @return [type]         [description]
    */
-  public function mapFields($fields, $data) {
+  public function mapFields($data) {
 
     $config = $this->getConfig();
     $entity = $this->getEntity();
 
     // Loop through each field and run a field processor on it.
-    foreach ($config['fields'] as $field_name => $remote_data_paths) {
+    foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
       $info = array();
 
       // Allow just one path as a string
-      if (!is_array($remote_data_paths)) {
-        $remote_data_paths = array($remote_data_paths);
+      if (!is_array($remoteDataPaths)) {
+        $remoteDataPaths = array($remoteDataPaths);
       }
 
       // Loop through each of the data paths.
-      foreach ($remote_data_paths as $key => $data_path) {
+      foreach ($remoteDataPaths as $key => $dataPath) {
         try {
-          $info[$key] = $this->getRemoteDataByJsonPath($data, $data_path);
+          $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
         } catch(\Exception $e) {
           // ... silently continue. Please dont shoot me.
+          // @todo: Add debugging logs/help here.
           continue;
         }
       }
 
-      $field_info_instance = field_info_instance($entity->type(), $field_name, $entity->getBundle());
-      $field_info_field = field_info_field($field_name);
+      $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
+      $fieldInfoField = field_info_field($fieldName);
 
-      $widget = $field_info_instance['widget']['type'];
-      $field = $field_info_field['type'];
+      $widget = $fieldInfoInstance['widget']['type'];
+      $field = $fieldInfoField['type'];
 
-      $field_processor = new FieldProcessor($entity, $field_name);
-      $field_processor->field($field)->widget($widget)->put($info);
+      $fieldProcessor = new FieldProcessor($entity, $fieldName);
+      $fieldProcessor->field($field)->widget($widget)->put($info);
 
     }
 
@@ -92,21 +99,61 @@ class EntityMapper extends MapperAbstract {
    * @param  [type] $data       [description]
    * @return [type]             [description]
    */
-  public function mapProperties($properties, $data) {
+  public function mapProperties($data) {
 
     $config = $this->getConfig();
     $entity = $this->getEntity();
 
         // Loop through each property and run a property processor on it.
-    foreach ($config['properties'] as $property_name => $remote_data_path) {
+    foreach ($config['properties'] as $propertyName => $remoteDataPath) {
       try {
-        $info = $this->getRemoteDataByJsonPath($data, $remote_data_path);
+        $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       } catch(\Exception $e) {
         // ... silently continue. Please dont shoot me.
         continue;
       }
-      $property_processor = new \CAPx\Drupal\Processors\PropertyProcessors\PropertyProcessor($entity, $property_name);
-      $property_processor->put($info);
+      $propertyProcessor = new PropertyProcessor($entity, $propertyName);
+      $propertyProcessor->put($info);
+    }
+
+    $this->setEntity($entity);
+  }
+
+  /**
+   * [mapFieldCollections description]
+   * @param  [type] $data [description]
+   * @return [type]       [description]
+   */
+  public function mapFieldCollections($data) {
+
+    try {
+      $collections = $this->getConfigSetting('fieldCollections');
+    }
+    catch(\Exception $e) {
+      // No collections. Just return.
+      return;
+    }
+
+    $entity = $this->getEntity();
+    // $collectionEntities = array();
+
+    foreach ($collections as $fieldName => $collectionMapper) {
+
+      // Validate that the field exists.
+      if (!isset($entity->{$fieldName})) {
+        watchdog('stanford_capx', 'No field collection field on this entity with name: ' . $fieldName, WATCHDOG_NOTICE);
+        continue;
+      }
+
+      // If field exists we will need to clear out the old values.
+      $entity->{$fieldName}->set(null);
+
+      // Create a new processor as we need to create the field collection item.
+      $collectionProcessor = new FieldCollectionProcessor($collectionMapper, $data);
+      $collectionProcessor->setParentEntity($entity);
+      $collectionProcessor->execute();
+      // $collectionEntities[] = $collectionProcessor->getFieldCollectionEntity();
+
     }
 
     $this->setEntity($entity);
