@@ -5,6 +5,8 @@
  */
 
 namespace CAPx\Drupal\Util;
+use CAPx\APILib\HTTPClient;
+use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class CAPx {
 
@@ -135,6 +137,36 @@ class CAPx {
       ->condition('entity_type', $entityType)
       ->condition('entity_id', $id)
       ->execute();
+  }
+
+  /**
+   * Tests a token against the API for validity
+   * @param  [type] $token [description]
+   * @return object        $object->value
+   *                       $obj
+   */
+  public static function testConnectionToken($token) {
+
+    $client = new HTTPClient();
+    $client->setApiToken($token);
+
+    try {
+      $client->api('search')->keyword('test');
+    }
+    catch(ClientErrorResponseException $e) {
+      return (object) array('value' => FALSE, 'message' => $e->getMessage());
+    }
+
+    $response = $client->getLastResponse();
+    $code = $response->getStatusCode();
+
+    if ($code == 200) {
+      return (object) array('value' => TRUE, 'message' => 'Server responded with 200');
+    }
+    else {
+      return (object) array('value' => FALSE, 'message' => 'Server responded with error code' . $code);
+    }
+
   }
 
 }

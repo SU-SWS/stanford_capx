@@ -143,6 +143,4 @@ class AuthLib extends APILib {
 
   }
 
-
-
 }

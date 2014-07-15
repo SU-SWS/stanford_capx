@@ -13,6 +13,7 @@ require_once "stanford_capx.entity.hooks.inc";
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
 use CAPx\Drupal\Mapper\EntityMapper;
+use CAPx\Drupal\Util\CAPx;
 
 /**
  * Implements hook_help().
@@ -58,15 +59,23 @@ function stanford_capx_menu() {
 function stanford_capx_admin_config() {
   $output = "";
 
-  // $client = new HTTPClient();
-  // $response = $client->api('auth')->authenticate('xxx', 'xxx');
-  // if ($response) {
-  //   $token = $response->getAuthApiToken();
-  // }
+  $username = variable_get('stanford_capx_username', '');
+  $password = variable_get('stanford_capx_password', '');
+  $token    = variable_get('stanford_capx_token', '');
 
-  // return $token;
+  $connection = CAPx::testConnectionToken($token);
 
-  $token = '';
+  if (!$connection->value) {
+    $client = new HTTPClient();
+    $response = $client->api('auth')->authenticate($username, $password);
+    if ($response) {
+      $token = $response->getAuthApiToken();
+      variable_set('stanford_capx_token', $token);
+    }
+    else {
+      throw new \Exception("Could not authenticate with API server.");
+    }
+  }
 
   $importer_config = array();
   $importer_config['type']    = "uids";
@@ -111,9 +120,11 @@ function stanford_capx_admin_config() {
   $mapper_config['fields']['field_faux_long_text']          = "$.currentRoleAtStanford";
   $mapper_config['fields']['field_faux_long_text_summary']  = array('value' => '$.currentRoleAtStanford',
                                                                     'summary' => '$.bio.html');
-  // $mapper_config['fields']['field_faux_tax_term']           = "";
-  // $mapper_config['fields']['field_faux_tax_term_select']    = "";
+  // Terms
+  $mapper_config['fields']['field_faux_tax_term']           = "$.affiliations";
+  $mapper_config['fields']['field_faux_tax_term_select']    = "$.professionalInterests.text";
   // $mapper_config['fields']['field_faux_tax_term_auto']      = "";
+
   $mapper_config['fields']['field_faux_text']               = "$.shortTitle.label.text";
 
   // Put up the properties
