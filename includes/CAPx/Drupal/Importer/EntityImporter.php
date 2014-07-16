@@ -40,10 +40,10 @@ class EntityImporter implements ImporterInterface {
     $client = $this->getClient();
 
     $data = $client->api('profile')->search($options['type'], $options['values']);
-    CAPx::setData($data);
 
     if(isset($data['values'])) {
       foreach ($data['values'] as $index => $info) {
+        drupal_alter('capx_pre_entity_processor', $info, $mapper);
         $processor = new EntityProcessor($mapper, $info);
         $processor->execute();
       }

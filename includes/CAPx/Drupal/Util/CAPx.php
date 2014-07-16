@@ -10,9 +10,6 @@ use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class CAPx {
 
-  // The last request CAP server request response.
-  public static $data;
-
   /**
    * Returns a fully loaded entity from the DB
    * @param  [type] $profileId [description]
@@ -74,22 +71,6 @@ class CAPx {
       ->fetchAssoc();
 
     return isset($query['profile_id']) ? $query['profile_id'] : FALSE;
-  }
-
-  /**
-   * [setData description]
-   * @param [type] $data [description]
-   */
-  public static function setData($data) {
-    CAPx::$data = $data;
-  }
-
-  /**
-   * [getData description]
-   * @return [type] [description]
-   */
-  public static function getData() {
-    return CAPx::$data;
   }
 
   /**
@@ -167,6 +148,33 @@ class CAPx {
       return (object) array('value' => FALSE, 'message' => 'Server responded with error code' . $code);
     }
 
+  }
+
+  /**
+   * Returns an authenticated HTTP Client for use.
+   * @return HTTPClient an authenticated HTTP client ready to use.
+   */
+  public static function getAuthenticatedHTTPClient() {
+    $username = variable_get('stanford_capx_username', '');
+    $password = variable_get('stanford_capx_password', '');
+    $token    = variable_get('stanford_capx_token', '');
+
+    $connection = CAPx::testConnectionToken($token);
+
+    if (!$connection->value) {
+      $client = new HTTPClient();
+      $response = $client->api('auth')->authenticate($username, $password);
+      if ($response) {
+        $token = $response->getAuthApiToken();
+        variable_set('stanford_capx_token', $token);
+      }
+      else {
+        throw new \Exception("Could not authenticate with API server.");
+      }
+    }
+
+    $client->setApiToken($token);
+    return $client;
   }
 
 }

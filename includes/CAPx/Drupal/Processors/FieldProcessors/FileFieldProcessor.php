@@ -47,7 +47,9 @@ class FileFieldProcessor extends FieldTypeProcessor {
    */
   public function process($data) {
 
-    // Request the file
+    drupal_alter('capx_pre_fetch_remote_file', $data);
+
+    // Request the file.
     $response = $this->fetchRemoteFile($data);
 
     // Save the file.
@@ -57,6 +59,8 @@ class FileFieldProcessor extends FieldTypeProcessor {
     if (!$file) {
       throw new \Exception("Could not save file: " . $data['url']);
     }
+
+    drupal_alter('capx_post_save_remote_file', $file, $filename);
 
     // All went well go and save it.
     $entity = $this->getEntity();
@@ -119,7 +123,6 @@ class FileFieldProcessor extends FieldTypeProcessor {
        case 'image/bmp': return '.bmp';
        case 'image/gif': return '.gif';
        case 'image/jpeg': return '.jpg';
-       case 'image/pipeg': return '.jfif';
        case 'image/tiff': return '.tif';
        case 'image/x-icon': return '.ico';
        case 'image/x-rgb': return '.rgb';

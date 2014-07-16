@@ -62,6 +62,8 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
       return;
     }
 
+    drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
+
     // Only want the first value for one card field
     if ($fieldInfo['cardinality'] == "1") {
       $field->set($data[0][$key]);

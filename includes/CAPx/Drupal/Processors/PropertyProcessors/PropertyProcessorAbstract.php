@@ -34,6 +34,9 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
     $propertyName = $this->getPropertyName();
 
     $data = is_array($data) ? array_shift($data) : $data;
+
+    drupal_alter('capx_pre_property_set', $entity, $data, $propertyName);
+
     $entity->{$propertyName}->set($data);
   }
 

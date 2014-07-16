@@ -44,8 +44,14 @@ class EntityProcessor extends ProcessorAbstract {
    * @return [type]         [description]
    */
   public function updateEntity($entity, $data, $mapper) {
+
+    drupal_alter('capx_pre_update_entity', $entity, $data, $mapper);
+
     $entity = $mapper->execute($entity, $data);
     $entity->save();
+
+    drupal_alter('capx_post_update_entity', $entity);
+
     return $entity;
   }
 
@@ -67,6 +73,8 @@ class EntityProcessor extends ProcessorAbstract {
       'promote' => 0, // Fogetaboutit.
     );
 
+    drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
+
     // Create an empty entity
     $entity = entity_create($entityType, $properties);
 
@@ -74,6 +82,8 @@ class EntityProcessor extends ProcessorAbstract {
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
     $entity->save();
+
+    drupal_alter('capx_post_entity_create', $entity);
 
     // Write a new record
     CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag']);

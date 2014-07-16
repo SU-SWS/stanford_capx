@@ -56,55 +56,73 @@ class FieldProcessor extends FieldProcessorAbstract {
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
 
-    // @todo: Allow others to hook in here with their own definitions. Do it by field name.
-
     switch ($type) {
 
       case "date":
-        return new DateFieldProcessor($entity, $fieldName, $type);
+        $processor = new DateFieldProcessor($entity, $fieldName, $type);
+        break;
+
       case "datetime":
-        return new DatetimeFieldProcessor($entity, $fieldName, $type);
+        $processor = new DatetimeFieldProcessor($entity, $fieldName, $type);
+        break;
+
       case "datestamp":
-        return new DatestampFieldProcessor($entity, $fieldName, $type);
+        $processor = new DatestampFieldProcessor($entity, $fieldName, $type);
+        break;
 
       case "email":
-        return new EmailFieldProcessor($entity, $fieldName);
+        $processor = new EmailFieldProcessor($entity, $fieldName);
+        break;
 
       case "field_collection":
-        return new FieldCollectionProcessor($entity, $fieldName);
+        $processor = new FieldCollectionProcessor($entity, $fieldName);
+        break;
 
       case "file":
-        return new FileFieldProcessor($entity, $fieldName, $type);
+        $processor = new FileFieldProcessor($entity, $fieldName, $type);
+        break;
+
       case "image":
-        return new ImageFieldProcessor($entity, $fieldName, $type);
+        $processor = new ImageFieldProcessor($entity, $fieldName, $type);
+        break;
 
       case "link_field":
-        return new LinkFieldProcessor($entity, $fieldName);
+        $processor = new LinkFieldProcessor($entity, $fieldName);
+        break;
 
       case "list_integer":
       case "list_float":
       case "list_text":
       case "list_boolean":
-        return new ListFieldProcessor($entity, $fieldName, $type);
+        $processor = new ListFieldProcessor($entity, $fieldName, $type);
+        break;
 
       case "number_integer":
       case "number_decimal":
       case "number_float":
-        return new NumberFieldProcessor($entity, $fieldName, $type);
+        $processor = new NumberFieldProcessor($entity, $fieldName, $type);
+        break;
 
       case "taxonomy_term_reference":
-        return new TaxonomyTermFieldProcessor($entity, $fieldName);
+        $processor = new TaxonomyTermFieldProcessor($entity, $fieldName);
+        break;
 
       case "text":
-        return new TextFieldFieldProcessor($entity, $fieldName);
+        $processor = new TextFieldFieldProcessor($entity, $fieldName);
+        break;
 
       case "text_long":
       case "text_with_summary":
-        return new TextAreaFieldProcessor($entity, $fieldName, $type);
+        $processor = new TextAreaFieldProcessor($entity, $fieldName, $type);
+        break;
 
       default:
-        return $this;
+        $processor = $this;
     }
+
+    drupal_alter('capx_field_processor_field', $processor, $type, $fieldName, $entity);
+
+    return $processor;
 
   }
 
@@ -123,14 +141,16 @@ class FieldProcessor extends FieldProcessorAbstract {
       // Downloads and saves a file
       case "image_file":
       case "image_image":
-        return new ImageFieldWidgetProcessor($entity, $fieldName);
+        $processor = new ImageFieldWidgetProcessor($entity, $fieldName);
         break;
 
       default:
-        return $this;
-        break;
+        $processor = $this;
     }
 
+    drupal_alter("capx_field_processor_widget", $processor, $type, $fieldName, $entity);
+
+    return $processor;
   }
 
 }

@@ -12,6 +12,7 @@
  * $faculty = $client->api('layouts')->faculty();
  * $other = $client->api('layouts')->getType('other');
  *
+ * Types: faculty, physician, postdoc, student, staff, invitee
  */
 
 namespace CAPx\APILib\LayoutsLib;
@@ -33,6 +34,38 @@ class LayoutsLib extends APILib {
    */
   public function staff() {
     return $this->getType('staff');
+  }
+
+  /**
+   * [physician description]
+   * @return [type] [description]
+   */
+  public function physician() {
+    return $this->getType('physician');
+  }
+
+  /**
+   * [postdoc description]
+   * @return [type] [description]
+   */
+  public function postdoc() {
+    return $this->getType('postdoc');
+  }
+
+  /**
+   * [student description]
+   * @return [type] [description]
+   */
+  public function student() {
+    return $this->getType('student');
+  }
+
+  /**
+   * [invitee description]
+   * @return [type] [description]
+   */
+  public function invitee() {
+    return $this->getType('invitee');
   }
 
   /**

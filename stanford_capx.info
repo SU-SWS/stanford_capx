@@ -11,3 +11,4 @@ dependencies[] = date_api
 files[] = includes/autoload.php
 files[] = includes/vendor/autoload.php
 files[] = stanford_capx.entity.hooks.inc
+files[] = stanford_capx.forms.inc

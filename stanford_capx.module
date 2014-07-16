@@ -9,6 +9,7 @@
 require_once "includes/autoloader.php";
 require_once "includes/vendor/autoload.php";
 require_once "stanford_capx.entity.hooks.inc";
+require_once "stanford_capx.forms.inc";
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
@@ -43,12 +44,109 @@ function stanford_capx_permission() {
  */
 function stanford_capx_menu() {
 
+  // Overview page
   $items['admin/config/capx'] = array(
-    'title' => 'Administer CAPx',
+    'title' => 'CAPx',
     'page callback' => 'stanford_capx_admin_config',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Connect page
+  $items['admin/config/capx/connect'] = array(
+    'title' => 'CAPX | Connect',
+    'page callback' => 'stanford_capx_admin_config_connect',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+  );
+
+  // Settings Page
+  $items['admin/config/capx/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'stanford_capx_admin_config_settings',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -9,
+  );
+
+  // Help Page
+  $items['admin/config/capx/help'] = array(
+    'title' => 'Help',
+    'page callback' => 'stanford_capx_admin_config_help',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+  );
+
+  // Mapper pages
+  // ---------------------------------------------------------------------------
+
+  $items['admin/config/capx/mapper'] = array(
+    'title' => 'Mapping',
+    'page callback' => 'stanford_capx_admin_config_mapper',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -5,
+  );
+
+  $items['admin/config/capx/mapper/new'] = array(
+    'title' => 'Create new mapper',
+    'page callback' => 'stanford_capx_admin_config_mapper_new',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/capx/mapper/edit/%machine_name'] = array(
+    'title' => 'Edit mapper',
+    'page callback' => 'stanford_capx_admin_config_mapper_edit',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Importer pages
+  // ---------------------------------------------------------------------------
+
+  $items['admin/config/capx/importer'] = array(
+    'title' => 'Import',
+    'page callback' => 'stanford_capx_admin_config_import',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -4,
+  );
+
+  $items['admin/config/capx/importer/new'] = array(
+    'title' => 'Create new importer',
+    'page callback' => 'stanford_capx_admin_config_import_new',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/capx/importer/edit/%machine_name'] = array(
+    'title' => 'Edit importer',
+    'page callback' => 'stanford_capx_admin_config_import_edit',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Profile pages
+  // ---------------------------------------------------------------------------
+
+  $items['admin/config/capx/profiles'] = array(
+    'title' => 'Profiles',
+    'page callback' => 'stanford_capx_admin_config_profiles',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+  $items['admin/config/capx/debug'] = array(
+    'title' => 'DEBUG CAPx',
+    'page callback' => 'stanford_capx_debug',
     'access arguments' => array('administer capx'),
     'type' => MENU_SUGGESTED_ITEM,
   );
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
   return $items;
 }
@@ -59,24 +157,118 @@ function stanford_capx_menu() {
  */
 function stanford_capx_admin_config() {
   $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
 
-  $username = variable_get('stanford_capx_username', '');
-  $password = variable_get('stanford_capx_password', '');
-  $token    = variable_get('stanford_capx_token', '');
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_connect() {
+  $output = "<h2>" . t('Connect to CAP') . "</h2>";
+  $output .= "<h3>Connection Status Block Goes Here</h3>";
+  $form = drupal_get_form('stanford_capx_forms_connect_form');
+  $output .= drupal_render($form);
+  return $output;
+}
 
-  $connection = CAPx::testConnectionToken($token);
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_settings() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
 
-  if (!$connection->value) {
-    $client = new HTTPClient();
-    $response = $client->api('auth')->authenticate($username, $password);
-    if ($response) {
-      $token = $response->getAuthApiToken();
-      variable_set('stanford_capx_token', $token);
-    }
-    else {
-      throw new \Exception("Could not authenticate with API server.");
-    }
-  }
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_help() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_mapper() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_mapper_new() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_mapper_edit() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_import() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_import_new() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_import_edit() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_admin_config_profiles() {
+  $output = "";
+  $output .= "<p>Please create the functionality for this page</p>";
+  return $output;
+}
+
+/**
+ * [stanford_capx_admin_config description]
+ * @return [type] [description]
+ */
+function stanford_capx_debug() {
+  $output = "";
 
   $importer_config = array();
   $importer_config['type']    = "uids";
@@ -152,10 +344,7 @@ function stanford_capx_admin_config() {
 
 
   $mapper = new EntityMapper($mapper_config);
-
-  $client = new HTTPClient();
-  $client->setApiToken($token);
-
+  $client = CAPx::getAuthenticatedHTTPClient();
   $importer = new EntityImporter($importer_config, $mapper, $client);
   $importer->execute();
 

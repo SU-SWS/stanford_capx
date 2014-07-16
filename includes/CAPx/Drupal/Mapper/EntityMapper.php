@@ -22,24 +22,9 @@ class EntityMapper extends MapperAbstract {
     // Store this for later.
     $this->setEntity($entity);
 
-    // Settings.
-    // $config = $this->getConfig();
-    // $type = $entity->type();
-    // $bundle = $entity->getBundle();
-
-    // $propInfo = entity_get_property_info($type);
-    // $fields = $propInfo['bundles'][$bundle]['properties'];
-    // $properties = $propInfo['properties'];
-
-    // body is placed in both. It should be treated as a field.
-    // if (isset($properties['body'])) {
-    //   unset($properties['body']);
-    // }
-
     // Mappy map.
     $this->mapFields($data);
     $this->mapProperties($data);
-
     // Field Collections are special. Special means more code. They get their
     // own mapProcess even though they are sort of a field.
     $this->mapFieldCollections($data);
@@ -61,6 +46,8 @@ class EntityMapper extends MapperAbstract {
     // Loop through each field and run a field processor on it.
     foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
       $info = array();
+
+      drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
 
       // Allow just one path as a string
       if (!is_array($remoteDataPaths)) {
@@ -86,6 +73,8 @@ class EntityMapper extends MapperAbstract {
 
       $fieldProcessor = new FieldProcessor($entity, $fieldName);
       $fieldProcessor->field($field)->widget($widget)->put($info);
+
+      drupal_alter('capx_post_map_field', $entity, $fieldName);
 
     }
 

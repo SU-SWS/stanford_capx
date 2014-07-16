@@ -27,7 +27,9 @@ class FieldTypeProcessor extends FieldProcessorAbstract {
    * @return [type]            [description]
    */
   public function widget($type) {
-    return $this;
+    $widget = $this;
+    drupal_alter('capx_field_type_processor_widget', $widget, $type);
+    return $widget;
   }
 
 }

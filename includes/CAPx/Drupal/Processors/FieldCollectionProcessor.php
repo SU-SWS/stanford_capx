@@ -16,8 +16,6 @@ class FieldCollectionProcessor extends EntityProcessor {
   // The parent entity
   protected $parentEntity = null;
 
-
-
   /**
    * [newEntity description]
    * @param  [type] $entityType [description]
@@ -48,6 +46,8 @@ class FieldCollectionProcessor extends EntityProcessor {
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
     $entity->save();
+
+    drupal_alter('capx_new_fc', $entity);
 
     // Storage for something that may need it.
     $this->setFieldCollectionEntity($entity);
