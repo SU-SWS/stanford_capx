@@ -36,13 +36,13 @@ class OrgLib extends APILib {
     public function get($vars) {
       // The endpoint. Usually default hard coded value.
       $endpoint = $this->getEndpoint();
-      $options = array();
+      $options = $this->getOptions();
 
       if (!is_array($vars)) {
-        $endpoint .= "/api/cap/v1/orgs/" . $vars;
+        $endpoint .= "/cap/v1/orgs/" . $vars;
       }
       else {
-        $endpoint .= "/api/cap/v1/orgs";
+        $endpoint .= "/cap/v1/orgs";
         $options['query']['orgCodes'] = implode(",", $vars);
       }
 
@@ -56,7 +56,7 @@ class OrgLib extends APILib {
      */
     public function getOrg($orgCode) {
       $endpoint = $this->getEndpoint();
-      $endpoint .= "/api/cap/v1/orgs/" . $orgCode;
+      $endpoint .= "/cap/v1/orgs/" . $orgCode;
 
       return $this->makeRequest($endpoint);
     }
@@ -69,7 +69,7 @@ class OrgLib extends APILib {
      */
     public function getProfiles($orgCode) {
       $endpoint = $this->getEndpoint();
-      $endpoint .= "/api/cap/v1/orgs/" . $orgCode . "/profiles";
+      $endpoint .= "/cap/v1/orgs/" . $orgCode . "/profiles";
 
       return $this->makeRequest($endpoint);
     }

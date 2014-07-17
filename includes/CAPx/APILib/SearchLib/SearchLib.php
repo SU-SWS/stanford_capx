@@ -25,7 +25,8 @@ class SearchLib extends APILib {
    *                           suggestions or false if something went wrong.
    */
   public function autocomplete($string = '') {
-    $endpoint = $this->getEndpoint() . "/api/cap/v1/search/autocomplete";
+    $endpoint = $this->getEndpoint() . "/cap/v1/search/autocomplete";
+    $options = $this->getOptions();
     $options['query']['q'] = $string;
 
     return $this->makeRequest($endpoint, array(), $options);
@@ -39,7 +40,8 @@ class SearchLib extends APILib {
    *                           went wrong.
    */
   public function keyword($string = '') {
-    $endpoint = $this->getEndpoint() . "/api/cap/v1/search/keyword";
+    $endpoint = $this->getEndpoint() . "/cap/v1/search/keyword";
+    $options = $this->getOptions();
     $options['query']['q'] = $string;
 
     return $this->makeRequest($endpoint, array(), $options);

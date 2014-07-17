@@ -37,7 +37,7 @@ class ProfileLib extends APILib {
    */
   public function search($type, $args, $exact = FALSE, $children = FALSE, $order = '') {
 
-    $endpoint = $this->getEndpoint() . "/api/profiles/v1";
+    $endpoint = $this->getEndpoint() . "/profiles/v1";
     $options = $this->getOptions();
 
     switch($type) {
@@ -74,7 +74,7 @@ class ProfileLib extends APILib {
    * @return mixed    An array of profile information or false if none.
    */
   public function get($profileId) {
-    $endpoint = $this->getEndpoint() . "/api/profiles/v1/" . $profileId;
+    $endpoint = $this->getEndpoint() . "/profiles/v1/" . $profileId;
     return $this->makeRequest($endpoint);
   }
 

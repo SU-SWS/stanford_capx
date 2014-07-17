@@ -15,7 +15,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   // CAPx\HTTPClient. Client is an extension of the Guzzle HTTP Client.
   protected $client;
   // Deault Endpoint.
-  protected $endpoint = 'https://cap.stanford.edu/cap-api';
+  protected $endpoint = 'https://api.stanford.edu';
   // Request Options. Used for storing things like the authentication token.
   protected $options = array();
   // The last response object. Good for debugging
@@ -132,20 +132,33 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
     // Build and make the request.
-    $request = $client->get($endpoint, $params, $options);
-    $response = $request->send();
+    try {
 
-    // Store the last response for later use.
-    $this->setLastResponse($response);
+      $request = $client->get($endpoint, $params, $options);
+      $response = $request->send();
+
+      // Store the last response for later use.
+      $this->setLastResponse($response);
+
+    }
+    catch(\Exception $e) {
+      var_dump($e->getMessage());
+      return FALSE;
+    }
+
 
     // Handle only valid response codes.
     $code = $response->getStatusCode();
+
     // @todo: Handle non-valid response codes.
     switch ($code) {
       case '200':
-        $json = $response->json();
-        return $json;
-        break;
+        try {
+          $json = $response->json();
+          return $json;
+        } catch(RuntimeException $e) {
+          return FALSE;
+        }
 
       default:
         return FALSE;

@@ -74,7 +74,7 @@ class LayoutsLib extends APILib {
    * @return mixed false or an array of layout data
    */
   public function getType($type) {
-    $endpoint = $this->getEndpoint() . "/api/cap/v1/layouts/" . $type;
+    $endpoint = $this->getEndpoint() . "/cap/v1/layouts/" . $type;
     return $this->makeRequest($endpoint);
   }
 

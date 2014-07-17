@@ -124,20 +124,28 @@ class CAPx {
    * [testConnection description]
    * @return [type] [description]
    */
-  public static function testConnection($username = null, $password = null) {
+  public static function testConnection($username = null, $password = null, $authpoint = null) {
 
     $return = new \stdClass();
     $return->status = 0;
-    $return->message = t("Connection Failed");
+    $return->message = t("Connection Failed. Invalid Enpoint");
+    $return->code = 0;
 
     $username = is_null($username) ? decrypt(variable_get('stanford_capx_username', '')) : $username;
     $password = is_null($password) ? decrypt(variable_get('stanford_capx_password', '')) : $password;
-    $authpoint  = variable_get('stanford_capx_api_auth_uri', '');
+    $authpoint = is_null($authpoint) ? variable_get('stanford_capx_api_auth_uri', '') : $authpoint;
 
     $client = new HTTPClient();
-    $client->setEndpoint($authpoint);
     $auth = $client->api('auth');
-    $auth->authenticate($username, $password);
+    $auth->setEndpoint($authpoint);
+
+    try {
+      $auth->authenticate($username, $password);
+    }
+    catch(\Exception $e) {
+      return $return;
+    }
+
     $token = $auth->getAuthApiToken();
     $response = $auth->getLastResponse();
     $reasonPhrase = $response->getReasonPhrase();
@@ -148,6 +156,7 @@ class CAPx {
 
     if (!empty($token)) {
       $return->status = 1;
+      $return->token = $token;
     }
 
     return $return;
@@ -160,31 +169,26 @@ class CAPx {
    * @return object        $object->value
    *                       $obj
    */
-  public static function testConnectionToken($token) {
+  public static function testConnectionToken($token, $endpoint = null) {
 
-    $endpoint   = variable_get('stanford_capx_api_base_url', '');
+    $endpoint = is_null($endpoint) ? variable_get('stanford_capx_api_base_url', '') : $endpoint;
 
     $client = new HTTPClient();
     $client->setEndpoint($endpoint);
     $client->setApiToken($token);
 
     try {
-      $client->api('search')->keyword('test');
+      $found = $client->api('search')->keyword('test');
     }
-    catch(ClientErrorResponseException $e) {
+    catch(\Exception $e) {
       return (object) array('value' => FALSE, 'message' => $e->getMessage());
     }
 
-    $response = $client->getLastResponse();
-    $code = $response->getStatusCode();
-
-    if ($code == 200) {
-      return (object) array('value' => TRUE, 'message' => 'Server responded with 200');
-    }
-    else {
-      return (object) array('value' => FALSE, 'message' => 'Server responded with error code' . $code);
+    if ($found) {
+      return (object) array('value' => TRUE, 'message' => t('Connection successful'));
     }
 
+    return (object) array('value' => FALSE, 'message' => t('Connection not successful'));
   }
 
   /**
@@ -202,7 +206,7 @@ class CAPx {
 
     if (!$connection->value) {
       $client = new HTTPClient();
-      $client->setEndpoint($endpoint);
+      $client->setEndpoint($authpoint);
       $response = $client->api('auth')->authenticate($username, $password);
       if ($response) {
         $token = $response->getAuthApiToken();
@@ -214,6 +218,7 @@ class CAPx {
     }
 
     $client->setApiToken($token);
+    $client->setEndpoint($endpoint);
     return $client;
   }
 

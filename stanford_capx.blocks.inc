@@ -51,7 +51,7 @@ function stanford_capx_connection_status_block() {
 
   if ($connection->status == 1) {
     $content .= "<h2>" . t('Connected!') . "</h2>";
-    $content .= "<p>Congratulations, you have successfully connected to the CAP API.</p>";
+    $content .= "<p>Congratulations, you have successfully authenticated with the CAP API.</p>";
   }
   else {
     $content .= "<h2 class=\"error\">" . t('Not Connected') . "</h2>";

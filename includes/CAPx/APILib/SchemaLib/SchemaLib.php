@@ -37,7 +37,7 @@ class SchemaLib extends APILib {
    *                  false if there is an error.
    */
   public function get($type) {
-    $endpoint = $this->getEndpoint() . "/api/cap/v1/schemas/" . $type;
+    $endpoint = $this->getEndpoint() . "/cap/v1/schemas/" . $type;
     return $this->makeRequest($endpoint);
   }
 

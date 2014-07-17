@@ -82,19 +82,37 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
  */
 function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
-  if (!empty($form_state['values']['stanford_capx_username'])
-  && !empty($form_state['values']['stanford_capx_password'])) {
+  $username = !empty($form_state['values']['stanford_capx_password']) ? $form_state['values']['stanford_capx_username'] : decrypt(variable_get('stanford_capx_username', ''));
+  $password = !empty($form_state['values']['stanford_capx_password']) ? $form_state['values']['stanford_capx_pasword'] : decrypt(variable_get('stanford_capx_password', ''));
+  $authpoint = $form_state['values']['stanford_capx_api_auth_uri'];
+  $endpoint = $form_state['values']['stanford_capx_api_base_url'];
 
-    $username = $form_state['values']['stanford_capx_username'];
-    $password = $form_state['values']['stanford_capx_password'];
+  // Test new user credentials!
+  if (!empty($form_state['values']['stanford_capx_password'])) {
 
-    $connection = CAPx::testConnection($username, $password);
+    $connection = CAPx::testConnection($username, $password, $authpoint);
 
     if (!$connection->status) {
       form_set_error('stanford_capx_username', t("Error. Can't connect to Stanford CAP API. Please check your username and password."));
       form_set_error('stanford_capx_password');
     }
 
+  }
+
+  // Test endpoint
+  if (!isset($connection)) {
+    $connection = CAPx::testConnection($username, $password, $authpoint);
+  }
+
+  // No connection token means no auth. Just end here.
+  if (!isset($connection->token)) {
+    return;
+  }
+
+  $endpointTest = CAPx::testConnectionToken($connection->token, $endpoint);
+
+  if (!$endpointTest->value) {
+    form_set_error('stanford_capx_api_base_url', t("Error, could not connect to endpoint"));
   }
 
 }
@@ -109,11 +127,21 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
   drupal_set_message('Configuration options were saved.');
 
-  $username = encrypt($form_state['values']['stanford_capx_username']);
-  $password = encrypt($form_state['values']['stanford_capx_password']);
+  // Username and Pass
+  if (!empty($form_state['values']['stanford_capx_username'])
+  && !empty($form_state['values']['stanford_capx_password'])) {
 
-  variable_set('stanford_capx_username', $username);
-  variable_set('stanford_capx_password', $password);
+    $username = encrypt($form_state['values']['stanford_capx_username']);
+    $password = encrypt($form_state['values']['stanford_capx_password']);
+    variable_set('stanford_capx_username', $username);
+    variable_set('stanford_capx_password', $password);
+
+  }
+
+  // Endpoints
+  variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
+  variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
+
 
 }
 

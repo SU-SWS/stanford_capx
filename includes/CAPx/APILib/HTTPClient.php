@@ -30,7 +30,7 @@ class HTTPClient {
   // Storage for the Guzzle http client object.
   protected $httpClient = null;
   // Default CAP Endpoint url.
-  protected $httpEndpoint = 'https://cap.stanford.edu/cap-api';
+  protected $httpEndpoint = 'https://api.stanford.edu';
   // Auth Token is a very long string that is obtained from the CAP API after
   // successfully authenticating a username and password. See AuthLib.
   protected $httpAuthToken;
@@ -54,15 +54,10 @@ class HTTPClient {
   }
 
   /**
-   * Setter for $httpEndpoint. When this changes we also need to create a new
-   * Guzzle client.
+   * Setter for $httpEndpoint.
    * @param string $end A fully qualified URL without the last slash
    */
   public function setEndpoint($end) {
-    // When the endpoint changes create a new client.
-    $client = new GuzzleClient($end);
-    $this->setHttpClient($client);
-
     $this->httpEndpoint = $end;
   }
 
@@ -78,7 +73,7 @@ class HTTPClient {
     }
 
     // If we do not have a client we need to create one.
-    $client = new GuzzleClient($this->getHttpEndpoint());
+    $client = new GuzzleClient($this->getEndpoint());
     $this->setHttpClient($client);
 
     return $client;
@@ -173,7 +168,8 @@ class HTTPClient {
         throw new \Exception(sprintf('Undefined api instance called: "%s"', $name));
     }
 
-  return $api;
+    $api->setEndpoint($this->getEndpoint());
+    return $api;
   }
 
 }
