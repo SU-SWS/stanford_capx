@@ -17,17 +17,16 @@ use CAPx\Drupal\Util\CAPx;
  */
 function stanford_capx_forms_connect_form($form, &$form_state) {
 
-  $username = decrypt(variable_get('stanford_capx_username', 'nothing'));
+  $username = decrypt(variable_get('stanford_capx_username', ''));
+  $connection = CAPx::testConnection();
 
    $form['auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Authorization'),
+    '#collapsible' => TRUE,
+    '#collapsed' => $connection->status,
   );
-
-  $form['auth']['description_wrapper'] = array(
-    '#type' => 'container',
-  );
-  $form['auth']['description_wrapper']['description'] = array(
+  $form['auth']['description'] = array(
     '#markup' => t('Please enter your authentication information for the CAP API.'),
   );
 
@@ -51,7 +50,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#description' => t('Advanced setting for CAP API and authentication URIs'),
   );
 
-  $form['advanced']['stanford_cap_api_base_url'] = array(
+  $form['advanced']['stanford_capx_api_base_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Endpoint'),
     '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
@@ -59,7 +58,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
-  $form['advanced']['stanford_cap_api_auth_uri'] = array(
+  $form['advanced']['stanford_capx_api_auth_uri'] = array(
     '#type' => 'textfield',
     '#title' => t('Authentication URI'),
     '#description' => t('CAP API authentication URI.'),
@@ -91,7 +90,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
     $connection = CAPx::testConnection($username, $password);
 
-    if (!$connection) {
+    if (!$connection->status) {
       form_set_error('stanford_capx_username', t("Error. Can't connect to Stanford CAP API. Please check your username and password."));
       form_set_error('stanford_capx_password');
     }

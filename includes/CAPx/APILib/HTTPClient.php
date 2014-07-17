@@ -49,7 +49,7 @@ class HTTPClient {
    * Getter for $httpEndpoint.
    * @return string A fully qualified url without the last slash.
    */
-  public function getHttpEndpoint() {
+  public function getEndpoint() {
     return $this->httpEndpoint;
   }
 
@@ -58,7 +58,7 @@ class HTTPClient {
    * Guzzle client.
    * @param string $end A fully qualified URL without the last slash
    */
-  public function setHttpEndpoint($end) {
+  public function setEndpoint($end) {
     // When the endpoint changes create a new client.
     $client = new GuzzleClient($end);
     $this->setHttpClient($client);

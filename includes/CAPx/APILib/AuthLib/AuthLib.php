@@ -135,7 +135,7 @@ class AuthLib extends APILib {
         break;
 
       default:
-        return FALSE;
+        return $this;
         break;
     }
 

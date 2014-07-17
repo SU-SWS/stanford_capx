@@ -126,21 +126,31 @@ class CAPx {
    */
   public static function testConnection($username = null, $password = null) {
 
-    $username = is_null($username) ? variable_get('stanford_capx_username', '') : $username;
-    $password = is_null($password) ? variable_get('stanford_capx_password', '') : $password;
+    $return = new \stdClass();
+    $return->status = 0;
+    $return->message = t("Connection Failed");
+
+    $username = is_null($username) ? decrypt(variable_get('stanford_capx_username', '')) : $username;
+    $password = is_null($password) ? decrypt(variable_get('stanford_capx_password', '')) : $password;
+    $authpoint  = variable_get('stanford_capx_api_auth_uri', '');
 
     $client = new HTTPClient();
-    $response = $client->api('auth')->authenticate($username, $password);
+    $client->setEndpoint($authpoint);
+    $auth = $client->api('auth');
+    $auth->authenticate($username, $password);
+    $token = $auth->getAuthApiToken();
+    $response = $auth->getLastResponse();
+    $reasonPhrase = $response->getReasonPhrase();
+    $code = $response->getStatusCode();
 
-    if ($response) {
-      $token = $response->getAuthApiToken();
-      variable_set('stanford_capx_token', $token);
-    }
-    else {
-      return FALSE;
+    $return->code = $code;
+    $return->message = t($reasonPhrase);
+
+    if (!empty($token)) {
+      $return->status = 1;
     }
 
-    return TRUE;
+    return $return;
   }
 
 
@@ -152,7 +162,10 @@ class CAPx {
    */
   public static function testConnectionToken($token) {
 
+    $endpoint   = variable_get('stanford_capx_api_base_url', '');
+
     $client = new HTTPClient();
+    $client->setEndpoint($endpoint);
     $client->setApiToken($token);
 
     try {
@@ -179,14 +192,17 @@ class CAPx {
    * @return HTTPClient an authenticated HTTP client ready to use.
    */
   public static function getAuthenticatedHTTPClient() {
-    $username = decrypt(variable_get('stanford_capx_username', ''));
-    $password = decrypt(variable_get('stanford_capx_password', ''));
-    $token    = variable_get('stanford_capx_token', '');
+    $username   = decrypt(variable_get('stanford_capx_username', ''));
+    $password   = decrypt(variable_get('stanford_capx_password', ''));
+    $token      = variable_get('stanford_capx_token', '');
+    $endpoint   = variable_get('stanford_capx_api_base_url', '');
+    $authpoint  = variable_get('stanford_capx_api_auth_uri', '');
 
     $connection = CAPx::testConnectionToken($token);
 
     if (!$connection->value) {
       $client = new HTTPClient();
+      $client->setEndpoint($endpoint);
       $response = $client->api('auth')->authenticate($username, $password);
       if ($response) {
         $token = $response->getAuthApiToken();
