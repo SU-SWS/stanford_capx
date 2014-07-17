@@ -121,6 +121,30 @@ class CAPx {
   }
 
   /**
+   * [testConnection description]
+   * @return [type] [description]
+   */
+  public static function testConnection($username = null, $password = null) {
+
+    $username = is_null($username) ? variable_get('stanford_capx_username', '') : $username;
+    $password = is_null($password) ? variable_get('stanford_capx_password', '') : $password;
+
+    $client = new HTTPClient();
+    $response = $client->api('auth')->authenticate($username, $password);
+
+    if ($response) {
+      $token = $response->getAuthApiToken();
+      variable_set('stanford_capx_token', $token);
+    }
+    else {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+
+  /**
    * Tests a token against the API for validity
    * @param  [type] $token [description]
    * @return object        $object->value
@@ -155,8 +179,8 @@ class CAPx {
    * @return HTTPClient an authenticated HTTP client ready to use.
    */
   public static function getAuthenticatedHTTPClient() {
-    $username = variable_get('stanford_capx_username', '');
-    $password = variable_get('stanford_capx_password', '');
+    $username = decrypt(variable_get('stanford_capx_username', ''));
+    $password = decrypt(variable_get('stanford_capx_password', ''));
     $token    = variable_get('stanford_capx_token', '');
 
     $connection = CAPx::testConnectionToken($token);

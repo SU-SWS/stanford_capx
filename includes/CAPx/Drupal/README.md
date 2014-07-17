@@ -20,8 +20,8 @@ This is a PHP library that handles data from the CAP API and turns it into usefu
 
 ## Usage
 
-      $username = variable_get('stanford_capx_username', '');
-      $password = variable_get('stanford_capx_password', '');
+      $username = decrypt(variable_get('stanford_capx_username', ''));
+      $password = decrypt(variable_get('stanford_capx_password', ''));
       $token    = variable_get('stanford_capx_token', '');
 
       $connection = CAPx::testConnectionToken($token);

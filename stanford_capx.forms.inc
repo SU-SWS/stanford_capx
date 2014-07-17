@@ -7,6 +7,7 @@
  *
  */
 
+use CAPx\Drupal\Util\CAPx;
 
 /**
  * [stanford_capx_forms_connect_form description]
@@ -15,7 +16,10 @@
  * @return [type]             [description]
  */
 function stanford_capx_forms_connect_form($form, &$form_state) {
-  $form['auth'] = array(
+
+  $username = decrypt(variable_get('stanford_capx_username', 'nothing'));
+
+   $form['auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Authorization'),
   );
@@ -27,14 +31,14 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#markup' => t('Please enter your authentication information for the CAP API.'),
   );
 
-  $form['auth']['stanford_cap_api_username'] = array(
+  $form['auth']['stanford_capx_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Client ID:'),
-    '#default_value' => variable_get('stanford_cap_api_username', ''),
+    '#default_value' => $username,
     '#required' => TRUE,
   );
 
-  $form['auth']['stanford_cap_api_password'] = array(
+  $form['auth']['stanford_capx_password'] = array(
     '#type' => 'password',
     '#title' => t('Authz secret:'),
   );
@@ -51,7 +55,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Endpoint'),
     '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
-    '#default_value' => variable_get('stanford_cap_api_base_url', 'https://api.stanford.edu'),
+    '#default_value' => variable_get('stanford_capx_api_base_url', 'https://api.stanford.edu'),
     '#required' => TRUE,
   );
 
@@ -59,7 +63,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Authentication URI'),
     '#description' => t('CAP API authentication URI.'),
-    '#default_value' => variable_get('stanford_cap_api_auth_uri', 'https://authz.stanford.edu/oauth/token'),
+    '#default_value' => variable_get('stanford_capx_api_auth_uri', 'https://authz.stanford.edu/oauth/token'),
     '#required' => TRUE,
   );
 
@@ -70,3 +74,47 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
 
   return $form;
 }
+
+/**
+ * [stanford_capx_forms_connect_form_validate description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_forms_connect_form_validate($form, &$form_state) {
+
+  if (!empty($form_state['values']['stanford_capx_username'])
+  && !empty($form_state['values']['stanford_capx_password'])) {
+
+    $username = $form_state['values']['stanford_capx_username'];
+    $password = $form_state['values']['stanford_capx_password'];
+
+    $connection = CAPx::testConnection($username, $password);
+
+    if (!$connection) {
+      form_set_error('stanford_capx_username', t("Error. Can't connect to Stanford CAP API. Please check your username and password."));
+      form_set_error('stanford_capx_password');
+    }
+
+  }
+
+}
+
+/**
+ * [stanford_capx_forms_connect_form_submit description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_forms_connect_form_submit($form, &$form_state) {
+
+  drupal_set_message('Configuration options were saved.');
+
+  $username = encrypt($form_state['values']['stanford_capx_username']);
+  $password = encrypt($form_state['values']['stanford_capx_password']);
+
+  variable_set('stanford_capx_username', $username);
+  variable_set('stanford_capx_password', $password);
+
+}
+
