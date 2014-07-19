@@ -49,10 +49,18 @@ function stanford_capx_connection_status_block() {
   $content = "";
   $connection = CAPx::testConnection();
 
-  if ($connection->status == 1) {
+  // Try to authenticate if not connected first try.
+  if (!$connection->status) {
+    CAPx::renewConnectionToken();
+    $connection = CAPx::testConnection();
+  }
+
+  // We good now!
+  if ($connection->status) {
     $content .= "<h2>" . t('Connected!') . "</h2>";
     $content .= "<p>Congratulations, you have successfully authenticated with the CAP API.</p>";
   }
+  // Something is not set correctly and we cannot connect.
   else {
     $content .= "<h2 class=\"error\">" . t('Not Connected') . "</h2>";
     $content .= "<p>" . t('The server responded with error code: ') . $connection->code . " " . t($connection->message) . ".</p>";

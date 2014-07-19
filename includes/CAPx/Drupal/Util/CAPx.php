@@ -121,28 +121,48 @@ class CAPx {
   }
 
   /**
+   * Test that both the API and Auth endpoints work.
+   * @return [type] [description]
+   */
+  public static function testConnection() {
+    $auth = CAPx::testAuthConnection();
+    $api  = CAPx::testApiConnection();
+
+    if ($auth->status && $api->status) {
+      return $auth;
+    }
+
+    if (!$auth->status) {
+      return $auth;
+    }
+
+    return $api;
+  }
+
+  /**
    * [testConnection description]
    * @return [type] [description]
    */
-  public static function testConnection($username = null, $password = null, $authpoint = null) {
+  public static function testAuthConnection($username = null, $password = null, $authpoint = null) {
 
-    $return = new \stdClass();
-    $return->status = 0;
-    $return->message = t("Connection Failed. Invalid Enpoint");
-    $return->code = 0;
+    $return = (object) array(
+      'status' => 0,
+      'message' => t('connection failed'),
+      'code' => 0,
+    );
 
-    $username = is_null($username) ? decrypt(variable_get('stanford_capx_username', '')) : $username;
-    $password = is_null($password) ? decrypt(variable_get('stanford_capx_password', '')) : $password;
-    $authpoint = is_null($authpoint) ? variable_get('stanford_capx_api_auth_uri', '') : $authpoint;
+    $username = is_null($username)    ? decrypt(variable_get('stanford_capx_username', '')) : $username;
+    $password = is_null($password)    ? decrypt(variable_get('stanford_capx_password', '')) : $password;
+    $authpoint = is_null($authpoint)  ? variable_get('stanford_capx_api_auth_uri', '')      : $authpoint;
 
     $client = new HTTPClient();
-    $auth = $client->api('auth');
-    $auth->setEndpoint($authpoint);
+    $client->setEndpoint($authpoint);
 
     try {
-      $auth->authenticate($username, $password);
+      $auth = $client->api('auth')->authenticate($username, $password);
     }
     catch(\Exception $e) {
+      $return->message = t($e->getMessage());
       return $return;
     }
 
@@ -169,26 +189,59 @@ class CAPx {
    * @return object        $object->value
    *                       $obj
    */
-  public static function testConnectionToken($token, $endpoint = null) {
+  public static function testApiConnection($token = null, $endpoint = null) {
 
+    $token    = is_null($token) ? variable_get('stanford_capx_token','') : $token;
     $endpoint = is_null($endpoint) ? variable_get('stanford_capx_api_base_url', '') : $endpoint;
+
+    $return = (object) array(
+      'status' => 0,
+      'message' => t('API connection failed'),
+      'code' => "ERROR: ",
+    );
 
     $client = new HTTPClient();
     $client->setEndpoint($endpoint);
     $client->setApiToken($token);
 
     try {
-      $found = $client->api('search')->keyword('test');
+      $results = $client->api('search')->keyword('test');
     }
     catch(\Exception $e) {
-      return (object) array('value' => FALSE, 'message' => $e->getMessage());
+      $return->message = $e->getMessage();
+      return $return;
     }
 
-    if ($found) {
-      return (object) array('value' => TRUE, 'message' => t('Connection successful'));
+    if (is_array($results)) {
+      $return->status = 1;
+      $return->message = t("connection successfull");
+      $return->code = 200;
     }
 
-    return (object) array('value' => FALSE, 'message' => t('Connection not successful'));
+    return $return;
+  }
+
+  /**
+   * [renewConnectionToken description]
+   * @return [type] [description]
+   */
+  public static function renewConnectionToken() {
+
+    $username   = decrypt(variable_get('stanford_capx_username', ''));
+    $password   = decrypt(variable_get('stanford_capx_password', ''));
+    $authpoint  = variable_get('stanford_capx_api_auth_uri', '');
+
+    $client = new HTTPClient();
+    $client->setEndpoint($authpoint);
+    $response = $client->api('auth')->authenticate($username, $password);
+
+    if ($response) {
+      $token = $response->getAuthApiToken();
+      variable_set('stanford_capx_token', $token);
+      return TRUE;
+    }
+
+    throw new Exception("Could not authenticate with server.");
   }
 
   /**

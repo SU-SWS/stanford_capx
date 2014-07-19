@@ -132,20 +132,11 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
     // Build and make the request.
-    try {
+    $request = $client->get($endpoint, $params, $options);
+    $response = $request->send();
 
-      $request = $client->get($endpoint, $params, $options);
-      $response = $request->send();
-
-      // Store the last response for later use.
-      $this->setLastResponse($response);
-
-    }
-    catch(\Exception $e) {
-      var_dump($e->getMessage());
-      return FALSE;
-    }
-
+    // Store the last response for later use.
+    $this->setLastResponse($response);
 
     // Handle only valid response codes.
     $code = $response->getStatusCode();
@@ -153,12 +144,8 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     // @todo: Handle non-valid response codes.
     switch ($code) {
       case '200':
-        try {
           $json = $response->json();
           return $json;
-        } catch(RuntimeException $e) {
-          return FALSE;
-        }
 
       default:
         return FALSE;
