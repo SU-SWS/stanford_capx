@@ -14,3 +14,4 @@ files[] = includes/vendor/autoload.php
 files[] = stanford_capx.entity.hooks.inc
 files[] = stanford_capx.forms.inc
 files[] = stanford_capx.blocks.inc
+files[] = stanford_capx.theme.inc

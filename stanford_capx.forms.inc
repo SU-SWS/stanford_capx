@@ -26,7 +26,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
   $username = decrypt(variable_get('stanford_capx_username', ''));
   $connection = CAPx::testConnection();
 
-   $form['auth'] = array(
+  $form['auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Authorization'),
     '#collapsible' => TRUE,
@@ -352,6 +352,9 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           '#title' => t($prop_info['label']),
           '#description' => t($prop_info['description']),
           '#default_value' => isset($mapper->{$property_machine_name}) ?  $mapper->{$property_machine_name} : '',
+          '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+          '#field_info' => $prop_info,
+
       );
     }
 
@@ -395,15 +398,17 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           continue;
         }
 
-         $form['field-mapping'][$field_container][$field_machine_name] = array(
-            '#type' => 'fieldset',
-            '#title' => t($field_machine_name),
-            '#description' => t(''),
-            '#collapsed' => TRUE,
-            '#collapsible' => TRUE,
-          );
-
         $field_info_field = field_info_field($field_machine_name);
+        $field_instance_info = field_info_instance($entity_machine_name, $field_machine_name, $bundle_machine_name);
+
+        $form['field-mapping'][$field_container][$field_machine_name] = array(
+          '#type' => 'container',
+          '#title' => t($field_instance_info['label']),
+          '#description' => t($field_instance_info['description']),
+          '#field_info' => $field_info_field,
+          '#field_instance_info' => $field_instance_info,
+          '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+        );
 
         foreach ($field_info_field['columns'] as $column_key => $column_info) {
           $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
@@ -444,14 +449,16 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
         );
 
         foreach ($instances as $fc_field_name => $instance_info) {
+
           $fc_field_info = field_info_field($fc_field_name);
 
           $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name] = array(
-            '#type' => 'fieldset',
-            '#title' => t($fc_field_name),
-            '#description' => t(''),
-            '#collapsed' => TRUE,
-            '#collapsible' => TRUE,
+            '#type' => 'container',
+            '#title' => t($instance_info['label']),
+            '#description' => t($instance_info['description']),
+            '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+            '#field_info' => $fc_field_info,
+            '#field_instance_info' => $instance_info,
           );
 
           foreach ($fc_field_info['columns'] as $column_key => $column_info) {

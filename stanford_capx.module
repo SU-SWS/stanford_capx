@@ -11,6 +11,7 @@ require_once "includes/vendor/autoload.php";
 require_once "stanford_capx.entity.hooks.inc";
 require_once "stanford_capx.forms.inc";
 require_once "stanford_capx.blocks.inc";
+require_once "stanford_capx.theme.inc";
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
@@ -27,6 +28,7 @@ $CAP_RESTRICTED_ENTITY_TYPES = array(
   'comment',
   'taxonomy_vocabulary',
 );
+
 
 /**
  * Implements hook_help().
