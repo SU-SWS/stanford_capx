@@ -18,6 +18,16 @@ use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
 
+// No mapping into these entity types.
+global $CAP_RESTRICTED_ENTITY_TYPES;
+$CAP_RESTRICTED_ENTITY_TYPES = array(
+  'capx_importer',
+  'capx_mapper',
+  'file',
+  'comment',
+  'taxonomy_vocabulary',
+);
+
 /**
  * Implements hook_help().
  */

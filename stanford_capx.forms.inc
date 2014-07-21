@@ -240,16 +240,12 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
  */
 function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) {
 
-  $entity_types = entity_get_info();
+  $entity_types = capx_entity_get_info();
   $entity_options = array();
   $bundle_options = array();
-  $restricted = array('capx_importer', 'capx_mapper');
   $mapper = new stdClass();
 
   foreach ($entity_types as $entity_name => $values) {
-    if (in_array($entity_name, $restricted)) {
-      continue;
-    }
     $entity_options[$entity_name] = $values['label'];
     $bundle_options[$entity_name] = array();
 
@@ -302,7 +298,8 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
  */
 function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
 
-  $entity_types = entity_get_info();
+  $entity_types = capx_entity_get_info();
+  $field_collections = array();
 
   $form['field-mapping'] = array(
     '#type' => 'fieldset',
@@ -310,11 +307,59 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
     '#description' => t(''),
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
+    '#tree' => TRUE,
   );
 
+  $form['field-mapping']['help']['#markup'] = "<p>" . t('Use the data browser to find the information you would like to map into the various different properties and fields below. You will need to use JSONPath syntax. For more information on JSONPath please read the documentation. ') . l('JSONPath Documentation →', 'http://goessner.net/articles/JsonPath/', array('attributes' => array('target' => '_blank'))) . "</p>";
+
+
+  // ******************************************************
   // **** WARNING ***** BIG HEAVY FORM ***** WARNING ******
+  // ******************************************************
+
+  // PROPERTIES
+  // ---------------------------------------------------------------------
   foreach ($entity_types as $entity_machine_name => $entity_info_values) {
 
+    // Get all the properties of the entity type.
+    $entity_info = entity_get_property_info($entity_machine_name);
+
+    $property_container = $entity_machine_name . "-properties";
+    // Generate property forms for each entity + bundle
+    $form['field-mapping'][$property_container] = array(
+      '#type' => 'fieldset',
+      '#title' => t($entity_machine_name . ' Properties'),
+      '#description' => t(''),
+      '#collapsed' => TRUE,
+      '#collapsible' => TRUE,
+      '#states' => array(
+        'visible' => array(
+          'select[name="entity-type"]' => array('value' => $entity_machine_name),
+        ),
+      ),
+    );
+
+    $properties = $entity_info['properties'];
+    foreach ($properties as $property_machine_name => $prop_info) {
+
+      // Body is not a property per se. It should be handled as a field.
+      if ($property_machine_name == "body") {
+        continue;
+      }
+
+      $form['field-mapping'][$property_container][$property_machine_name] = array(
+          '#type' => 'textfield',
+          '#title' => t($prop_info['label']),
+          '#description' => t($prop_info['description']),
+          '#default_value' => isset($mapper->{$property_machine_name}) ?  $mapper->{$property_machine_name} : '',
+      );
+    }
+
+  }
+
+  // FIELDS
+  // ---------------------------------------------------------------------
+  foreach ($entity_types as $entity_machine_name => $entity_info_values) {
     // Get all the properties of the entity type.
     $entity_info = entity_get_property_info($entity_machine_name);
 
@@ -324,26 +369,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
     }
 
     foreach($entity_info['bundles'] as $bundle_machine_name => $bundle_info) {
-      $properties = $entity_info['properties'];
       $fields = $entity_info['bundles'][$bundle_machine_name]['properties'];
-
-      $property_container = $entity_machine_name . "-" . $bundle_machine_name . "-properties";
       $field_container = $entity_machine_name . "-" . $bundle_machine_name . "-fields";
-
-      // Generate property forms for each entity + bundle
-      $form['field-mapping'][$property_container] = array(
-        '#type' => 'fieldset',
-        '#title' => t($bundle_machine_name . ' Properties'),
-        '#description' => t(''),
-        '#collapsed' => TRUE,
-        '#collapsible' => TRUE,
-        '#states' => array(
-          'visible' => array(
-            'select[name="entity-type"]' => array('value' => $entity_machine_name),
-            'select[name="bundle-' . $entity_machine_name . '"]' => array('value' => $bundle_machine_name),
-          ),
-        ),
-      );
 
       // Generate property forms for each entity + bundle
       $form['field-mapping'][$field_container] = array(
@@ -360,34 +387,86 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
         ),
       );
 
-
-      // PROPERTIES
-      // ----------
-      foreach ($properties as $property_machine_name => $property_info) {
-        $form['field-mapping'][$property_container][$entity_machine_name][$bundle_machine_name][$property_machine_name] = array(
-            '#type' => 'textfield',
-            '#title' => t($property_info['label']),
-            '#description' => t(@$property_info['description']),
-            '#default_value' => isset($mapper->{$property_machine_name}) ?  $mapper->{$property_machine_name} : '',
-        );
-      }
-
-      // FIELDS
-      // ----------------
-
-      // @todo: field columns
       foreach ($fields as $field_machine_name => $field_info) {
-        $form['field-mapping'][$field_container][$entity_machine_name][$bundle_machine_name][$field_machine_name] = array(
-            '#type' => 'textfield',
-            '#title' => t($field_info['label']),
-            '#description' => t($field_info['description']),
-            '#default_value' => isset($mapper->{$field_machine_name}) ?  $mapper->{$field_machine_name} : '',
-        );
-      }
 
+        // Field collections need their own fieldset and fields.
+        if (strpos($field_info['type'], 'field_collection_item')) {
+          $field_collections[$entity_machine_name][$bundle_machine_name][$field_machine_name] = $field_info;
+          continue;
+        }
+
+         $form['field-mapping'][$field_container][$field_machine_name] = array(
+            '#type' => 'fieldset',
+            '#title' => t($field_machine_name),
+            '#description' => t(''),
+            '#collapsed' => TRUE,
+            '#collapsible' => TRUE,
+          );
+
+        $field_info_field = field_info_field($field_machine_name);
+
+        foreach ($field_info_field['columns'] as $column_key => $column_info) {
+          $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
+            '#type' => 'textfield',
+            '#title' => t($column_key),
+            '#description' => t(@$column_info['description']),
+          );
+        }
+
+      }
 
     }
+  } // end field looop
+
+  // FIELD COLLECTIONS
+  // ----------------------------------------------------------------------
+
+  foreach ($field_collections as $entity_machine_name => $bundles) {
+    foreach ($bundles as $bundle_machine_name => $fields) {
+      foreach ($fields as $field_machine_name => $field_info) {
+
+        $instances = field_info_instances('field_collection_item', $field_machine_name);
+        $collection_container = $entity_machine_name . "-" . $bundle_machine_name . "-collections";
+
+        // Fieldset for all fields on this entity -> bundle -> collection field
+        $form['field-mapping'][$collection_container] = array(
+          '#type' => 'fieldset',
+          '#title' => t($field_machine_name . ' Field Collection'),
+          '#description' => t(''),
+          '#collapsed' => TRUE,
+          '#collapsible' => TRUE,
+          '#states' => array(
+            'visible' => array(
+              'select[name="entity-type"]' => array('value' => $entity_machine_name),
+              'select[name="bundle-' . $entity_machine_name . '"]' => array('value' => $bundle_machine_name),
+            ),
+          ),
+        );
+
+        foreach ($instances as $fc_field_name => $instance_info) {
+          $fc_field_info = field_info_field($fc_field_name);
+
+          $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name] = array(
+            '#type' => 'fieldset',
+            '#title' => t($fc_field_name),
+            '#description' => t(''),
+            '#collapsed' => TRUE,
+            '#collapsible' => TRUE,
+          );
+
+          foreach ($fc_field_info['columns'] as $column_key => $column_info) {
+            $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key] = array(
+              '#type' => 'textfield',
+              '#title' => t($column_key),
+              '#description' => t(@$column_info['description']),
+              );
+          }
+        }
+
+      }
+    }
   }
+
 
   return $form;
 }
@@ -410,7 +489,7 @@ function stanford_capx_mapper_machine_name_exits($name) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
-
+  form_set_error('entity-type', 'Ooogity boogity');
 }
 
 /**
@@ -420,7 +499,6 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_submit($form, $form_state) {
-
 }
 
 

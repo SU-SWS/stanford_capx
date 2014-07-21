@@ -64,3 +64,17 @@ function stanford_capx_entity_load($entities, $type) {
 function stanford_capx_entity_view($entity, $type, $view_mode, $langcode) {
 
 }
+/**
+ * Wrapper for entity_get_info() with restricted types removed.
+ * @return [type] [description]
+ */
+function capx_entity_get_info() {
+  global $CAP_RESTRICTED_ENTITY_TYPES;
+  $entity_types = entity_get_info();
+  foreach ($entity_types as $entity_name => $values) {
+    if (in_array($entity_name, $CAP_RESTRICTED_ENTITY_TYPES)) {
+      unset($entity_types[$entity_name]);
+    }
+  }
+  return $entity_types;
+}
