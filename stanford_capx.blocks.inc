@@ -20,6 +20,16 @@ function stanford_capx_block_info() {
     'properties' => array('administrative' => 1),
   );
 
+  $blocks['data_browser_launch'] = array(
+    'info' => t('Selecting fields'),
+    'cache' => DRUPAL_NO_CACHE,
+    'properties' => array('administrative' => 1),
+    'region' => 'help',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'admin/config/capx/mapper/*',
+
+  );
+
   return $blocks;
 }
 
@@ -34,6 +44,11 @@ function stanford_capx_block_view($delta = '') {
     case 'connection_status':
       $block['subject'] = t('Connection Status');
       $block['content'] = stanford_capx_connection_status_block();
+      break;
+
+    case "data_browser_launch":
+      $block['subject'] = t('Data Browser');
+      $block['content'] = stanford_capx_data_browser_launch_block();
       break;
 
   }
@@ -68,3 +83,20 @@ function stanford_capx_connection_status_block() {
 
   return $content;
 }
+
+/**
+ * [stanford_capx_data_browser_block description]
+ * @return [type] [description]
+ */
+function stanford_capx_data_browser_launch_block() {
+  $output = "";
+
+  $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "</p>";
+
+  // @TODO: THIS!
+  $output .= l('Open Data Schema', 'admin/config/capx', array('attributes' => array('class' => 'btn button')));
+
+  return $output;
+}
+
+

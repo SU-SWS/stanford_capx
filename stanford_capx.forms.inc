@@ -185,10 +185,13 @@ function stanford_capx_mapper_form($form, &$form_state) {
   $form += stanford_capx_mapper_form_get_entity_mapping_form($form, $form_state);
   $form += stanford_capx_mapper_form_get_field_mapping_form($form, $form_state);
 
-
-  $form['submit'] = array(
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Save',
+    '#value' => 'Save mapper',
+  );
+
+  $form['actions']['cancel'] = array(
+    '#markup' => l(t('Cancel'), 'admin/config/capx/mapper'),
   );
 
   return $form;
@@ -354,7 +357,6 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           '#default_value' => isset($mapper->{$property_machine_name}) ?  $mapper->{$property_machine_name} : '',
           '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
           '#field_info' => $prop_info,
-
       );
     }
 
