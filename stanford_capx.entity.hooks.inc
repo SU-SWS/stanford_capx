@@ -8,6 +8,139 @@
  */
 
 use CAPx\Drupal\Util\CAPx;
+use CAPx\Drupal\Entities\CFEntity;
+use CAPx\Drupal\Entities\CFEControllerExportable;
+
+/**
+ * Implements hook_entity_info().
+ */
+function stanford_capx_entity_info() {
+
+  $return = array(
+    'capx_cfe' => array(
+      'label' => t('Configuration Entity'),
+      'plural label' => t('Configuration Entities'),
+      'entity class' => '\CAPx\Drupal\Entities\CFEntity',
+      'controller class' => '\CAPx\Drupal\Entities\CFEControllerExportable',
+      'base table' => 'capx_cfe',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'cfid',
+        'bundle' => 'type',
+      ),
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
+      'bundles' => array(),
+      'load hook' => 'capx_cfe_load',
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Default'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'module' => 'stanford_capx',
+      'access callback' => 'stanford_capx_access',
+    ),
+  );
+  // The type entity allows us to create bundles for the above entity. You can
+  // find additional bundle type information in the stanford_capx_cfe_types hook
+  $return['capx_cfe_type'] = array(
+    'label' => t('Configuration Entity Type'),
+    'entity class' => '\CAPx\Drupal\Entities\CFEntityType',
+    'controller class' => '\CAPx\Drupal\Entities\CFEntityTypeController',
+    'base table' => 'capx_cfe_type',
+    'fieldable' => FALSE,
+    'bundle of' => 'capx_cfe',
+    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'name' => 'type',
+      'label' => 'label',
+    ),
+    'module' => 'stanford_capx',
+    'access callback' => 'stanford_capx_access',
+  );
+
+  return $return;
+}
+
+/**
+ * List of task Types.
+ */
+function stanford_capx_get_types($type_name = NULL) {
+  $types = entity_load_multiple_by_name('capx_cfe_type', isset($type_name) ? array($type_name) : FALSE);
+  return isset($type_name) ? reset($types) : $types;
+}
+
+/**
+ * The configuration entity bundle types.
+ * @return [type] [description]
+ */
+function stanford_capx_default_capx_cfe_type() {
+  $items = array();
+
+  $items['mapper'] = entity_import('capx_cfe_type', '{
+  "label": "CAPx Mapper",
+  "type" : "mapper",
+  "weight" : "0",
+  "description" : "Mappers map data from the CAP API into a Drupal entity"
+  }');
+
+  $items['importer'] = entity_import('capx_cfe_type', '{
+  "type" : "importer",
+  "label": "CAPx Importer",
+  "weight" : "0",
+  "description" : "Importers set what profiles should be imported into Drupal"
+  }');
+
+  return $items;
+}
+
+/**
+* Implements hook_entity_info_alter().
+*/
+function stanford_capx_entity_info_alter(&$entity_info) {
+  foreach (stanford_capx_get_types() as $type => $info) {
+    $entity_info['capx_cfe']['bundles'][$type] = array(
+      'label' => $info->label,
+    );
+  }
+}
+
+
+/**
+ * Helper function to load a mapper entity
+ * @param  [type] $machine_name [description]
+ * @return [type]               [description]
+ */
+function stanford_capx_mapper_load($machine_name) {
+
+}
+
+/**
+ * Helper function to save a mapper entity
+ * @param  [type] $entity [description]
+ * @return [type]         [description]
+ */
+function stanford_capx_mapper_save($entity) {
+
+}
+
+/**
+ * Helper function to delete a mapper entity
+ * @param  [type] $entity [description]
+ * @return [type]         [description]
+ */
+function stanford_capx_mapper_delete($entity) {
+
+}
+
+// hook_entity_[action]()
+// /////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////////
 
 /**
  * implements hook_entity_delete
@@ -64,6 +197,11 @@ function stanford_capx_entity_load($entities, $type) {
 function stanford_capx_entity_view($entity, $type, $view_mode, $langcode) {
 
 }
+
+// Helper & Util
+// /////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////////
+
 /**
  * Wrapper for entity_get_info() with restricted types removed.
  * @return [type] [description]

@@ -8,7 +8,7 @@
  */
 
 use CAPx\Drupal\Util\CAPx;
-
+use CAPx\Drupal\Util\CAPxConnection;
 
 // /////////////////////////////////////////////////////////////////////////////
 // CONNECT FORM
@@ -23,8 +23,8 @@ use CAPx\Drupal\Util\CAPx;
  */
 function stanford_capx_forms_connect_form($form, &$form_state) {
 
-  $username = decrypt(variable_get('stanford_capx_username', ''));
-  $connection = CAPx::testConnection();
+  $username = CAPx::getAuthUsername();
+  $connection = CAPxConnection::testConnection();
 
   $form['auth'] = array(
     '#type' => 'fieldset',
@@ -60,7 +60,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Endpoint'),
     '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
-    '#default_value' => variable_get('stanford_capx_api_base_url', 'https://api.stanford.edu'),
+    '#default_value' => CAPx::getAPIEndpoint(),
     '#required' => TRUE,
   );
 
@@ -68,7 +68,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Authentication URI'),
     '#description' => t('CAP API authentication URI.'),
-    '#default_value' => variable_get('stanford_capx_api_auth_uri', 'https://authz.stanford.edu/oauth/token'),
+    '#default_value' => CAPx::getAuthEndpoint(),
     '#required' => TRUE,
   );
 
@@ -95,7 +95,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
   // If password changed validate auth
   if (!empty($password)) {
-    $auth_test = CAPx::testAuthConnection($username, $password, $authpoint);
+    $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
     if (!$auth_test->status) {
       form_set_error('stanford_capx_username', 'Could not authenticate with server. Invalid credentials. Please check your username and password');
       form_set_error('stanford_capx_password');
@@ -103,7 +103,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   }
 
   // In case the end points change we need to get pass from db.
-  $password = !empty($password) ? $password : decrypt(variable_get('stanford_capx_password', ''));
+  $password = !empty($password) ? $password : CAPx::getAuthPassword();
 
   // If authpoint changed
   if ($authpoint !== "https://authz.stanford.edu/oauth/token") {
@@ -122,12 +122,12 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   if ($endpoint !== "https://api.stanford.edu") {
 
     if (!isset($auth_test)) {
-      $auth_test = CAPx::testAuthConnection($username, $password, $authpoint);
+      $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
     }
 
     if (isset($auth_test->token)) {
       $token = $auth_test->token;
-      $end_test = CAPx::testApiConnection($token, $endpoint);
+      $end_test = CAPxConnection::testApiConnection($token, $endpoint);
     }
 
   }
@@ -343,12 +343,9 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
     );
 
     $properties = $entity_info['properties'];
-    foreach ($properties as $property_machine_name => $prop_info) {
+    $properties = stanford_capx_filter_properties($entity_machine_name, $properties);
 
-      // Body is not a property per se. It should be handled as a field.
-      if ($property_machine_name == "body") {
-        continue;
-      }
+    foreach ($properties as $property_machine_name => $prop_info) {
 
       $form['field-mapping'][$property_container][$property_machine_name] = array(
           '#type' => 'textfield',
@@ -395,7 +392,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
       foreach ($fields as $field_machine_name => $field_info) {
 
         // Field collections need their own fieldset and fields.
-        if (strpos($field_info['type'], 'field_collection_item')) {
+        if (strpos($field_info['type'], 'field_collection_item') !== FALSE) {
           $field_collections[$entity_machine_name][$bundle_machine_name][$field_machine_name] = $field_info;
           continue;
         }
@@ -492,13 +489,100 @@ function stanford_capx_mapper_machine_name_exits($name) {
 
 
 /**
+ * Takes in an array of properties and filters out the ones that users should
+ * never map to. Things like nid, vid, comments, etc.
+ * @param  array  $properties [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_filter_properties($entity_type, $properties = array()) {
+
+  $blacklist = array();
+  $property_keys = array_keys($properties);
+
+  // Blocks / Beans
+  $blacklist['bean'][] = "bid";
+  $blacklist['bean'][] = "vid";
+  $blacklist['bean'][] = "delta";
+  $blacklist['bean'][] = "view_mode";
+  $blacklist['bean'][] = "type";
+  $blacklist['bean'][] = "url";
+  $blacklist['bean'][] = "uid";
+
+  // Field collection item.
+  $blacklist['field_collection_item'][] = "item_id";
+  $blacklist['field_collection_item'][] = "revision_id";
+  $blacklist['field_collection_item'][] = "field_name";
+  $blacklist['field_collection_item'][] = "archived";
+  $blacklist['field_collection_item'][] = "url";
+  $blacklist['field_collection_item'][] = "host_entity";
+
+  // Node
+  $blacklist['node'][] = "nid";
+  $blacklist['node'][] = "vid";
+  $blacklist['node'][] = "is_new";
+  $blacklist['node'][] = "type";
+  $blacklist['node'][] = "language";
+  $blacklist['node'][] = "url";
+  $blacklist['node'][] = "edit_url";
+  $blacklist['node'][] = "status";
+  $blacklist['node'][] = "promote";
+  $blacklist['node'][] = "sticky";
+  $blacklist['node'][] = "author";
+  $blacklist['node'][] = "source";
+  $blacklist['node'][] = "revision";
+  $blacklist['node'][] = "comment";
+  $blacklist['node'][] = "comments";
+  $blacklist['node'][] = "comment_count";
+  $blacklist['node'][] = "comment_count_new";
+  $blacklist['node'][] = "body";
+
+  // Terms
+  $blacklist['taxonomy_term'][] = "tid";
+  $blacklist['taxonomy_term'][] = "weight";
+  $blacklist['taxonomy_term'][] = "node_count";
+  $blacklist['taxonomy_term'][] = "url";
+  $blacklist['taxonomy_term'][] = "vocabulary";
+  $blacklist['taxonomy_term'][] = "parent";
+  $blacklist['taxonomy_term'][] = "parents_all";
+
+  // User
+  $blacklist['user'][] = "uid";
+  $blacklist['user'][] = "url";
+  $blacklist['user'][] = "edit_url";
+  $blacklist['user'][] = "last_access";
+  $blacklist['user'][] = "last_login";
+  $blacklist['user'][] = "roles";
+  $blacklist['user'][] = "status";
+  $blacklist['user'][] = "theme";
+
+  // Anything we don't know about
+  $blacklist['unknown'][] = "id";
+  $blacklist['unknown'][] = "vid";
+  $blacklist['unknown'][] = "url";
+  $blacklist['unknown'][] = "edit_url";
+  $blacklist['unknown'][] = "uid";
+
+  if (!isset($blacklist[$entity_type])) {
+    $entity_type = "unknown";
+  }
+
+  // Rip out the blacklisted items.
+  $allowed = array_diff($property_keys, $blacklist[$entity_type]);
+  $allowed = array_flip($allowed);
+  $properties = array_intersect_key($properties, $allowed);
+
+  return $properties;
+}
+
+
+/**
  * [stanford_capx_mapper_form_validate description]
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
-  form_set_error('entity-type', 'Ooogity boogity');
+  // We should validate the json selectors here.
 }
 
 /**
@@ -508,7 +592,34 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_submit($form, $form_state) {
+
+  $values = $form_state['values'];
+
+  $mapper = entity_create('capx_cfe', array());
+  $mapper->title = $values['title'];
+  $mapper->machine_name = $values['machine-name'];
+  $mapper->type = "mapper";
+
+  $settings = array();
+  $settings['config'] = array();
+  $settings['fields'] = array();
+  $settings['properties'] = array();
+  $settings['collections'] = array();
+
+  $entity = $values['entity-type'];
+  $bundle = $values['bundle-' . $entity];
+
+  $settings['config']['entity-type'] = $entity;
+  $settings['config']['bundle'] = $bundle;
+  $settings['properties'] = $values['field-mapping'][$entity . "-properties"];
+  $settings['fields'] = $values['field-mapping'][$entity . "-" . $bundle . "-fields"];
+  $settings['collections'] = $values['field-mapping'][$entity . "-" . $bundle . "-collections"];
+
+  $mapper->settings = $settings;
+  $mapper->save();
+
 }
+
 
 
 

@@ -22,11 +22,12 @@ use CAPx\Drupal\Util\CAPx;
 // No mapping into these entity types.
 global $CAP_RESTRICTED_ENTITY_TYPES;
 $CAP_RESTRICTED_ENTITY_TYPES = array(
-  'capx_importer',
-  'capx_mapper',
+  'capx_cfe',
+  'capx_cfe_type',
   'file',
   'comment',
   'taxonomy_vocabulary',
+  'field_collection_item',
 );
 
 
@@ -50,6 +51,15 @@ function stanford_capx_permission() {
       'description' => t('Administer and Configure CAPx settings.'),
     ),
   );
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function stanford_capx_node_access($node, $op, $account) {
+
+  // Returning nothing from this function would have the same effect.
+  return NODE_ACCESS_IGNORE;
 }
 
 /**
@@ -298,83 +308,81 @@ function stanford_capx_admin_config_profiles() {
 function stanford_capx_debug() {
   $output = "";
 
-  $importer_config = array();
-  $importer_config['type']    = "uids";
-  // @todo: Currently ptchen doesn't return any data. Need to report this somehow.
-  $importer_config['values']  = array('sheamck','swberg','jbickar','cjwest','ptchen');
+  // $importer_config = array();
+  // $importer_config['type']    = "uids";
+  // // @todo: Currently ptchen doesn't return any data. Need to report this somehow.
+  // $importer_config['values']  = array('sheamck','swberg','jbickar','cjwest','ptchen');
 
-  $mapper_config = array();
+  // $mapper_config = array();
 
-  $mapper_config['entityType']        = 'node';
-  $mapper_config['bundleType']        = 'faux';
-  $mapper_config['fields']            = array();
-  $mapper_config['properties']        = array();
-  $mapper_config['fieldCollections']  = array();
+  // $mapper_config['entityType']        = 'node';
+  // $mapper_config['bundleType']        = 'faux';
+  // $mapper_config['fields']            = array();
+  // $mapper_config['properties']        = array();
+  // $mapper_config['fieldCollections']  = array();
 
-  // FIELDS
-  // ---------------------------------------------------------------------------
+  // // FIELDS
+  // // ---------------------------------------------------------------------------
 
-  // This setting is exactly the same as the commented out line below.
-  $mapper_config['fields']['body']                          = '$.bio.html';
-  // $mapper_config['fields']['body']                          = array('value' => '$.bio.html');
+  // // This setting is exactly the same as the commented out line below.
+  // $mapper_config['fields']['body']                          = '$.bio.html';
+  // // $mapper_config['fields']['body']                          = array('value' => '$.bio.html');
 
-  $mapper_config['fields']['field_faux_bool_one']           = "$.affiliations.capFaculty";
-  $mapper_config['fields']['field_faux_bool_two']           = "$.affiliations.capStaff";
+  // $mapper_config['fields']['field_faux_bool_one']           = "$.affiliations.capFaculty";
+  // $mapper_config['fields']['field_faux_bool_two']           = "$.affiliations.capStaff";
 
-  $mapper_config['fields']['field_faux_date_date']          = "$.lastModified";
-  $mapper_config['fields']['field_faux_date_date_two']      = "$.lastModified";
-  $mapper_config['fields']['field_faux_date_iso']           = "$.lastModified";
-  $mapper_config['fields']['field_faux_date_iso_two']       = "$.lastModified";
-  $mapper_config['fields']['field_faux_date_unix']          = "$.lastModified";
-  $mapper_config['fields']['field_faux_date_pop']           = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_date']          = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_date_two']      = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_iso']           = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_iso_two']       = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_unix']          = "$.lastModified";
+  // $mapper_config['fields']['field_faux_date_pop']           = "$.lastModified";
 
-  $mapper_config['fields']['field_faux_decimal']            = "$.presentations.location.latitude";
-  $mapper_config['fields']['field_faux_email']              = "$.primaryContact.email";
-  $mapper_config['fields']['field_faux_file']               = "$.profilePhotos.big";
-  $mapper_config['fields']['field_faux_float']              = "$.presentations.location.latitude";
-  $mapper_config['fields']['field_faux_image']              = "$.profilePhotos.bigger";
-  $mapper_config['fields']['field_faux_integer']            = "$.professionalOrganizations.startYear.text";
+  // $mapper_config['fields']['field_faux_decimal']            = "$.presentations.location.latitude";
+  // $mapper_config['fields']['field_faux_email']              = "$.primaryContact.email";
+  // $mapper_config['fields']['field_faux_file']               = "$.profilePhotos.big";
+  // $mapper_config['fields']['field_faux_float']              = "$.presentations.location.latitude";
+  // $mapper_config['fields']['field_faux_image']              = "$.profilePhotos.bigger";
+  // $mapper_config['fields']['field_faux_integer']            = "$.professionalOrganizations.startYear.text";
 
-  // Example of how to handle a field with multiple values
-  $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.text",
-                                                                    "url"   => "$.profilePhotos.big.url");
-  $mapper_config['fields']['field_faux_list_float']         = "$.universityId";
-  $mapper_config['fields']['field_faux_list_int']           = "$.profileId";
-  $mapper_config['fields']['field_faux_list_text']          = "$.shortTitle.label.text";
-  $mapper_config['fields']['field_faux_long_text']          = "$.currentRoleAtStanford";
-  $mapper_config['fields']['field_faux_long_text_summary']  = array('value' => '$.currentRoleAtStanford',
-                                                                    'summary' => '$.bio.html');
-  // Terms
-  $mapper_config['fields']['field_faux_tax_term']           = "$.affiliations";
-  $mapper_config['fields']['field_faux_tax_term_select']    = "$.professionalInterests.text";
-  $mapper_config['fields']['field_faux_tax_term_auto']      = "$.professionalInterests.text";
+  // // Example of how to handle a field with multiple values
+  // $mapper_config['fields']['field_faux_link']               = array("title" => "$.shortTitle.label.text",
+  //                                                                   "url"   => "$.profilePhotos.big.url");
+  // $mapper_config['fields']['field_faux_list_float']         = "$.universityId";
+  // $mapper_config['fields']['field_faux_list_int']           = "$.profileId";
+  // $mapper_config['fields']['field_faux_list_text']          = "$.shortTitle.label.text";
+  // $mapper_config['fields']['field_faux_long_text']          = "$.currentRoleAtStanford";
+  // $mapper_config['fields']['field_faux_long_text_summary']  = array('value' => '$.currentRoleAtStanford',
+  //                                                                   'summary' => '$.bio.html');
+  // // Terms
+  // $mapper_config['fields']['field_faux_tax_term']           = "$.affiliations";
+  // $mapper_config['fields']['field_faux_tax_term_select']    = "$.professionalInterests.text";
+  // $mapper_config['fields']['field_faux_tax_term_auto']      = "$.professionalInterests.text";
 
-  $mapper_config['fields']['field_faux_text']               = "$.shortTitle.label.text";
+  // $mapper_config['fields']['field_faux_text']               = "$.shortTitle.label.text";
 
-  // FIELD COLLECTIONS
-  // ---------------------------------------------------------------------------
-  $collection_config = array();
-  $collection_config['bundleType'] = 'field_faux_collection';
-  $collection_config['fields'] = array();
-  $collection_config['properties'] = array();
-  $collection_config['fields']['field_faux_collection_text']  = "$.shortTitle.label.text";
-  $collection_config['fields']['field_faux_collection_terms'] = "$.affiliations";
-  $collection_config['fields']['field_faux_image']            = "$.profilePhotos.bigger";
-
-
-  $collection_mapper = new FieldCollectionMapper($collection_config);
-  $mapper_config['fieldCollections']['field_faux_collection']           = $collection_mapper;
-
-  // PROPERTIES
-  // ---------------------------------------------------------------------------
-  $mapper_config['properties']['title'] = '$.displayName';
+  // // FIELD COLLECTIONS
+  // // ---------------------------------------------------------------------------
+  // $collection_config = array();
+  // $collection_config['bundleType'] = 'field_faux_collection';
+  // $collection_config['fields'] = array();
+  // $collection_config['properties'] = array();
+  // $collection_config['fields']['field_faux_collection_text']  = "$.shortTitle.label.text";
+  // $collection_config['fields']['field_faux_collection_terms'] = "$.affiliations";
+  // $collection_config['fields']['field_faux_image']            = "$.profilePhotos.bigger";
 
 
+  // $collection_mapper = new FieldCollectionMapper($collection_config);
+  // $mapper_config['fieldCollections']['field_faux_collection']           = $collection_mapper;
 
-  $mapper = new EntityMapper($mapper_config);
-  $client = CAPx::getAuthenticatedHTTPClient();
-  $importer = new EntityImporter($importer_config, $mapper, $client);
-  $importer->execute();
+  // // PROPERTIES
+  // // ---------------------------------------------------------------------------
+  // $mapper_config['properties']['title'] = '$.displayName';
+
+  // $mapper = new EntityMapper($mapper_config);
+  // $client = CAPx::getAuthenticatedHTTPClient();
+  // $importer = new EntityImporter($importer_config, $mapper, $client);
+  // $importer->execute();
 
   // BEANS!
   // ---------------------------------------------------------------------------
@@ -396,6 +404,11 @@ function stanford_capx_debug() {
   // $mapper = new EntityMapper($mapper_config);
   // $importer = new EntityImporter($importer_config, $mapper, $client);
   // $importer->execute();
+
+
+  // $cfe = entity_load('capx_cfe', array(7), array(), FALSE);
+  // dpm($cfe[7]->getEntityMapper());
+  // dpm($cfe[7]->getEntityMapperConfig());
 
   return $output;
 }

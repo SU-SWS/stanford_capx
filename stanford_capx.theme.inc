@@ -24,7 +24,7 @@ function theme_stanford_capx_columns_to_the_right($elements) {
   $element = array_pop($elements);
   global $stanford_capx_theme_zebra;
   $stanford_capx_theme_zebra = ($stanford_capx_theme_zebra == "even") ? "odd" : "even";
-  $header = array("<b>" . t($element['#title']) . "</b>", t('CAP Settings'));
+  $header = array("<b>" . t($element['#title']) . "</b>", t('CAP API Path'));
 
   $info = "";
   if (isset($element['#field_info']['field_name'])) {

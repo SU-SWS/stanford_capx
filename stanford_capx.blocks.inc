@@ -7,6 +7,7 @@
  */
 
 use CAPx\Drupal\Util\CAPx;
+use CAPx\Drupal\Util\CAPxConnection;
 
 /**
  * Implements hook_block_info().
@@ -62,12 +63,12 @@ function stanford_capx_block_view($delta = '') {
  */
 function stanford_capx_connection_status_block() {
   $content = "";
-  $connection = CAPx::testConnection();
+  $connection = CAPxConnection::testConnection();
 
   // Try to authenticate if not connected first try.
   if (!$connection->status) {
-    CAPx::renewConnectionToken();
-    $connection = CAPx::testConnection();
+    CAPxConnection::renewConnectionToken();
+    $connection = CAPxConnection::testConnection();
   }
 
   // We good now!
@@ -94,7 +95,17 @@ function stanford_capx_data_browser_launch_block() {
   $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "</p>";
 
   // @TODO: THIS!
-  $output .= l('Open Data Schema', 'admin/config/capx', array('attributes' => array('class' => 'btn button')));
+  $output .= "<p>" . l('Open Data Schema', 'admin/config/capx', array('attributes' => array('class' => 'btn button'))) . "</p>";
+
+  $output .= "<p>Here are some commonly used settings:</p>";
+  $rows = array();
+  $rows[] = array('Title', '$.displayName');
+  $rows[] = array('Body', '$.bio.html');
+  $rows[] = array('Last Updated', '$.lastModified');
+  $rows[] = array('Email', '$.primaryContact.email');
+  $rows[] = array('Profile Photo', '$.profilePhotos.bigger');
+  $rows[] = array('Job Title', '$.shortTitle.label.text');
+  $output .= theme('table', array('rows' => $rows));
 
   return $output;
 }
