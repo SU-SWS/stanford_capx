@@ -615,7 +615,7 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
 function stanford_capx_mapper_form_submit($form, $form_state) {
 
   $values = $form_state['values'];
-  $mapper = capx_cfe_load_by_machine_name($values['machine-name']);
+  $mapper = capx_cfe_load_by_machine_name($values['machine-name'], 'mapper');
 
   if (!$mapper) {
     $mapper = entity_create('capx_cfe', array());
@@ -671,7 +671,44 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   drupal_goto('admin/config/capx/mapper');
 }
 
+/**
+ * [stanford_capx_admin_config_mapper_delete description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_name) {
+  $form = array();
+  $mapper = capx_cfe_load_by_machine_name($machine_name, 'mapper');
 
+  if (!$mapper) {
+    throw new Exception("Could not load a mapper with provided machine name. Please check url.");
+  }
+
+  $form['machine-name'] = array(
+    '#type' => 'hidden',
+    '#value' => $mapper->machine_name,
+  );
+  $question = "Are you sure you want to delete " . $mapper->title . "?";
+  $path = "admin/config/capx/mapper";
+  $description = t('Like seeing your parents getting intimate, this action cannot be undone.');
+  $name = 'confirm_mapper_delete';
+  $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+  return $form;
+}
+
+/**
+ * Delete the mapper.
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
+  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name']);
+  capx_cfe_delete($mapper);
+  drupal_set_message('Mapper was deleted.');
+  drupal_goto('admin/config/capx/mapper');
+}
 
 
 

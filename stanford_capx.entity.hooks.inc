@@ -118,10 +118,16 @@ function stanford_capx_entity_info_alter(&$entity_info) {
 /**
  * Loads a cfe by machine name
  * @param  [type] $machine_name [description]
+ * @param  [type] $type The bundle type. eg: mapper, importer
  * @return [type]               [description]
  */
-function capx_cfe_load_by_machine_name($machine_name) {
-  $cfes = entity_load_multiple_by_name('capx_cfe', array($machine_name), array());
+function capx_cfe_load_by_machine_name($machine_name, $type = null) {
+
+  if (is_null($type)) {
+    throw new Exception("\$type is required in capx_cfe_load_by_machine_name");
+  }
+
+  $cfes = entity_load_multiple_by_name('capx_cfe', array($machine_name), array('type' => $type));
   // Return just one.
   if (is_array($cfes)) {
     return array_pop($cfes);
