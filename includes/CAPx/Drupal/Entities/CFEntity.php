@@ -11,6 +11,27 @@ use CAPx\Drupal\Mapper\FieldCollectionMapper;
 class CFEntity extends \Entity {
 
   /**
+   * [__construct description]
+   */
+  public function __construct(array $values = array(), $entityType = NULL) {
+    parent::__construct($values, $entityType);
+
+    /**
+     * Expose settings for easier get access.
+     */
+
+    if (isset($this->settings)) {
+      $ar = unserialize($this->settings);
+      foreach ($ar as $key => $value) {
+        if (!isset($this->{$key})) {
+          $this->{$key} = $value;
+        }
+      }
+    }
+
+  }
+
+  /**
    * [defaultLabel description]
    * @return [type] [description]
    */
@@ -31,6 +52,11 @@ class CFEntity extends \Entity {
    * @return [type] [description]
    */
   public function getEntityMapper() {
+
+    if ($this->type !== "mapper") {
+      throw new \Exception("Cannot call getEntityMapper on non mapper type.");
+    }
+
     $mapperConfig = $this->getEntityMapperConfig();
     $mapper = new EntityMapper($mapperConfig);
     return $mapper;
@@ -42,6 +68,11 @@ class CFEntity extends \Entity {
    * @return [type] [description]
    */
   public function getEntityMapperConfig() {
+
+    if ($this->type !== "mapper") {
+      throw new \Exception("Cannot call getEntityMapperConfig on non mapper type.");
+    }
+
     $settings = $this->settings;
     $settings['entityType'] = $settings['config']['entity-type'];
     $settings['bundleType'] = $settings['config']['bundle'];

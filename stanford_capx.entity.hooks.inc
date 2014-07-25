@@ -16,6 +16,7 @@ use CAPx\Drupal\Entities\CFEControllerExportable;
  */
 function stanford_capx_entity_info() {
 
+  // Base configuration entity settings.
   $return = array(
     'capx_cfe' => array(
       'label' => t('Configuration Entity'),
@@ -27,12 +28,15 @@ function stanford_capx_entity_info() {
       'entity keys' => array(
         'id' => 'cfid',
         'bundle' => 'type',
+        'name' => 'machine_name',
       ),
       'bundle keys' => array(
         'bundle' => 'type',
       ),
       'bundles' => array(),
       'load hook' => 'capx_cfe_load',
+      'save hook' => 'capx_cfe_save',
+      'delete hook' => 'capx_cfe_delete',
       'view modes' => array(
         'full' => array(
           'label' => t('Default'),
@@ -45,6 +49,7 @@ function stanford_capx_entity_info() {
       'access callback' => 'stanford_capx_access',
     ),
   );
+
   // The type entity allows us to create bundles for the above entity. You can
   // find additional bundle type information in the stanford_capx_cfe_types hook
   $return['capx_cfe_type'] = array(
@@ -110,32 +115,58 @@ function stanford_capx_entity_info_alter(&$entity_info) {
   }
 }
 
-
 /**
- * Helper function to load a mapper entity
+ * Loads a cfe by machine name
  * @param  [type] $machine_name [description]
  * @return [type]               [description]
  */
-function stanford_capx_mapper_load($machine_name) {
-
+function capx_cfe_load_by_machine_name($machine_name) {
+  $cfes = entity_load_multiple_by_name('capx_cfe', array($machine_name), array());
+  // Return just one.
+  if (is_array($cfes)) {
+    return array_pop($cfes);
+  }
+  return FALSE;
 }
 
 /**
- * Helper function to save a mapper entity
- * @param  [type] $entity [description]
- * @return [type]         [description]
+ * Load a cfe.
  */
-function stanford_capx_mapper_save($entity) {
-
+function capx_cfe_load($cfid, $reset = FALSE) {
+  $cfes = capx_cfe_load_multiple(array($cfid), array(), $reset);
+  // Return just one.
+  if (is_array($cfes)) {
+    return array_pop($cfes);
+  }
+  return FALSE;
 }
 
 /**
- * Helper function to delete a mapper entity
- * @param  [type] $entity [description]
- * @return [type]         [description]
+ * Load multiple tasks based on certain conditions.
  */
-function stanford_capx_mapper_delete($entity) {
+function capx_cfe_load_multiple($cfids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('capx_cfe', $cfids, $conditions, $reset);
+}
 
+/**
+ * Save task.
+ */
+function capx_cfe_save($cfe) {
+  entity_save('capx_cfe', $cfe);
+}
+
+/**
+ * Delete single task.
+ */
+function capx_cfe_delete($cfe) {
+  entity_delete('capx_cfe', entity_id('capx_cfe', $cfe));
+}
+
+/**
+ * Delete multiple tasks.
+ */
+function capx_cfe_delete_multiple($cfids) {
+  entity_delete_multiple('capx_cfe', $cfids);
 }
 
 // hook_entity_[action]()

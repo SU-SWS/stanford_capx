@@ -130,6 +130,12 @@ function stanford_capx_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'machine_name' => array(
+        'description' => 'The machine-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
       'type' => array(
         'description' => 'The type (bundle) of this cfe.',
         'type' => 'varchar',
@@ -160,10 +166,6 @@ function stanford_capx_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'description' => array(
-        'description' => 'task description.',
-        'type' => 'text',
       ),
       'settings' => array(
         'description' => 'The configuration settings',

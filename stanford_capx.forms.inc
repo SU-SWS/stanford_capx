@@ -178,8 +178,6 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
  */
 function stanford_capx_mapper_form($form, &$form_state) {
 
-  $mapper = new stdClass();
-
   $form = array();
   $form += stanford_capx_mapper_form_get_machine_name_form($form, $form_state);
   $form += stanford_capx_mapper_form_get_entity_mapping_form($form, $form_state);
@@ -204,6 +202,10 @@ function stanford_capx_mapper_form($form, &$form_state) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
+
+  // Globally loaded mapper
+  global $mapper;
+
   $form['naming'] = array(
     '#title' => t('Mapper title'),
     '#type' => 'fieldset',
@@ -216,6 +218,7 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
     '#type' => 'textfield',
     '#description' => t('Please enter a unique name for this mapper'),
     '#default_value' => isset($mapper->title) ? $mapper->title : '',
+    '#disabled' => isset($mapper->machine_name),
   );
 
   $form['naming']['machine-name'] = array(
@@ -246,7 +249,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
   $entity_types = capx_entity_get_info();
   $entity_options = array();
   $bundle_options = array();
-  $mapper = new stdClass();
+  global $mapper;
 
   foreach ($entity_types as $entity_name => $values) {
     $entity_options[$entity_name] = $values['label'];
@@ -270,7 +273,8 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
     '#type' => 'select',
     '#description' => t(''),
     '#options' => $entity_options,
-    '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
+    '#default_value' => isset($mapper->config['entity-type']) ? $mapper->config['entity-type'] : 'node',
+    '#disabled' => isset($mapper->machine_name),
   );
 
   // Build out the bundles options.
@@ -281,10 +285,11 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
       '#title' => t('Select bundle'),
       '#description' => t(''),
       '#options' => $bundle_opts,
-      '#default_value' => isset($mapper->bundle) ? $mapper->bundle : 'stanford_person',
+      '#default_value' => isset($mapper->config['bundle']) ? $mapper->config['bundle'] : 'stanford_person',
       '#states' => array(
         'visible' => array('select[name="entity-type"]' => array('value' => $entity_name)),
       ),
+      '#disabled' => isset($mapper->machine_name),
     );
 
   }
@@ -303,6 +308,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
 
   $entity_types = capx_entity_get_info();
   $field_collections = array();
+  global $mapper;
 
   $form['field-mapping'] = array(
     '#type' => 'fieldset',
@@ -351,7 +357,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           '#type' => 'textfield',
           '#title' => t($prop_info['label']),
           '#description' => t($prop_info['description']),
-          '#default_value' => isset($mapper->{$property_machine_name}) ?  $mapper->{$property_machine_name} : '',
+          '#default_value' => isset($mapper->properties[$property_machine_name]) ? $mapper->properties[$property_machine_name] : '',
           '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
           '#field_info' => $prop_info,
       );
@@ -414,6 +420,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
             '#type' => 'textfield',
             '#title' => t($column_key),
             '#description' => t(@$column_info['description']),
+            '#default_value' => @$mapper->fields[$field_machine_name][$column_key],
           );
         }
 
@@ -465,6 +472,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
               '#type' => 'textfield',
               '#title' => t($column_key),
               '#description' => t(@$column_info['description']),
+              '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][$column_key],
               );
           }
         }
@@ -484,6 +492,19 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
  */
 function stanford_capx_mapper_machine_name_exits($name) {
 
+  $result = db_select('capx_cfe', 'cfe')
+              ->fields('cfe', array('machine_name'))
+              ->condition('machine_name', $name)
+              ->condition('type', 'mapper')
+              ->execute();
+  $count = $result->rowCount();
+
+  // We found a match!
+  if ($count > 0) {
+    return TRUE;
+  }
+
+  // Nothing by the passed in name.
   return FALSE;
 }
 
@@ -534,7 +555,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['node'][] = "comments";
   $blacklist['node'][] = "comment_count";
   $blacklist['node'][] = "comment_count_new";
-  $blacklist['node'][] = "body";
+  $blacklist['node'][] = "body"; // body is not a property!
 
   // Terms
   $blacklist['taxonomy_term'][] = "tid";
@@ -582,7 +603,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
-  // We should validate the json selectors here.
+  // @todo: We should validate the json selectors here.
 }
 
 /**
@@ -594,8 +615,12 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
 function stanford_capx_mapper_form_submit($form, $form_state) {
 
   $values = $form_state['values'];
+  $mapper = capx_cfe_load_by_machine_name($values['machine-name']);
 
-  $mapper = entity_create('capx_cfe', array());
+  if (!$mapper) {
+    $mapper = entity_create('capx_cfe', array());
+  }
+
   $mapper->title = $values['title'];
   $mapper->machine_name = $values['machine-name'];
   $mapper->type = "mapper";
@@ -611,13 +636,39 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   $settings['config']['entity-type'] = $entity;
   $settings['config']['bundle'] = $bundle;
-  $settings['properties'] = $values['field-mapping'][$entity . "-properties"];
-  $settings['fields'] = $values['field-mapping'][$entity . "-" . $bundle . "-fields"];
-  $settings['collections'] = $values['field-mapping'][$entity . "-" . $bundle . "-collections"];
+
+  // If there are properties...
+  $properties = @$values['field-mapping'][$entity . "-properties"];
+  if (!empty($properties)) {
+    $settings['properties'] = $properties;
+  }
+
+  // If there are fields...
+  $fields = @$values['field-mapping'][$entity . "-" . $bundle . "-fields"];
+  if (!empty($fields)) {
+    $settings['fields'] = $fields;
+  }
+
+  // If there are collections...
+  $collections = @$values['field-mapping'][$entity . "-" . $bundle . "-collections"];
+  if (!empty($collections)) {
+    $settings['collections'] = $collections;
+  }
 
   $mapper->settings = $settings;
-  $mapper->save();
 
+  // New vs Edit
+  if (!empty($mapper->is_new)) {
+    drupal_set_message('Congratulations, Your mapper has been created.');
+  }
+  else {
+    drupal_set_message("Your mapper has been updated.");
+  }
+
+  // Do the save
+  capx_cfe_save($mapper);
+  // $mapper->save();
+  drupal_goto('admin/config/capx/mapper');
 }
 
 

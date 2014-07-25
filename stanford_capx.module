@@ -62,6 +62,12 @@ function stanford_capx_node_access($node, $op, $account) {
   return NODE_ACCESS_IGNORE;
 }
 
+function stanford_capx_views_api() {
+  return array(
+    'api' => 3,
+  );
+}
+
 /**
  * Implements hook_menu().
  */
@@ -120,9 +126,18 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items['admin/config/capx/mapper/edit/%machine_name'] = array(
+  $items['admin/config/capx/mapper/edit/%'] = array(
     'title' => 'Edit mapper',
     'page callback' => 'stanford_capx_admin_config_mapper_edit',
+    'page arguments' => array(5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/capx/mapper/delete/%'] = array(
+    'title' => 'Delete Mapper',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('stanford_capx_admin_config_mapper_delete', 5),
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
   );
@@ -231,7 +246,7 @@ function stanford_capx_admin_config_help() {
 function stanford_capx_admin_config_mapper() {
   $output = "";
   $output .= "<p>" . l('Create new mapper', 'admin/config/capx/mapper/new', array('attributes'=>array('class'=>'new-button btn'))) . "</p>";
-  $output .= "<p>Please create the functionality for this page</p>";
+  $output .= views_embed_view('capx_mappers');
   return $output;
 }
 
@@ -244,6 +259,11 @@ function stanford_capx_admin_config_mapper_new() {
 
   drupal_add_css(drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css");
 
+  // Data browser block.
+  $block = block_load('stanford_capx', 'data_browser_launch');
+  $block_render = _block_get_renderable_array(_block_render_blocks(array($block)));
+  $output .= render($block_render);
+
   // Get and render the mapper form.
   $form = drupal_get_form('stanford_capx_mapper_form');
   $output .= drupal_render($form);
@@ -252,12 +272,65 @@ function stanford_capx_admin_config_mapper_new() {
 }
 
 /**
+ * [stanford_capx_admin_config_mapper_delete description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_name) {
+  $form = array();
+  $mapper = capx_cfe_load_by_machine_name($machine_name);
+
+  if (!$mapper) {
+    throw new Exception("Could not load mapper with provided machine name. Please check url.");
+  }
+
+  $form['machine-name'] = array(
+    '#type' => 'hidden',
+    '#value' => $mapper->machine_name,
+  );
+  $question = "Are you sure you want to delete " . $mapper->title . "?";
+  $path = "admin/config/capx/mapper";
+  $description = t('Like seeing your parents getting intimate, this action cannot be undone.');
+  $name = 'confirm_mapper_delete';
+  $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+  return $form;
+}
+
+/**
+ * Delete the mapper.
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
+  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name']);
+  capx_cfe_delete($mapper);
+  drupal_set_message('Mapper was deleted.');
+  drupal_goto('admin/config/capx/mapper');
+}
+
+/**
  * [stanford_capx_admin_config description]
  * @return [type] [description]
  */
-function stanford_capx_admin_config_mapper_edit() {
+function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+  global $mapper;
+  $mapper = capx_cfe_load_by_machine_name($mapper_machine_name);
+
+  if (!$mapper) {
+    throw new Exception("Could not load mapper by that machine name");
+  }
+
+  $form = drupal_get_form('stanford_capx_mapper_form');
+
+  // If we have a mapper we need change the submit location.
+  unset($form["#submit"]['stanford_capx_mapper_form_submit']);
+  $form['#submit'][] = 'stanford_capx_mapper_form_edit_submit';
+
+  $output .= drupal_render($form);
+
   return $output;
 }
 
@@ -409,6 +482,9 @@ function stanford_capx_debug() {
   // $cfe = entity_load('capx_cfe', array(7), array(), FALSE);
   // dpm($cfe[7]->getEntityMapper());
   // dpm($cfe[7]->getEntityMapperConfig());
+
+  $cfe = capx_cfe_load_by_machine_name('mapper_mapper');
+  dpm($cfe);
 
   return $output;
 }
