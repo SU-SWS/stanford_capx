@@ -18,6 +18,8 @@ use CAPx\Drupal\Importer\EntityImporter;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
+use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxImporter;
 
 // No mapping into these entity types.
 global $CAP_RESTRICTED_ENTITY_TYPES;
@@ -62,11 +64,16 @@ function stanford_capx_node_access($node, $op, $account) {
   return NODE_ACCESS_IGNORE;
 }
 
+/**
+ * [stanford_capx_views_api description]
+ * @return [type] [description]
+ */
 function stanford_capx_views_api() {
   return array(
     'api' => 3,
   );
 }
+
 
 /**
  * Implements hook_menu().
@@ -160,9 +167,18 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items['admin/config/capx/importer/edit/%machine_name'] = array(
+  $items['admin/config/capx/importer/edit/%'] = array(
     'title' => 'Edit importer',
+    'page arguments' => array(5),
     'page callback' => 'stanford_capx_admin_config_import_edit',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/capx/importer/delete/%'] = array(
+    'title' => 'Delete Importer',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('stanford_capx_admin_config_importer_delete', 5),
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
   );
@@ -188,6 +204,10 @@ function stanford_capx_menu() {
 
   return $items;
 }
+
+// Pages
+// /////////////////////////////////////////////////////////////////////////////
+
 
 /**
  * [stanford_capx_admin_config description]
@@ -306,7 +326,10 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
  */
 function stanford_capx_admin_config_import() {
   $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+
+  $output .= "<p>" . l('Create new importer', 'admin/config/capx/importer/new', array('attributes'=>array('class'=>'new-button btn'))) . "</p>";
+  $output .= views_embed_view('capx_importers');
+
   return $output;
 }
 
@@ -316,7 +339,11 @@ function stanford_capx_admin_config_import() {
  */
 function stanford_capx_admin_config_import_new() {
   $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+
+   // Get and render the mapper form.
+  $form = drupal_get_form('stanford_capx_importer_form');
+  $output .= drupal_render($form);
+
   return $output;
 }
 
@@ -324,9 +351,19 @@ function stanford_capx_admin_config_import_new() {
  * [stanford_capx_admin_config description]
  * @return [type] [description]
  */
-function stanford_capx_admin_config_import_edit() {
+function stanford_capx_admin_config_import_edit($importer_machine_name) {
   $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+  global $importer;
+  $importer = CAPxImporter::loadImporter($importer_machine_name);
+
+  if (!$importer) {
+    throw new Exception("Could not load an importer with provided machine name. Please check url.");
+  }
+
+  // Render form
+  $form = drupal_get_form('stanford_capx_importer_form');
+  $output .= drupal_render($form);
+
   return $output;
 }
 

@@ -122,7 +122,6 @@ function stanford_capx_entity_info_alter(&$entity_info) {
  * @return [type]               [description]
  */
 function capx_cfe_load_by_machine_name($machine_name, $type = null) {
-
   if (is_null($type)) {
     throw new Exception("\$type is required in capx_cfe_load_by_machine_name");
   }
@@ -148,9 +147,9 @@ function capx_cfe_load($cfid, $reset = FALSE) {
 }
 
 /**
- * Load multiple tasks based on certain conditions.
+ * Load multiple cfes based on certain conditions.
  */
-function capx_cfe_load_multiple($cfids = array(), $conditions = array(), $reset = FALSE) {
+function capx_cfe_load_multiple($cfids = FALSE, $conditions = array(), $reset = FALSE) {
   return entity_load('capx_cfe', $cfids, $conditions, $reset);
 }
 
@@ -159,6 +158,22 @@ function capx_cfe_load_multiple($cfids = array(), $conditions = array(), $reset 
  */
 function capx_cfe_save($cfe) {
   entity_save('capx_cfe', $cfe);
+}
+
+/**
+ * Wrapper function for capx_cfe_save for mappers.
+ * @param  [type] $mapper [description]
+ * @return [type]         [description]
+ */
+function capx_mapper_save($mapper) {
+   $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
+  /**
+   * Add this information to the entity as they are fields used by views.
+   */
+  $mapper->field_entity_type->set($mapper->raw()->settings['config']['entity-type']);
+  $mapper->field_bundle_type->set($mapper->raw()->settings['config']['bundle']);
+
+  capx_cfe_save($mapper->raw());
 }
 
 /**
@@ -186,10 +201,8 @@ function capx_cfe_delete_multiple($cfids) {
  * @return [type]         [description]
  */
 function stanford_capx_entity_delete($entity, $type) {
-
   $entity = entity_metadata_wrapper($type, $entity);
   CAPx::deleteProfileRecord($entity);
-
 }
 
 /**

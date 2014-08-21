@@ -9,7 +9,8 @@ use CAPx\APILib\HTTPClient;
 use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class CAPxConnection {
-   /**
+
+  /**
    * Test that both the API and Auth endpoints work.
    * @return [type] [description]
    */

@@ -26,4 +26,14 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
     return parent::create($values);
   }
 
+  /**
+   * Save function.
+   * @param  [type] $entity      [description]
+   * @param  [type] $transaction [description]
+   * @return [type]              [description]
+   */
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
+    parent::save($entity, $transaction);
+  }
+
 }

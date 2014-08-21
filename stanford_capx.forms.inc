@@ -9,6 +9,8 @@
 
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
+use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxImporter;
 
 // /////////////////////////////////////////////////////////////////////////////
 // CONNECT FORM
@@ -167,7 +169,7 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
 
 // /////////////////////////////////////////////////////////////////////////////
-// MAPPER FORM
+// MAPPER FORMS
 // /////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -481,7 +483,6 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
     }
   }
 
-
   return $form;
 }
 
@@ -659,15 +660,15 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   // New vs Edit
   if (!empty($mapper->is_new)) {
-    drupal_set_message('Congratulations, Your mapper has been created.');
+    drupal_set_message('Congratulations, Your mapper has been created.', 'status', FALSE);
   }
   else {
-    drupal_set_message("Your mapper has been updated.");
+    drupal_set_message("Your mapper has been updated.", 'status', FALSE);
   }
 
   // Do the save
-  capx_cfe_save($mapper);
-  // $mapper->save();
+  capx_mapper_save($mapper);
+
   drupal_goto('admin/config/capx/mapper');
 }
 
@@ -691,7 +692,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   );
   $question = "Are you sure you want to delete " . $mapper->title . "?";
   $path = "admin/config/capx/mapper";
-  $description = t('Like seeing your parents getting intimate, this action cannot be undone.');
+  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
   $name = 'confirm_mapper_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
   return $form;
@@ -704,11 +705,254 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
  * @return [type]             [description]
  */
 function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
-  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name']);
+  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   capx_cfe_delete($mapper);
-  drupal_set_message('Mapper was deleted.');
+  drupal_set_message('Mapper was deleted.', 'status');
   drupal_goto('admin/config/capx/mapper');
 }
+
+
+// /////////////////////////////////////////////////////////////////////////////
+// IMPORTER FORMS
+// /////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * [stanford_capx_importer_form description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_importer_form($form, &$form_state) {
+
+  global $importer;
+
+  // Configuration group
+  // -–-–-–-–-–-–-–-–-–-–-
+
+  $form['naming'] = array(
+    '#title' => t('Configuration'),
+    '#type' => 'fieldset',
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    '#description' => t('Provide a human-readable name and machine name for this selection of profiles.'),
+  );
+
+  $form['naming']['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Importer name'),
+    '#description' => t('Please enter a unique name for this Importer'),
+    '#default_value' => isset($importer->title) ? $importer->title : '',
+    '#disabled' => isset($importer->machine_name),
+  );
+
+  $form['naming']['machine-name'] = array(
+    '#type' => 'machine_name',
+    '#title' => t('Machine name'),
+    '#default_value' => isset($importer->machine_name) ? $importer->machine_name : '',
+    '#size' => 64,
+    '#maxlength' => 64,
+    '#description' => t('A unique name for the importer. It must only contain lowercase letters, numbers and hyphens.'),
+    '#machine_name' => array(
+      'exists' => 'stanford_capx_importer_machine_name_exits',
+      'source' => array('naming','title'),
+    ),
+    '#disabled' => isset($importer->machine_name),
+  );
+
+  // Create options...
+  $mapping_options = array();
+  $mappers = CAPxMapper::loadAllMappers();
+  foreach ($mappers as $cfid => $mapper) {
+    $mapping_options[$mapper->machine_name] = $mapper->title;
+  }
+
+  $form['naming']['mapper'] = array(
+    '#type' => 'select',
+    '#title' => t('Mapping'),
+    '#description' => t('Choose the Mapper you would like to import these profiles with.'),
+    '#options' => $mapping_options,
+    '#default_value' => isset($importer->mapper) ? $importer->mapper : '',
+    // '#disabled' => isset($importer->mapper),
+  );
+
+  // Profile group
+  // -–-–-–-–-–-–-–-–-–-–-
+
+  $form['groups'] = array(
+    '#title' => t('Add groups'),
+    '#type' => 'fieldset',
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    '#description' => t(''),
+  );
+
+  $link = l(t('Stanford University Org Code Hierarchy'), 'http://www.stanford.edu/dept/pres-provost/budget/org/orgchart/');
+
+  $form['groups']['organization'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Organization'),
+    '#description' => t('Please select the name of the organization you wish to import. Learn more about !orgchart.', array('!orgchart' => $link)),
+    '#default_value' => isset($importer->organization) ? $importer->organization : '',
+    '#autocomplete_path' => 'stanford-cap-api-org-autocomplete', // @todo: this.
+  );
+
+  $link = l(t('workgroup manager website'), 'https://workgroup.stanford.edu');
+  $form['groups']['workgroup'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Workgroup'),
+    '#description' => t('Enter the name of the workgroup you wish to import. You can learn more about workgroups at Stanford, and get propernames for import, at the !managerlink.', array('!managerlink' => $link)),
+    '#default_value' => isset($importer->workgroup) ? $importer->workgroup : '',
+  );
+
+  $form['individuals'] = array(
+    '#title' => t('Add individuals'),
+    '#type' => 'fieldset',
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    '#description' => t(''),
+  );
+
+  $form['individuals']['sunet_id'] = array(
+    '#type' => 'textarea',
+    '#title' => t('SUNet IDs'),
+    '#description' => t('Enter SUNet IDs for the profiles you wish to import. Enter multiple SUNet IDs by separating them with a comma.'),
+    '#default_value' => isset($importer->sunet_id) ? $importer->sunet_id : '',
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+
+  $form['actions']['saveandimport'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save & Import Now'),
+  );
+
+  return $form;
+}
+
+/**
+ * [stanford_capx_importer_machine_name_exits description]
+ * @todo refactor this with the mapper_machine_name_exists function.
+ * @param  [type] $name [description]
+ * @return [type]       [description]
+ */
+function stanford_capx_importer_machine_name_exits($name) {
+
+  $result = db_select('capx_cfe', 'cfe')
+              ->fields('cfe', array('machine_name'))
+              ->condition('machine_name', $name)
+              ->condition('type', 'importer')
+              ->execute();
+  $count = $result->rowCount();
+
+  // We found a match!
+  if ($count > 0) {
+    return TRUE;
+  }
+
+  // Nothing by the passed in name.
+  return FALSE;
+}
+
+/**
+ * [stanford_capx_importer_form_validate description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_importer_form_validate($form, &$form_state) {
+  // Todo: validate options
+}
+
+/**
+ * [stanford_capx_importer_form_submit description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_importer_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $importer = CAPxImporter::loadImporter($values['machine-name']);
+
+  if (!$importer) {
+    $importer = entity_create('capx_cfe', array('type' => 'importer'));
+  }
+
+  $importer->title = $values['title'];
+  $importer->machine_name = $values['machine-name'];
+  $settings = array();
+
+  // Put settings in here!
+  $settings['mapper'] = $values['mapper'];
+  $settings['organization'] = $values['organization'];
+  $settings['workgroup'] = $values['workgroup'];
+  $settings['sunet_id'] = $values['sunet_id'];
+
+  $importer->settings = $settings;
+
+  // New vs Edit
+  if (!empty($importer->is_new)) {
+    drupal_set_message('Congratulations, Your importer has been created.', 'status', FALSE);
+  }
+  else {
+    drupal_set_message("Your importer has been updated.", 'status', FALSE);
+  }
+
+  // Do the save
+  capx_cfe_save($importer);
+
+  drupal_goto('admin/config/capx/importer');
+}
+
+/**
+ * [stanford_capx_admin_config_importer_delete description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_importer_delete($form, $form_state, $machine_name) {
+  $form = array();
+  $importer = CAPxImporter::loadImporter($machine_name);
+
+  if (!$importer) {
+    throw new Exception("Could not load an importer with provided machine name. Please check url.");
+  }
+
+  $form['machine-name'] = array(
+    '#type' => 'hidden',
+    '#value' => $importer->machine_name,
+  );
+
+  $question = "Are you sure you want to delete " . $importer->title . "?";
+  $path = "admin/config/capx/importer";
+  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
+  $name = 'confirm_importer_delete';
+  $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+  return $form;
+}
+
+/**
+ * Delete the importer.
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
+  $importer = CAPxImporter::loadImporter($form_state['values']['machine-name']);
+  capx_cfe_delete($importer);
+  drupal_set_message('Importer was deleted.', 'status');
+  drupal_goto('admin/config/capx/importer');
+}
+
+
+
+
+
+
 
 
 
