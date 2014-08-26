@@ -12,6 +12,8 @@ require_once "stanford_capx.entity.hooks.inc";
 require_once "stanford_capx.forms.inc";
 require_once "stanford_capx.blocks.inc";
 require_once "stanford_capx.theme.inc";
+require_once "stanford_capx.views.inc";
+
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
@@ -73,7 +75,6 @@ function stanford_capx_views_api() {
     'api' => 3,
   );
 }
-
 
 /**
  * Implements hook_menu().
@@ -488,6 +489,9 @@ function stanford_capx_debug() {
 
   // $cfe = capx_cfe_load_by_machine_name('mapper_mapper', 'mapper');
   // dpm($cfe);
+
+  $importer = CAPxImporter::loadEntityImporter('importy_porty');
+  $importer->execute();
 
   return $output;
 }

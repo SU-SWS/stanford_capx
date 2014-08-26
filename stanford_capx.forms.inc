@@ -275,7 +275,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
     '#type' => 'select',
     '#description' => t(''),
     '#options' => $entity_options,
-    '#default_value' => isset($mapper->config['entity-type']) ? $mapper->config['entity-type'] : 'node',
+    '#default_value' => isset($mapper->entityType) ? $mapper->entityType : 'node',
     '#disabled' => isset($mapper->machine_name),
   );
 
@@ -287,7 +287,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
       '#title' => t('Select bundle'),
       '#description' => t(''),
       '#options' => $bundle_opts,
-      '#default_value' => isset($mapper->config['bundle']) ? $mapper->config['bundle'] : 'stanford_person',
+      '#default_value' => isset($mapper->bundleType) ? $mapper->bundleType : 'stanford_person',
       '#states' => array(
         'visible' => array('select[name="entity-type"]' => array('value' => $entity_name)),
       ),
@@ -542,6 +542,8 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['node'][] = "nid";
   $blacklist['node'][] = "vid";
   $blacklist['node'][] = "is_new";
+  $blacklist['node'][] = "changed";
+  $blacklist['node'][] = "created";
   $blacklist['node'][] = "type";
   $blacklist['node'][] = "language";
   $blacklist['node'][] = "url";
@@ -627,7 +629,6 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $mapper->type = "mapper";
 
   $settings = array();
-  $settings['config'] = array();
   $settings['fields'] = array();
   $settings['properties'] = array();
   $settings['collections'] = array();
@@ -635,8 +636,8 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $entity = $values['entity-type'];
   $bundle = $values['bundle-' . $entity];
 
-  $settings['config']['entity-type'] = $entity;
-  $settings['config']['bundle'] = $bundle;
+  $settings['entityType'] = $entity;
+  $settings['bundleType'] = $bundle;
 
   // If there are properties...
   $properties = @$values['field-mapping'][$entity . "-properties"];

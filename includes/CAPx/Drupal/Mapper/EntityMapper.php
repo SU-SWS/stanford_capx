@@ -65,6 +65,11 @@ class EntityMapper extends MapperAbstract {
         }
       }
 
+      // We got nothing!
+      if (empty($info)) {
+        continue;
+      }
+
       $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
       $fieldInfoField = field_info_field($fieldName);
 
@@ -141,7 +146,6 @@ class EntityMapper extends MapperAbstract {
       $collectionProcessor = new FieldCollectionProcessor($collectionMapper, $data);
       $collectionProcessor->setParentEntity($entity);
       $collectionProcessor->execute();
-      // $collectionEntities[] = $collectionProcessor->getFieldCollectionEntity();
 
     }
 

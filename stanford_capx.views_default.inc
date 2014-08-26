@@ -65,7 +65,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'There are no available mappers. Click the create mapper link above to get started.';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
-  /* Field: Configuration Entity: Machine-readable name */
+  /* Field: Configuration Entity: Machine name */
   $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
   $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['machine_name']['field'] = 'machine_name';
@@ -74,16 +74,20 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['title']['field'] = 'title';
-  /* Field: Configuration Entity: Entity Type */
-  $handler->display->display_options['fields']['field_entity_type']['id'] = 'field_entity_type';
-  $handler->display->display_options['fields']['field_entity_type']['table'] = 'field_data_field_entity_type';
-  $handler->display->display_options['fields']['field_entity_type']['field'] = 'field_entity_type';
-  $handler->display->display_options['fields']['field_entity_type']['label'] = 'Selected Entity Type';
-  /* Field: Configuration Entity: Entity Type */
-  $handler->display->display_options['fields']['field_bundle_type']['id'] = 'field_bundle_type';
-  $handler->display->display_options['fields']['field_bundle_type']['table'] = 'field_data_field_bundle_type';
-  $handler->display->display_options['fields']['field_bundle_type']['field'] = 'field_bundle_type';
-  $handler->display->display_options['fields']['field_bundle_type']['label'] = 'Selected Bundle';
+  /* Field: Configuration Entity: Configuration Settings */
+  $handler->display->display_options['fields']['settings']['id'] = 'settings';
+  $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['settings']['field'] = 'settings';
+  $handler->display->display_options['fields']['settings']['label'] = 'Entity Type';
+  $handler->display->display_options['fields']['settings']['format'] = 'key';
+  $handler->display->display_options['fields']['settings']['key'] = 'entityType';
+  /* Field: Configuration Entity: Configuration Settings */
+  $handler->display->display_options['fields']['settings_1']['id'] = 'settings_1';
+  $handler->display->display_options['fields']['settings_1']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['settings_1']['field'] = 'settings';
+  $handler->display->display_options['fields']['settings_1']['label'] = 'Bundle Type';
+  $handler->display->display_options['fields']['settings_1']['format'] = 'key';
+  $handler->display->display_options['fields']['settings_1']['key'] = 'bundleType';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
@@ -118,13 +122,11 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['sorts']['created']['id'] = 'created';
   $handler->display->display_options['sorts']['created']['table'] = 'capx_cfe';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
-  /* Filter criterion: Configuration Entity: Type */
+  /* Filter criterion: Configuration Entity: type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'capx_cfe';
   $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'mapper' => 'mapper',
-  );
+  $handler->display->display_options['filters']['type']['value'] = 'mapper';
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'mappers_manage_block');
@@ -209,7 +211,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'Sorry, there are no importers available. To get started click on the create new importer link above.';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
-  /* Field: Configuration Entity: Machine-readable name */
+  /* Field: Configuration Entity: Machine name */
   $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
   $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['machine_name']['field'] = 'machine_name';
@@ -238,19 +240,41 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing_1']['alter']['text'] = 'Delete';
   $handler->display->display_options['fields']['nothing_1']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['nothing_1']['alter']['path'] = 'admin/config/capx/importer/delete/[machine_name]';
+  /* Field: Configuration Entity: Configuration Settings */
+  $handler->display->display_options['fields']['settings']['id'] = 'settings';
+  $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['settings']['field'] = 'settings';
+  $handler->display->display_options['fields']['settings']['label'] = 'Mapper Name';
+  $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
+  $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/mapper/edit/[settings]';
+  $handler->display->display_options['fields']['settings']['format'] = 'key';
+  $handler->display->display_options['fields']['settings']['key'] = 'mapper';
+  /* Field: Configuration Entity: Meta Data */
+  $handler->display->display_options['fields']['meta']['id'] = 'meta';
+  $handler->display->display_options['fields']['meta']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['meta']['field'] = 'meta';
+  $handler->display->display_options['fields']['meta']['label'] = 'Number of profiles';
+  $handler->display->display_options['fields']['meta']['format'] = 'key';
+  $handler->display->display_options['fields']['meta']['key'] = 'count';
+  /* Field: Configuration Entity: Meta Data */
+  $handler->display->display_options['fields']['meta_1']['id'] = 'meta_1';
+  $handler->display->display_options['fields']['meta_1']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['meta_1']['field'] = 'meta';
+  $handler->display->display_options['fields']['meta_1']['label'] = 'Last Update';
+  $handler->display->display_options['fields']['meta_1']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['meta_1']['format'] = 'key';
+  $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdate';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
   $handler->display->display_options['fields']['nothing_2']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing_2']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1]';
-  /* Filter criterion: Configuration Entity: Type */
+  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1] | Sync';
+  /* Filter criterion: Configuration Entity: type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'capx_cfe';
   $handler->display->display_options['filters']['type']['field'] = 'type';
-  $handler->display->display_options['filters']['type']['value'] = array(
-    'importer' => 'importer',
-  );
+  $handler->display->display_options['filters']['type']['value'] = 'importer';
 
   /* Display: Importer Manage Block */
   $handler = $view->new_display('block', 'Importer Manage Block', 'importer_manage_block');

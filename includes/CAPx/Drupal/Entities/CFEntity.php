@@ -74,8 +74,6 @@ class CFEntity extends \Entity {
     }
 
     $settings = $this->settings;
-    $settings['entityType'] = $settings['config']['entity-type'];
-    $settings['bundleType'] = $settings['config']['bundle'];
     $settings['fieldCollections'] = array();
 
     if (isset($settings['collections'])) {
@@ -89,6 +87,37 @@ class CFEntity extends \Entity {
     }
 
     unset($settings['collections']);
+
+    return $settings;
+  }
+
+  /**
+   * This function takes the saved settings and retuns an array that
+   * matches the API importer library settings.
+   * @return [type] [description]
+   */
+  public function getEntityImporterConfig() {
+
+    if ($this->type !== "importer") {
+      throw new \Exception("Cannot call getEntityImporterConfig on non importer type.");
+    }
+
+    $settings = $this->settings;
+
+    if (!empty($settings['organization'])) {
+      $settings['types'][] = 'orgCodes';
+      $settings['values'][] = explode(",", $settings['organization']);
+    }
+
+    if (!empty($settings['workgroup'])) {
+      $settings['types'][] = 'privGroups';
+      $settings['values'][] = explode(",", $settings['workgroup']);
+    }
+
+    if (!empty($settings['sunet_id'])) {
+      $settings['types'][] = 'uids';
+      $settings['values'][] = explode(",", $settings['sunet_id']);
+    }
 
     return $settings;
   }

@@ -145,11 +145,12 @@ class CAPxConnection {
     $endpoint   = CAPx::getAPIEndpoint();
     $authpoint  = CAPx::getAuthEndpoint();
 
-    $connection = CAPxConnection::testConnectionToken($token);
+    $client = new HTTPClient();
+    $client->setEndpoint($authpoint);
 
-    if (!$connection->value) {
-      $client = new HTTPClient();
-      $client->setEndpoint($authpoint);
+    $connection = CAPxConnection::testApiConnection($token);
+
+    if (!$connection->status) {
       $response = $client->api('auth')->authenticate($username, $password);
       if ($response) {
         $token = $response->getAuthApiToken();
@@ -162,6 +163,7 @@ class CAPxConnection {
 
     $client->setApiToken($token);
     $client->setEndpoint($endpoint);
+
     return $client;
   }
 

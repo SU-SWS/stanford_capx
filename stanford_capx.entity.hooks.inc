@@ -127,6 +127,7 @@ function capx_cfe_load_by_machine_name($machine_name, $type = null) {
   }
 
   $cfes = entity_load_multiple_by_name('capx_cfe', array($machine_name), array('type' => $type));
+
   // Return just one.
   if (is_array($cfes)) {
     return array_pop($cfes);
@@ -166,14 +167,8 @@ function capx_cfe_save($cfe) {
  * @return [type]         [description]
  */
 function capx_mapper_save($mapper) {
-   $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
-  /**
-   * Add this information to the entity as they are fields used by views.
-   */
-  $mapper->field_entity_type->set($mapper->raw()->settings['config']['entity-type']);
-  $mapper->field_bundle_type->set($mapper->raw()->settings['config']['bundle']);
-
-  capx_cfe_save($mapper->raw());
+  //  $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
+  capx_cfe_save($mapper);
 }
 
 /**

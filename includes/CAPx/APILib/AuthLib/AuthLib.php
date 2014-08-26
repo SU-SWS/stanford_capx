@@ -129,15 +129,15 @@ class AuthLib extends APILib {
     // @todo: handle non 200 responses with error logging.
     switch ($code) {
       case '200':
-      try {
-        $json = $response->json();
-        $this->setAuthApiToken($json['access_token']);
-        $this->setAuthApiTokenExpires($json['expires_in']);
-      }
-      catch(\Guzzle\Common\Exception\RuntimeException $e) {
-        drupal_set_message('Could not parse json response. Please check endpoint configuration.', 'error', FALSE);
-        return $this;
-      }
+        try {
+          $json = $response->json();
+          $this->setAuthApiToken($json['access_token']);
+          $this->setAuthApiTokenExpires($json['expires_in']);
+        }
+        catch(\Guzzle\Common\Exception\RuntimeException $e) {
+          drupal_set_message('Could not parse json response. Please check endpoint configuration.', 'error', FALSE);
+          return $this;
+        }
         break;
 
       default:

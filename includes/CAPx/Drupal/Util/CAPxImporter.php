@@ -6,6 +6,13 @@
 
 namespace CAPx\Drupal\Util;
 
+use CAPx\APILib\HTTPClient;
+
+use CAPx\Drupal\Util\CAPx;
+use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxConnection;
+use CAPx\Drupal\Importer\EntityImporter;
+
 class CAPxImporter {
 
   /**
@@ -21,7 +28,7 @@ class CAPxImporter {
    * @param  [type] $key [description]
    * @return [type]      [description]
    */
-  public static function loadImporter($key) {
+  public static function loadImporterConfig($key) {
 
     if (is_numeric($key)) {
       return capx_cfe_load_multiple($key, array('type' => 'importer'));
@@ -30,6 +37,23 @@ class CAPxImporter {
       return capx_cfe_load_by_machine_name($key, 'importer');
     }
 
+  }
+
+  /**
+   * [loadEntityImporter description]
+   * @param  [type] $key [description]
+   * @return [type]      [description]
+   */
+  public static function loadEntityImporter($key) {
+
+    $importerConfig = self::loadImporterConfig($key);
+    $config = $importerConfig->getEntityImporterConfig();
+
+    $mapper = CAPxMapper::loadEntityMapper($importerConfig->mapper);
+    $client = CAPxConnection::getAuthenticatedHTTPClient();
+
+    $importer = new EntityImporter($config, $mapper, $client);
+    return $importer;
   }
 
 }

@@ -8,62 +8,6 @@
  */
 function stanford_capx_install() {
 
-  // Check if our field is not already created.
-  if (!field_info_field('field_entity_type')) {
-
-    // Create the field base.
-    $field = array(
-      'field_name' => 'field_entity_type',
-      'type' => 'text',
-    );
-    field_create_field($field);
-
-    // Create the field instance on the bundle.
-    $instance = array(
-      'field_name' => 'field_entity_type',
-      'entity_type' => 'capx_cfe',
-      'label' => 'Selected Entity Type',
-      'bundle' => 'mapper',
-      // If you don't set the "required" property then the field wont be required by default.
-      'required' => TRUE,
-      'settings' => array(
-      ),
-      'widget' => array(
-        'type' => 'textfield',
-      ),
-    );
-
-    field_create_instance($instance);
-  }
-
-   // Check if our field is not already created.
-  if (!field_info_field('field_bundle_type')) {
-
-    // Create the field base.
-    $field = array(
-      'field_name' => 'field_bundle_type',
-      'type' => 'text',
-    );
-    field_create_field($field);
-
-    // Create the field instance on the bundle.
-    $instance = array(
-      'field_name' => 'field_bundle_type',
-      'entity_type' => 'capx_cfe',
-      'label' => 'Selected Bundle Type',
-      'bundle' => 'mapper',
-      // If you don't set the "required" property then the field wont be required by default.
-      'required' => TRUE,
-      'settings' => array(
-      ),
-      'widget' => array(
-        'type' => 'textfield',
-      ),
-    );
-
-    field_create_instance($instance);
-  }
-
 }
 
 /**
@@ -212,6 +156,13 @@ function stanford_capx_schema() {
       ),
       'settings' => array(
         'description' => 'The configuration settings',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+      ),
+      'meta' => array(
+        'description' => 'Meta data',
         'type' => 'blob',
         'size' => 'big',
         'not null' => TRUE,
