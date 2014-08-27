@@ -1069,17 +1069,17 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
   global $language;
   $lang = $language->language;
 
-  dpm($mapper);
-  dpm($form);
   $fields = $mapper->fields;
   $properties = $mapper->properties;
   $collections = $mapper->collections;
+
+  $description = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
 
   // Disable any properties...
   foreach ($properties as $property_name => $value) {
     if (!empty($value)) {
       $form[$property_name]['#disabled'] = TRUE;
-      $form[$property_name]['#description'] = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
+      $form[$property_name]['#description'] = $description;
     }
   }
 
@@ -1089,30 +1089,27 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
       if (!empty($value)) {
         $form[$field_name]["#disabled"] = TRUE;
         $form[$field_name][LANGUAGE_NONE]['#description'] =
-        $form[$field_name][LANGUAGE_NONE][0]['#description'] = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
+        $form[$field_name][LANGUAGE_NONE][0]['#description'] = $description;
         break;
       }
     }
   }
 
-  dpm($collections);
-
   // Disable any field collection fields with data.
   foreach ($collections as $field_name => $fc_field) {
-    foreach ($fc_field as $column_name => $value) {
+    foreach ($fc_field as $fc_field_name => $value) {
 
         if (!empty($value)) {
           foreach ($form[$field_name][LANGUAGE_NONE] as $key => $fc_entity) {
 
-           if (!is_numeric($key)) {
+            if (!is_numeric($key)) {
               continue;
             }
 
-            $form[$field_name][LANGUAGE_NONE][$key];
+            $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
+            $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name][LANGUAGE_NONE][0]['#description'] = $description;
 
-            // dpm($form[$field_name][LANGUAGE_NONE][$key]);
-            //$form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
-          }
+           }
         }
 
     }
