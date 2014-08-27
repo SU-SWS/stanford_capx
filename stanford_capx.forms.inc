@@ -299,7 +299,6 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
   return $form;
 }
 
-
 /**
  * [stanford_capx_mapper_form_get_field_mapping_form description]
  * @param  [type] $form       [description]
@@ -417,6 +416,19 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
         );
 
+        // Do not give all options for the file field. File field processor
+        // will take care of most.
+        if ($field_info_field['type'] == "file" || $field_info_field['type'] == "image") {
+          $form['field-mapping'][$field_container][$field_machine_name][0] = array(
+            '#type' => 'textfield',
+            '#title' => t('File Information'),
+            '#description' => t('In your JSON Path selector please pass in the whole array of image information. eg: $.profilePhotos.bigger'),
+            '#default_value' => @$mapper->fields[$field_machine_name][0],
+          );
+
+          continue;
+        }
+
         foreach ($field_info_field['columns'] as $column_key => $column_info) {
           $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
             '#type' => 'textfield',
@@ -469,13 +481,25 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
             '#field_instance_info' => $instance_info,
           );
 
+          // Do not give all options for the file field. File field processor
+          // will take care of most.
+          if ($fc_field_info['type'] == "file" || $fc_field_info['type'] == "image") {
+            $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][0] = array(
+              '#type' => 'textfield',
+              '#title' => t('File Info'),
+              '#description' => t('In your JSON Path selector please pass in the whole array of image information. eg: $.profilePhotos.bigger'),
+              '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][0],
+            );
+            continue;
+          }
+
           foreach ($fc_field_info['columns'] as $column_key => $column_info) {
             $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key] = array(
               '#type' => 'textfield',
               '#title' => t($column_key),
               '#description' => t(@$column_info['description']),
               '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][$column_key],
-              );
+            );
           }
         }
 
@@ -508,7 +532,6 @@ function stanford_capx_mapper_machine_name_exits($name) {
   // Nothing by the passed in name.
   return FALSE;
 }
-
 
 /**
  * Takes in an array of properties and filters out the ones that users should
@@ -597,7 +620,6 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
 
   return $properties;
 }
-
 
 /**
  * [stanford_capx_mapper_form_validate description]
@@ -885,6 +907,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   $importer->title = $values['title'];
   $importer->machine_name = $values['machine-name'];
+  $importer->meta = array('count' => 0, 'lastUpdated' => 0);
   $settings = array();
 
   // Put settings in here!
@@ -904,7 +927,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   }
 
   // Do the save
-  capx_cfe_save($importer);
+  capx_importer_save($importer);
 
   drupal_goto('admin/config/capx/importer');
 }
@@ -949,10 +972,154 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
   drupal_goto('admin/config/capx/importer');
 }
 
+// /////////////////////////////////////////////////////////////////////////////
+// FORM ALTERS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Implements hook_form_alter().
+ */
+function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
+
+  // If on an entity form add the vertical tab and disable fields that are
+  // mapped.
+  if (!empty($form['#entity_type'])) {
+    $entity = $form["#entity"];
+    if (isset($entity->capx)) {
+      stanford_capx_entity_form_add_vt($form, $form_state, $form_id);
+      stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
+    }
+  }
+
+}
+
+/**
+ * [stanford_capx_entity_form_add_vt description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @param  [type] $form_id    [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id) {
+   // Create a fieldset that will be included in the vertical tab.
+  $form['capx_vertical_tab'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('CAPx Information'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
+    '#weight' => -99,
+    '#description' => t('CAPx information about this vertical tab goes here'),
+    '#summary' => t('summary'),
+    // The #group value must match the name of the vertical tabs element.
+    // In most cases, this is 'additional_settings'.
+    '#group' => 'additional_settings',
+    // '#attached' => array(
+    //   'js' => array(
+    //     'vertical-tabs' => drupal_get_path('module', 'vertical_tabs_example') . '/vertical_tabs_example.js',
+    //   ),
+    // ),
+  );
+
+  $entity = $form["#entity"];
+  $capx_info = $entity->capx;
+
+  // Remove a few things.
+  unset($capx_info['entity_type']);
+  unset($capx_info['bundle_type']);
+  unset($capx_info['id']);
+  unset($capx_info['entity_id']);
+
+  // Small tweak
+  $capx_info['importer'] = l($capx_info['importer'], 'admin/config/capx/importer/edit/' . $capx_info['importer']);
+
+  $header = array_keys($capx_info);
+  $rows = array_values($capx_info);
+
+  $vars = array(
+    'header' => $header,
+    'rows' => array('data' => $rows),
+    'attributes' => array(),
+    'caption' => '',
+    'colgroups' => array(),
+    'sticky' => '',
+    'empty' => '',
+  );
+
+  $table = theme_table($vars);
+
+  $form['capx_vertical_tab']['tmpinfo']['#markup'] = $table;
+
+}
+
+/**
+ * Disable all fields that have mapped data from all users.
+ * @todo all of this. We may have to change the way we look up fields as they
+ * might not be in the order we are assuming below.
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @param  [type] $ford_id    [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $ford_id) {
+
+  $entity = $form["#entity"];
+  $importer = CAPxImporter::loadImporter($entity->capx['importer']);
+  $mapper = CAPxMapper::loadMapper($importer->mapper);
+  global $language;
+  $lang = $language->language;
+
+  dpm($mapper);
+  dpm($form);
+  $fields = $mapper->fields;
+  $properties = $mapper->properties;
+  $collections = $mapper->collections;
+
+  // Disable any properties...
+  foreach ($properties as $property_name => $value) {
+    if (!empty($value)) {
+      $form[$property_name]['#disabled'] = TRUE;
+      $form[$property_name]['#description'] = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
+    }
+  }
+
+  // Disable any fields with data...
+  foreach ($fields as $field_name => $columns) {
+    foreach ($columns as $column_name => $value) {
+      if (!empty($value)) {
+        $form[$field_name]["#disabled"] = TRUE;
+        $form[$field_name][LANGUAGE_NONE]['#description'] =
+        $form[$field_name][LANGUAGE_NONE][0]['#description'] = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
+        break;
+      }
+    }
+  }
+
+  dpm($collections);
+
+  // Disable any field collection fields with data.
+  foreach ($collections as $field_name => $fc_field) {
+    foreach ($fc_field as $column_name => $value) {
+
+        if (!empty($value)) {
+          foreach ($form[$field_name][LANGUAGE_NONE] as $key => $fc_entity) {
+
+           if (!is_numeric($key)) {
+              continue;
+            }
+
+            $form[$field_name][LANGUAGE_NONE][$key];
+
+            // dpm($form[$field_name][LANGUAGE_NONE][$key]);
+            //$form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
+          }
+        }
+
+    }
+  }
 
 
-
-
+}
 
 
 

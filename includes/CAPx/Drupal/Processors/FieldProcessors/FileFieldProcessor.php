@@ -47,6 +47,10 @@ class FileFieldProcessor extends FieldTypeProcessor {
    */
   public function process($data) {
 
+    $entity = $this->getEntity();
+    $fieldName = $this->getFieldName();
+    $fieldInfo = field_info_field($fieldName);
+
     drupal_alter('capx_pre_fetch_remote_file', $data);
 
     // Request the file.
@@ -63,15 +67,20 @@ class FileFieldProcessor extends FieldTypeProcessor {
     drupal_alter('capx_post_save_remote_file', $file, $filename);
 
     // All went well go and save it.
-    $entity = $this->getEntity();
-    $fieldName = $this->getFieldName();
-    $entity->{$fieldName}->set(
-      array(
-        'fid' => $file->fid,
-        'file' => $file,
-        'display' => variable_get('capx_display_file_default', 1),
-      )
+    $setData = array(
+      'fid' => $file->fid,
+      'file' => $file,
+      'display' => variable_get('capx_display_file_default', 1),
     );
+
+    // Check cardinality.
+    if ($fieldInfo['cardinality'] !== "1") {
+      // wrap the setData in another array.
+      $setData = array($setData);
+    }
+
+    // Set the thing.
+    $entity->{$fieldName}->set($setData);
 
   }
 

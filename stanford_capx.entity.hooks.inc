@@ -172,6 +172,25 @@ function capx_mapper_save($mapper) {
 }
 
 /**
+ * Wrapper function for capx_cfe_save for importers.
+ * @param  [type] $mapper [description]
+ * @return [type]         [description]
+ */
+function capx_importer_save($importer) {
+  //  $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
+
+  if (empty($importer->meta['count'])) {
+    $importer->meta['count'] = 0;
+  }
+
+  if (empty($importer->meta['lastUpdate'])) {
+    $importer->meta['lastUpdate'] = 0;
+  }
+
+  capx_cfe_save($importer);
+}
+
+/**
  * Delete single task.
  */
 function capx_cfe_delete($cfe) {
@@ -222,12 +241,34 @@ function stanford_capx_entity_update($entity, $type) {
 }
 
 /**
- * [stanford_capx_entity_load description]
+ * Add some extra information to every loaded entity.
+ * @todo : Think about this some more. Should we do this? Overhead?
  * @param  [type] $entities [description]
  * @param  [type] $type     [description]
  * @return [type]           [description]
  */
 function stanford_capx_entity_load($entities, $type) {
+
+  // @todo: cache all this!
+  $ids = array_keys($entities);
+
+  $meta = db_select("capx_profiles", 'capx')
+      ->fields('capx')
+      ->condition('entity_type', $type)
+      ->condition('entity_id', $ids)
+      ->execute()
+      ->fetchAllAssoc('entity_id');
+
+  foreach ($entities as $entity_id => $entity) {
+
+    // If we do not find a match then carry on.
+    if (!isset($meta[$entity_id])) {
+      continue;
+    }
+
+    $entity->capx = (array) $meta[$entity_id];
+
+  }
 
 }
 

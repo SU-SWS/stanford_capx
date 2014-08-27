@@ -22,6 +22,8 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
       'changed' => REQUEST_TIME,
       'uid' => $user->uid,
       'module' => 'stanford_capx',
+      'settings' => array(),
+      'meta' => array(),
     );
     return parent::create($values);
   }

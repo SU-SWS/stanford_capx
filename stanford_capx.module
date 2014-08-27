@@ -206,6 +206,25 @@ function stanford_capx_menu() {
   return $items;
 }
 
+// Cron
+// /////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Implements hook_cron().
+ */
+function stanford_capx_cron() {
+
+  // Run all importers.
+  $importers = CAPxImporter::loadAllImporters();
+  foreach ($importers as $key => $importer) {
+    $entity_importer = $importer->getEntityImporter();
+    $entity_importer->execute();
+  }
+
+}
+
+
 // Pages
 // /////////////////////////////////////////////////////////////////////////////
 
@@ -484,14 +503,22 @@ function stanford_capx_debug() {
 
 
   // $cfe = entity_load('capx_cfe', array(7), array(), FALSE);
-  // dpm($cfe[7]->getEntityMapper());
-  // dpm($cfe[7]->getEntityMapperConfig());
 
   // $cfe = capx_cfe_load_by_machine_name('mapper_mapper', 'mapper');
-  // dpm($cfe);
 
-  $importer = CAPxImporter::loadEntityImporter('importy_porty');
-  $importer->execute();
+  // $importer = CAPxImporter::loadEntityImporter('my_importer_is_better_than_yours');
+  // $importer->execute();
+
+  // $importer = CAPxImporter::loadEntityImporter('importertoimporter');
+  // $importer->execute();
+
+  // $profiles = CAPx::getProfiles('node', array('importer' => 'importertoimporter'));
+
+  $importers = CAPxImporter::loadAllImporters();
+  foreach ($importers as $key => $importer) {
+    $entity_importer = $importer->getEntityImporter();
+    $entity_importer->execute();
+  }
 
   return $output;
 }

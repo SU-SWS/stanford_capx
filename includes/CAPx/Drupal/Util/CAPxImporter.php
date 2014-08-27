@@ -28,7 +28,7 @@ class CAPxImporter {
    * @param  [type] $key [description]
    * @return [type]      [description]
    */
-  public static function loadImporterConfig($key) {
+  public static function loadImporter($key) {
 
     if (is_numeric($key)) {
       return capx_cfe_load_multiple($key, array('type' => 'importer'));
@@ -46,7 +46,7 @@ class CAPxImporter {
    */
   public static function loadEntityImporter($key) {
 
-    $importerConfig = self::loadImporterConfig($key);
+    $importerConfig = self::loadImporter($key);
     $config = $importerConfig->getEntityImporterConfig();
 
     $mapper = CAPxMapper::loadEntityMapper($importerConfig->mapper);

@@ -17,6 +17,21 @@ class FieldCollectionProcessor extends EntityProcessor {
   protected $parentEntity = null;
 
   /**
+   * [execute description]
+   * @return [type] [description]
+   */
+  public function execute() {
+    $data = $this->getData();
+    $mapper = $this->getMapper();
+    $entityType = $mapper->getEntityType();
+    $bundleType = $mapper->getBundleType();
+
+    $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
+    return $entity;
+  }
+
+
+  /**
    * [newEntity description]
    * @param  [type] $entityType [description]
    * @param  [type] $bundleType [description]
@@ -77,7 +92,6 @@ class FieldCollectionProcessor extends EntityProcessor {
    * @param [type] $entity [description]
    */
   public function setParentEntity($entity) {
-
     $this->parentEntity = $entity;
   }
 

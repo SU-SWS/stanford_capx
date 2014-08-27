@@ -246,7 +246,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['settings']['field'] = 'settings';
   $handler->display->display_options['fields']['settings']['label'] = 'Mapper Name';
   $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/mapper/edit/[settings]';
+  $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/capx/mapper/edit/[settings]';
   $handler->display->display_options['fields']['settings']['format'] = 'key';
   $handler->display->display_options['fields']['settings']['key'] = 'mapper';
   /* Field: Configuration Entity: Meta Data */

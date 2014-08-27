@@ -56,6 +56,11 @@ class EntityMapper extends MapperAbstract {
 
       // Loop through each of the data paths.
       foreach ($remoteDataPaths as $key => $dataPath) {
+
+        if (empty($dataPath)) {
+          continue;
+        }
+
         try {
           $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
         } catch(\Exception $e) {

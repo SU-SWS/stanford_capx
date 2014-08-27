@@ -19,6 +19,9 @@ class EntityImporter implements ImporterInterface {
   // The mapping scheme object
   protected $mapper;
 
+  // The machine name of the CFE Importer entity.
+  protected $machineName = '';
+
   /**
    * [__construct description]
    * @param [type] $config [description]
@@ -27,6 +30,7 @@ class EntityImporter implements ImporterInterface {
     $this->addOptions($config);
     $this->setMapper($mapper);
     $this->setClient($client);
+    $this->setMachineName($config['machine_name']);
   }
 
   /**
@@ -47,6 +51,7 @@ class EntityImporter implements ImporterInterface {
         foreach ($data['values'] as $index => $info) {
           drupal_alter('capx_pre_entity_processor', $info, $mapper);
           $processor = new EntityProcessor($mapper, $info);
+          $processor->setEntityImporter($this);
           $processor->execute();
         }
       }
@@ -117,6 +122,20 @@ class EntityImporter implements ImporterInterface {
     $this->client = $client;
   }
 
+  /**
+   * [getmachineName description]
+   * @return [type] [description]
+   */
+  public function getMachineName() {
+    return $this->machineName;
+  }
 
+  /**
+   * [setmachineName description]
+   * @param [type] $machineName [description]
+   */
+  public function setMachineName($name) {
+    $this->machineName = $name;
+  }
 
 }

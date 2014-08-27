@@ -11,6 +11,7 @@ abstract class ProcessorAbstract implements ProcessorInterface {
 
   protected $mapper;
   protected $data;
+  protected $entityImporter;
 
   /**
    * [__construct description]
@@ -56,6 +57,22 @@ abstract class ProcessorAbstract implements ProcessorInterface {
    */
   public function setMapper($map) {
     $this->mapper = $map;
+  }
+
+  /**
+   * [setEntityImporter description]
+   * @param [type] $porter [description]
+   */
+  public function setEntityImporter($porter) {
+    $this->entityImporter = $porter;
+  }
+
+  /**
+   * [getEntityImporter description]
+   * @return [type] [description]
+   */
+  public function getEntityImporter() {
+    return $this->entityImporter;
   }
 
 }

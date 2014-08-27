@@ -17,14 +17,21 @@ class EntityProcessor extends ProcessorAbstract {
   public function execute() {
     $data = $this->getData();
     $mapper = $this->getMapper();
+    $entityImporter = $this->getEntityImporter();
+    $importerMachineName = $entityImporter->getMachineName();
 
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
-    $entity = CAPx::getEntityByProfileId($entityType, $bundleType, $data['profileId']);
+    // $entity = CAPx::getEntityByProfileId($entityType, $bundleType, $data['profileId']);
+    $entity = null;
+    $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
+    if (is_array($entities)) {
+      $entity = array_pop($entities);
+    }
 
     // If we have an entity we need to update it.
-    if ($entity) {
+    if (!empty($entity)) {
       $entity = entity_metadata_wrapper($entityType, $entity);
       $entity = $this->updateEntity($entity, $data, $mapper);
     }
@@ -86,12 +93,12 @@ class EntityProcessor extends ProcessorAbstract {
     drupal_alter('capx_post_entity_create', $entity);
 
     // Write a new record
-    CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag']);
+    $entityImporter = $this->getEntityImporter();
+    $importerMachineName = $entityImporter->getMachineName();
+    CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
 
     return $entity;
   }
-
-
 
 
 }

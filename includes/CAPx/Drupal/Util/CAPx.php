@@ -11,6 +11,33 @@ use Guzzle\Http\Exception\ClientErrorResponseException;
 class CAPx {
 
   /**
+   * Returns an array of loaded profile entities.
+   * @param  array  $conditions [description]
+   * @return [type]             [description]
+   */
+  public static function getProfiles($type, $conditions = array()) {
+
+    if (!$type) {
+      throw new Exception("Type required for getProfiles", 1);
+    }
+
+    $query = db_select("capx_profiles", 'capx')
+      ->fields('capx', array('entity_type', 'entity_id'))
+      ->condition('entity_type', $type)
+      ->orderBy('id', 'DESC');
+
+    foreach ($conditions as $key => $value) {
+      $query->condition($key, $value);
+    }
+
+    $result = $query->execute();
+    $assoc = $result->fetchAllAssoc('entity_id');
+    $ids = array_keys($assoc);
+
+    return entity_load($type, $ids);
+  }
+
+  /**
    * Returns a fully loaded entity from the DB
    * @param  [type] $profileId [description]
    * @return [type]            [description]
@@ -78,7 +105,7 @@ class CAPx {
    * @param  [type] $entity [description]
    * @return [type]         [description]
    */
-  public static function insertNewProfileRecord($entity, $profileId, $etag = '') {
+  public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
     $id = $entity->getIdentifier();
     $entityType = $entity->type();
     $bundleType = $entity->getBundle();
@@ -86,7 +113,7 @@ class CAPx {
     $record = array(
       'entity_type' => $entityType,
       'entity_id' => $id,
-      'importer' => '',
+      'importer' => $importer,
       'profile_id' => $profileId,
       'etag' => $etag,
       'bundle_type' => $bundleType,

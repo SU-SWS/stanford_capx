@@ -5,8 +5,12 @@
  */
 
 namespace CAPx\Drupal\Entities;
+
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
+use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxConnection;
+use CAPx\Drupal\Importer\EntityImporter;
 
 class CFEntity extends \Entity {
 
@@ -21,7 +25,13 @@ class CFEntity extends \Entity {
      */
 
     if (isset($this->settings)) {
-      $ar = unserialize($this->settings);
+
+      $ar = $this->settings;
+
+      if (!is_array($this->settings)) {
+        $ar = unserialize($this->settings);
+      }
+
       foreach ($ar as $key => $value) {
         if (!isset($this->{$key})) {
           $this->{$key} = $value;
@@ -103,6 +113,7 @@ class CFEntity extends \Entity {
     }
 
     $settings = $this->settings;
+    $settings['machine_name'] = $this->machine_name;
 
     if (!empty($settings['organization'])) {
       $settings['types'][] = 'orgCodes';
@@ -120,6 +131,24 @@ class CFEntity extends \Entity {
     }
 
     return $settings;
+  }
+
+  /**
+   * [getEntityImporter description]
+   * @return [type] [description]
+   */
+  public function getEntityImporter() {
+
+    if ($this->type !== "importer") {
+      throw new \Exception("Cannot call getEntityImporter on non importer type.");
+    }
+
+    $config = self::getEntityImporterConfig();
+    $mapper = CAPxMapper::loadEntityMapper($this->mapper);
+    $client = CAPxConnection::getAuthenticatedHTTPClient();
+
+    $importer = new EntityImporter($config, $mapper, $client);
+    return $importer;
   }
 
 }
