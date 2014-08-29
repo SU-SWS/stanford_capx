@@ -1101,14 +1101,11 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 
         if (!empty($value)) {
           foreach ($form[$field_name][LANGUAGE_NONE] as $key => $fc_entity) {
-
             if (!is_numeric($key)) {
               continue;
             }
-
             $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
             $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name][LANGUAGE_NONE][0]['#description'] = $description;
-
            }
         }
 

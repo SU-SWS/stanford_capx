@@ -181,6 +181,68 @@ function stanford_capx_views_data() {
     ),
   );
 
+  // CAPx PROFILES
+  // ---------------------------------------------------------------------------
+
+
+  // The 'group' index will be used as a prefix in the UI for any of this
+  // table's fields, sort criteria, etc. so it's easy to tell where they came
+  // from.
+  $data['capx_profiles']['table']['group'] = t('CAPx profile');
+
+  // Define this as a base table – a table that can be described in itself by
+  // views (and not just being brought in as a relationship). In reality this
+  // is not very useful for this table, as it isn't really a distinct object of
+  // its own, but it makes a good example.
+  $data['capx_profiles']['table']['base'] = array(
+    'field' => 'id', // This is the identifier field for the view.
+    'title' => t('CAPx profile'),
+    'help' => t('Additional information about a profile.'),
+    'weight' => -10,
+  );
+
+  // settings table field.
+  $data['capx_profiles']['importer'] = array(
+    'title' => t('Importer'),
+    'help' => t('The machine name of the CAPx importer.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
+
 
   return $data;
+}
+
+/**
+ * Implements hook_views_data_alter()
+ * @param  [type] $data [description]
+ * @return [type]       [description]
+ */
+function stanford_capx_views_data_alter(&$data) {
+
+  // Add a relationship to the capx_profiles table.
+  $data['node']['capx_profiles'] = array(
+    'title' => t('CAPx profile info relationship'),
+    'help' => t('A relationship to the extra profile information from CAP'),
+    'relationship' => array(
+      'base' => 'capx_profiles', // Table we're joining to.
+      'base field' => 'entity_id', // Field on the joined table.
+      'field' => 'nid', // Real field name on the 'foo' table.
+      'handler' => 'views_handler_relationship',
+      'label' => t('Importer'),
+      'title' => t('CAPx importer'),
+      'help' => t('A relationship between the imported entity and the importer that imported it.'),
+    ),
+  );
+
 }
