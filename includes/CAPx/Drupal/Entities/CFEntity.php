@@ -89,7 +89,7 @@ class CFEntity extends \Entity {
     if (isset($settings['collections'])) {
       foreach ($settings['collections'] as $fieldName => $fields) {
         $collectionConfig = array();
-        $collectionConfig['bundleType'] = $fieldName;
+        $collectionConfig['bundle_type'] = $fieldName;
         $collectionConfig['fields'] = $fields;
         $collectionConfig['properties'] = array();
         $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($collectionConfig);

@@ -44,8 +44,8 @@ This is a PHP library that handles data from the CAP API and turns it into usefu
 
       $mapper_config = array();
 
-      $mapper_config['entityType']        = 'node';
-      $mapper_config['bundleType']        = 'faux'; // name of content type
+      $mapper_config['entity_type']        = 'node';
+      $mapper_config['bundle_type']        = 'faux'; // name of content type
       $mapper_config['fields']            = array(); // to hold fields
       $mapper_config['properties']        = array(); // to hold properties
       $mapper_config['fieldCollections']  = array(); // to hold field collection fields.

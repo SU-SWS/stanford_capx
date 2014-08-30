@@ -187,12 +187,12 @@ function stanford_capx_menu() {
   // Profile pages
   // ---------------------------------------------------------------------------
 
-  $items['admin/config/capx/profiles'] = array(
-    'title' => 'Profiles',
-    'page callback' => 'stanford_capx_admin_config_profiles',
-    'access arguments' => array('administer capx'),
-    'type' => MENU_NORMAL_ITEM,
-  );
+  // $items['admin/config/capx/profiles'] = array(
+  //   'title' => 'Profiles',
+  //   'page callback' => 'stanford_capx_admin_config_profiles',
+  //   'access arguments' => array('administer capx'),
+  //   'type' => MENU_NORMAL_ITEM,
+  // );
 
   // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
   $items['admin/config/capx/debug'] = array(
@@ -234,8 +234,15 @@ function stanford_capx_cron() {
  * @return [type] [description]
  */
 function stanford_capx_admin_config() {
+   // Connection Status Block
+  $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
+
+  // Content Output
   $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+  $output .= render($connection_block['content']);
+  $output .= "<h2>" . t('Importers') . "</h2>";
+  $output .= views_embed_view('importers_overview_page');
+
   return $output;
 }
 
@@ -391,11 +398,11 @@ function stanford_capx_admin_config_import_edit($importer_machine_name) {
  * [stanford_capx_admin_config description]
  * @return [type] [description]
  */
-function stanford_capx_admin_config_profiles() {
-  $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
-  return $output;
-}
+// function stanford_capx_admin_config_profiles() {
+//   $output = "";
+//   $output .= "<p>Please create the functionality for this page</p>";
+//   return $output;
+// }
 
 /**
  * [stanford_capx_admin_config description]
@@ -411,8 +418,8 @@ function stanford_capx_debug() {
 
   // $mapper_config = array();
 
-  // $mapper_config['entityType']        = 'node';
-  // $mapper_config['bundleType']        = 'faux';
+  // $mapper_config['entity_type']        = 'node';
+  // $mapper_config['bundle_type']        = 'faux';
   // $mapper_config['fields']            = array();
   // $mapper_config['properties']        = array();
   // $mapper_config['fieldCollections']  = array();
@@ -484,8 +491,8 @@ function stanford_capx_debug() {
   // ---------------------------------------------------------------------------
 
   // $mapper_config = array();
-  // $mapper_config['entityType']  = 'bean';
-  // $mapper_config['bundleType']  = 'profile';
+  // $mapper_config['entity_type']  = 'bean';
+  // $mapper_config['bundle_type']  = 'profile';
   // $mapper_config['fields']      = array();
   // $mapper_config['properties']  = array();
 

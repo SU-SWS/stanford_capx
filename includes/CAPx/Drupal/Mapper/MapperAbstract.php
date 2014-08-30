@@ -55,7 +55,7 @@ abstract class MapperAbstract implements MapperInterface {
    * @return [type] [description]
    */
   public function getEntityType() {
-    return $this->getConfigSetting('entityType');
+    return $this->getConfigSetting('entity_type');
   }
 
   /**
@@ -63,7 +63,7 @@ abstract class MapperAbstract implements MapperInterface {
    * @return [type] [description]
    */
   public function getBundleType() {
-    return $this->getConfigSetting('bundleType');
+    return $this->getConfigSetting('bundle_type');
   }
 
   /**

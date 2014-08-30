@@ -275,7 +275,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
     '#type' => 'select',
     '#description' => t(''),
     '#options' => $entity_options,
-    '#default_value' => isset($mapper->entityType) ? $mapper->entityType : 'node',
+    '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
     '#disabled' => isset($mapper->machine_name),
   );
 
@@ -287,7 +287,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
       '#title' => t('Select bundle'),
       '#description' => t(''),
       '#options' => $bundle_opts,
-      '#default_value' => isset($mapper->bundleType) ? $mapper->bundleType : 'stanford_person',
+      '#default_value' => isset($mapper->bundle_type) ? $mapper->bundle_type : 'stanford_person',
       '#states' => array(
         'visible' => array('select[name="entity-type"]' => array('value' => $entity_name)),
       ),
@@ -658,8 +658,8 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $entity = $values['entity-type'];
   $bundle = $values['bundle-' . $entity];
 
-  $settings['entityType'] = $entity;
-  $settings['bundleType'] = $bundle;
+  $settings['entity_type'] = $entity;
+  $settings['bundle_type'] = $bundle;
 
   // If there are properties...
   $properties = @$values['field-mapping'][$entity . "-properties"];
@@ -984,9 +984,16 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
   // If on an entity form add the vertical tab and disable fields that are
   // mapped.
   if (!empty($form['#entity_type'])) {
-    $entity = $form["#entity"];
+
+    if ($form['#entity_type'] == "user") {
+      $entity = $form["#user"];
+    }
+    else {
+      $entity = $form["#entity"];
+    }
+
     if (isset($entity->capx)) {
-      stanford_capx_entity_form_add_vt($form, $form_state, $form_id);
+      stanford_capx_entity_form_add_vt($form, $form_state, $form_id, $entity);
       stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
     }
   }
@@ -1000,7 +1007,7 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
  * @param  [type] $form_id    [description]
  * @return [type]             [description]
  */
-function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id) {
+function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entity) {
    // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
@@ -1021,7 +1028,6 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id) {
     // ),
   );
 
-  $entity = $form["#entity"];
   $capx_info = $entity->capx;
 
   // Remove a few things.

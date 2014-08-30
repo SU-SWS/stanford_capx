@@ -15,3 +15,5 @@ files[] = stanford_capx.entity.hooks.inc
 files[] = stanford_capx.forms.inc
 files[] = stanford_capx.blocks.inc
 files[] = stanford_capx.theme.inc
+
+files[] = includes/views/views_handler_filter_importer.inc

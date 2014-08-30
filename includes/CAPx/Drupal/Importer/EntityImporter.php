@@ -7,7 +7,8 @@
 namespace CAPx\Drupal\Importer;
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Mapper\EntityMapper;
-use CAPx\Drupal\Processors\EntityProcessor;
+use CAPx\Drupal\Processors\EntityProcessor as EntityProcessor;
+use CAPx\Drupal\Processors\UserProcessor as UserProcessor;
 use CAPx\APILib\HTTPClient;
 
 
@@ -50,9 +51,22 @@ class EntityImporter implements ImporterInterface {
       if(isset($data['values'])) {
         foreach ($data['values'] as $index => $info) {
           drupal_alter('capx_pre_entity_processor', $info, $mapper);
-          $processor = new EntityProcessor($mapper, $info);
-          $processor->setEntityImporter($this);
-          $processor->execute();
+
+          $entityType = $mapper->getEntityType();
+          $entityType = ucfirst(strtolower($entityType));
+          $className = "\CAPx\Drupal\Processors\\" . $entityType . 'Processor';
+
+          if (class_exists($className)) {
+            $processor = new $className($mapper, $info);
+            $processor->setEntityImporter($this);
+            $processor->execute();
+          }
+          else {
+            $processor = new EntityProcessor($mapper, $info);
+            $processor->setEntityImporter($this);
+            $processor->execute();
+          }
+
         }
       }
 

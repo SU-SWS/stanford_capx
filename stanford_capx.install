@@ -99,6 +99,11 @@ function stanford_capx_schema() {
         'default' => 1,
         'size' => 'tiny',
       ),
+      'last_sync' => array(
+        'description' => 'The last time this profile was successfully updated.',
+        'type' => 'int',
+        'default' => 0,
+      ),
     ),
     'primary key' => array('id'),
     'indexes' => array(
