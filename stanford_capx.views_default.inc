@@ -428,7 +428,8 @@ function stanford_capx_views_default_views() {
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Profiles';
   $handler->display->display_options['use_more_always'] = FALSE;
-  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['access']['perm'] = 'administer capx';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
@@ -665,6 +666,13 @@ function stanford_capx_views_default_views() {
   /* Display: Profiles */
   $handler = $view->new_display('page', 'Profiles', 'profiles');
   $handler->display->display_options['path'] = 'admin/config/capx/profiles';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Profiles';
+  $handler->display->display_options['menu']['description'] = 'CAPx Profiles';
+  $handler->display->display_options['menu']['weight'] = '0';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
+
 
   $views['capx_admin_profiles'] = $view;
 
