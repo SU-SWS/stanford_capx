@@ -12,10 +12,10 @@ use CAPx\Drupal\Processors\FieldCollectionProcessor;
 class EntityMapper extends MapperAbstract {
 
   /**
-   * [execute description]
-   * @param  [type] $entity Expects the entity to be wrapped in entity_metadata_wrapper
-   * @param  [type] $data   [description]
-   * @return [type]         [description]
+   * Execute starts the mapping process.
+   * @param  Entity $entity Expects the entity to be wrapped in entity_metadata_wrapper
+   * @param  Array $data   An array of json data. The response from the API.
+   * @return Entity a fully saved or updated entity.
    */
   public function execute($entity, $data) {
 
@@ -33,10 +33,10 @@ class EntityMapper extends MapperAbstract {
   }
 
   /**
-   * [mapFields description]
-   * @param  [type] $field_info [description]
-   * @param  [type] $data   [description]
-   * @return [type]         [description]
+   * Map all of the fields that have settings in the mapper to their field on
+   * the entity. Loop through each setting and get the data out of the response
+   * array.
+   * @param  array $data   An array of data from the API.
    */
   public function mapFields($data) {
 
@@ -57,10 +57,14 @@ class EntityMapper extends MapperAbstract {
       // Loop through each of the data paths.
       foreach ($remoteDataPaths as $key => $dataPath) {
 
+        // No setting was provided.
         if (empty($dataPath)) {
           continue;
         }
 
+        // Attempt to get the data based on the path that was provided.
+        // No guarentee that the user wont enter valid jsonpath notation that
+        // does not have a valid result.
         try {
           $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
         } catch(\Exception $e) {
@@ -72,54 +76,67 @@ class EntityMapper extends MapperAbstract {
 
       // We got nothing!
       if (empty($info)) {
+        // @todo: log this
         continue;
       }
 
+      // Get some information about the field we are going to process
       $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
       $fieldInfoField = field_info_field($fieldName);
 
+      // Widgets can change the way the data needs to be parsed. Provide that
+      // to the FieldProcessor.
       $widget = $fieldInfoInstance['widget']['type'];
       $field = $fieldInfoField['type'];
 
+      // Create a new field processor and let it do its magic.
       $fieldProcessor = new FieldProcessor($entity, $fieldName);
       $fieldProcessor->field($field)->widget($widget)->put($info);
 
+      // Allow altering of an entity after this process.
       drupal_alter('capx_post_map_field', $entity, $fieldName);
 
     }
 
+    // Set the entity again for changes.
     $this->setEntity($entity);
 
   }
 
   /**
-   * [mapProperties description]
-   * @param  [type] $properties [description]
-   * @param  [type] $data       [description]
-   * @return [type]             [description]
+   * Take the data out of the JSON array and put it into a property on the
+   * entity. Properties are much simplier than fields as they do not have a
+   * number of columns and/or other special properties to worry about.
+   * @param  array $data       The response data from the API
    */
   public function mapProperties($data) {
 
     $config = $this->getConfig();
     $entity = $this->getEntity();
 
-        // Loop through each property and run a property processor on it.
+    // Loop through each property and run a property processor on it.
     foreach ($config['properties'] as $propertyName => $remoteDataPath) {
       try {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       } catch(\Exception $e) {
         // ... silently continue. Please dont shoot me.
+        // @todo: log this for debugging.
         continue;
       }
+
+      // Let the property processor do its magic.
       $propertyProcessor = new PropertyProcessor($entity, $propertyName);
       $propertyProcessor->put($info);
     }
 
+    // Set the entity again for changes.
     $this->setEntity($entity);
   }
 
   /**
-   * [mapFieldCollections description]
+   * Field Collection fields are a special field and need to be handled
+   * differently. The field collection data needs to be saved as its own enitty
+   * and then attached to the parent entity. Allow for this.
    * @param  [type] $data [description]
    * @return [type]       [description]
    */
@@ -133,9 +150,10 @@ class EntityMapper extends MapperAbstract {
       return;
     }
 
+    // The parent entity.
     $entity = $this->getEntity();
-    // $collectionEntities = array();
 
+    // Each field collection field.
     foreach ($collections as $fieldName => $collectionMapper) {
 
       // Validate that the field exists.
@@ -144,16 +162,20 @@ class EntityMapper extends MapperAbstract {
         continue;
       }
 
-      // If field exists we will need to clear out the old values.
+      // If field exists we will need to clear out the old values. Create a new
+      // field collection each time.
+      // @todo: rethink the new field collection each time as there may be
+      // additional data on the FC.
       $entity->{$fieldName}->set(null);
 
-      // Create a new processor as we need to create the field collection item.
+      // Allow the field collection processor to do its magic.
       $collectionProcessor = new FieldCollectionProcessor($collectionMapper, $data);
       $collectionProcessor->setParentEntity($entity);
       $collectionProcessor->execute();
 
     }
 
+    // Set the entity again for changes.
     $this->setEntity($entity);
   }
 

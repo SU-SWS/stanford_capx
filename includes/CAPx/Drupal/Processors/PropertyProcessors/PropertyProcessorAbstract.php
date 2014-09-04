@@ -15,9 +15,9 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
   protected $propertyName;
 
   /**
-   * [__construct description]
-   * @param [type] $entity    [description]
-   * @param [type] $propertyName [description]
+   * Constructor Method
+   * @param Entity $entity    The entity whose properties are being modified/set
+   * @param string $propertyName the name of the property to modify/set
    */
   public function __construct($entity, $propertyName) {
     $this->setEntity($entity);
@@ -26,8 +26,7 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
 
   /**
    * Default implementation of put
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * @param  array $data An array of CAP API data.
    */
   public function put($data) {
     $entity = $this->getEntity();
@@ -37,41 +36,42 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
 
     drupal_alter('capx_pre_property_set', $entity, $data, $propertyName);
 
+    // @todo: validate this data. try / catch.
     $entity->{$propertyName}->set($data);
   }
 
 
-  //
+  // Getters and Setters
   // ---------------------------------------------------------------------------
   //
 
   /**
-   * [getEntity description]
-   * @return [type] [description]
+   * Getter function
+   * @return Entity the entity being worked on.
    */
   public function getEntity() {
     return $this->entity;
   }
 
   /**
-   * [setEntity description]
-   * @param [type] $entity [description]
+   * Setter function
+   * @param Entity $entity the entity to be worked on.
    */
   public function setEntity($entity) {
     $this->entity = $entity;
   }
 
   /**
-   * [getPropertyName description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the name of the property being worked on.
    */
   public function getPropertyName() {
     return $this->PropertyName;
   }
 
   /**
-   * [setPropertyName description]
-   * @param [type] $name [description]
+   * Setter function
+   * @param string $name the name of the property to be worked on.
    */
   public function setPropertyName($name) {
     $this->PropertyName = $name;

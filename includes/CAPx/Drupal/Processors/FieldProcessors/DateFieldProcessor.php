@@ -19,9 +19,10 @@ class DateFieldProcessor extends FieldTypeProcessor {
   protected $dbFormatValue = "date";
 
   /**
-   * [getDBFormat description]
-   * @param  [type] $type [description]
-   * @return [type]       [description]
+   * Getter function.
+   * A switch statement to get the type of date format the field is storing.
+   * @param  string $type the name of the type of date the field is storing.
+   * @return integer?       The date type format for reals.
    */
   public function getDBFormat($type) {
     switch ($type) {
@@ -39,11 +40,14 @@ class DateFieldProcessor extends FieldTypeProcessor {
   }
 
   /**
-   * Default implementation of put
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Put the data from the CAP API into the field that is being processed.
+   * Mangle, fandangle and change the data so that it fits the field's
+   * configuration.
+   * @param  array $data An array of data from the CAP API.
    */
   public function put($data) {
+
+    // Set values...
     $data = $this->prepareData($data);
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
@@ -52,15 +56,16 @@ class DateFieldProcessor extends FieldTypeProcessor {
 
 
     // No need for anything fancy when there is nothing to parse :)
+    // Just empty out the field and be done.
     if (count($data) == 1 && empty($data[0])) {
       $field->set(null);
       return;
     }
 
-    // Reformat the jsonpath return data so it works with Durp.
+    // Reformat the jsonpath return data so it works with Drupal.
     $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
 
-    // No valid colums were found. Truncate field.
+    // No valid colums were found. Truncate field and be done.
     if (empty($data)) {
       drupal_set_message('No valid columns found for ' . $fieldName, 'error');
       $field->set(null);
@@ -78,28 +83,34 @@ class DateFieldProcessor extends FieldTypeProcessor {
         $value = $value['value'];
       }
 
+      // entity_metadata_wrapper set function.
+      // @todo: Stop it from puking.
       $field->set($value);
     }
     else {
       // For everything else give it all.
+      // entity_metadata_wrapper set function.
+      // @todo: Stop it from puking.
       $field->set($data);
     }
 
   }
 
   /**
-   * [widget description]
-   * @param  [type] $type [description]
-   * @return [type]       [description]
+   * Default widget implementation. Just  return itself as we do not have any
+   * special per widget type processing.
+   * @param  string $type the type of date widget.
+   * @return DateFieldProcessor self.
    */
   public function widget($type) {
     return $this;
   }
 
   /**
-   * [prepareData description]
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Prepare data takes what was given to us from the API and turned into a
+   * usable format for the entity_metadata_wrapper functions.
+   * @param  array $data an array of data from the CAP API
+   * @return array       a formatted array of data that can be saved to a field.
    */
   public function prepareData($data) {
 

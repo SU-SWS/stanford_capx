@@ -1,6 +1,8 @@
 <?php
 /**
  * @file
+ * Entity importer class handles the execution process which fires off the
+ * API request, parses the data, and sends it to an entity processor.
  * @author [author] <[email]>
  */
 
@@ -24,7 +26,7 @@ class EntityImporter implements ImporterInterface {
   protected $machineName = '';
 
   /**
-   * [__construct description]
+   * Constructor class. Sets a number of items.
    * @param [type] $config [description]
    */
   public function __construct(Array $config, EntityMapper $mapper, HTTPClient $client) {
@@ -35,8 +37,8 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Oh man. Oh man. Oh man. Do all the things.
-   * @return [type] [description]
+   * Run the show!
+   * This function is the entry point to importing the whole thing.
    */
   public function execute() {
 
@@ -79,16 +81,16 @@ class EntityImporter implements ImporterInterface {
   // ===========================================================================
 
   /**
-   * [getOptions description]
-   * @return [type] [description]
+   * Getter function
+   * @return array an arry of options
    */
   protected function getOptions() {
     return $this->options;
   }
 
   /**
-   * [addOptions description]
-   * @param [type] $newOpts [description]
+   * Adder function
+   * @param array - Adds an array of options into the already defined options.
    */
   public function addOptions($newOpts) {
     $opts = $this->getOptions();
@@ -97,56 +99,56 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * [setOptions description]
-   * @param [type] $opts [description]
+   * Setter function
+   * @param array - an array of options
    */
   protected function setOptions($opts) {
     $this->options = $opts;
   }
 
   /**
-   * [getMapper description]
-   * @return [type] [description]
+   * Getter function
+   * @return EntityMapper an EntityMapper instance.
    */
   public function getMapper() {
     return $this->mapper;
   }
 
   /**
-   * [setMapper description]
-   * @param [type] $map [description]
+   * Setter function
+   * @param EntityMapper - an EntityMapper instance
    */
   public function setMapper($map) {
     $this->mapper = $map;
   }
 
   /**
-   * [getClient description]
-   * @return [type] [description]
+   * Getter function
+   * @return HTTPClient the HTTPClient instance.
    */
   public function getClient() {
     return $this->client;
   }
 
   /**
-   * [setClient description]
-   * @param [type] $client [description]
+   * Setter function
+   * @param HTTPClient the HTTPClient instance.
    */
   public function setClient($client) {
     $this->client = $client;
   }
 
   /**
-   * [getmachineName description]
-   * @return [type] [description]
+   * Getter function
+   * @return string The machine name of the importer configuration entity.
    */
   public function getMachineName() {
     return $this->machineName;
   }
 
   /**
-   * [setmachineName description]
-   * @param [type] $machineName [description]
+   * Setter function
+   * @param string $name the machine name of the importer configuration entity.
    */
   public function setMachineName($name) {
     $this->machineName = $name;

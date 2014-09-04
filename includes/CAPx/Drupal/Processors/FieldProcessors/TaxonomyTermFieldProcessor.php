@@ -9,9 +9,13 @@ namespace CAPx\Drupal\Processors\FieldProcessors;
 class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
 
   /**
-   * Default implementation of put
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Override of default implementation of put.
+   * Handles two types of input. A string list of values separated by comma
+   * and an array of key => values. This allows for multiple types of selections
+   * of data from the CAP API.
+   * This function will create new terms if they do not exist.
+   * @todo refactor this big ugly function into the two forms of input.
+   * @param  array $data An array of CAP API data.
    */
   public function put($data) {
 

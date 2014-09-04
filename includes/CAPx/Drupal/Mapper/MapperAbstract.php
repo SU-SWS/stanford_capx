@@ -10,10 +10,8 @@ use \Peekmo\JsonPath\JsonStore as JsonParser;
 
 abstract class MapperAbstract implements MapperInterface {
 
-  /**
-   * Default and stored configuration
-   * @var array
-   */
+
+  // Default and stored configuration
   protected $config = array();
 
   // The entity.
@@ -21,7 +19,7 @@ abstract class MapperAbstract implements MapperInterface {
 
 
   /**
-   * [__construct description]
+   * Merges default configuration options with the passed in set.
    * @param [type] $config [description]
    */
   public function __construct($config) {
@@ -34,9 +32,9 @@ abstract class MapperAbstract implements MapperInterface {
    * Uses a JSONPath library and notation to find data in a parsed json array.
    * Documentation on JSON path: http://goessner.net/articles/JsonPath/
    *
-   * @param  [type] $data [description]
-   * @param  [type] $path [description]
-   * @return [type]       [description]
+   * @param  array $data the JSON array of data from the API
+   * @param  string $path The JSONPath
+   * @return array       an array of data sliced from the $data by $path.
    */
   public function getRemoteDataByJsonPath($data, $path) {
 
@@ -51,32 +49,33 @@ abstract class MapperAbstract implements MapperInterface {
   }
 
   /**
-   * [getEntityType description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the entity type
    */
   public function getEntityType() {
     return $this->getConfigSetting('entity_type');
   }
 
   /**
-   * [getEntityType description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the bundle type
    */
   public function getBundleType() {
     return $this->getConfigSetting('bundle_type');
   }
 
   /**
-   * [getConfig description]
-   * @return [type] [description]
+   * Getter function
+   * @return array the configuration array
    */
   public function getConfig() {
     return $this->config;
   }
 
   /**
-   * [getConfig description]
-   * @return [type] [description]
+   * Getter function for a key in the config array
+   * @param string $name the index key for an item in the config array.
+   * @return mixed the value for a key in an associative array.
    */
   public function getConfigSetting($name) {
     if (isset($this->config[$name])) {
@@ -88,24 +87,24 @@ abstract class MapperAbstract implements MapperInterface {
   }
 
   /**
-   * [setConfig description]
-   * @param [type] $config [description]
+   * Setter function
+   * @param array $config An array of configuration options.
    */
   public function setConfig($config) {
     $this->config = $config;
   }
 
   /**
-   * [setEntity description]
-   * @param [type] $entity [description]
+   * Setter function
+   * @param Entity $entity The entity to be worked on.
    */
   public function setEntity($entity) {
     $this->entity = $entity;
   }
 
   /**
-   * [getEntity description]
-   * @return [type] [description]
+   * Getter function
+   * @return Entity the entity being worked on.
    */
   public function getEntity() {
     return $this->entity;

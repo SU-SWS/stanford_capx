@@ -9,9 +9,11 @@ namespace CAPx\Drupal\Processors\FieldProcessors;
 class TextAreaFieldProcessor extends FieldTypeProcessor {
 
   /**
-   * Default implementation of put
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Overridden put method.
+   * Textareas fields take in a variety of structures and we need to be specific
+   * when handling them.
+   * @see  parent::put();
+   * @param  arrat $data An array of CAP API data.
    */
   public function put($data) {
     $entity = $this->getEntity();

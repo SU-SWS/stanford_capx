@@ -9,10 +9,9 @@ namespace CAPx\Drupal\Mapper;
 interface MapperInterface {
 
   /**
-   * [execute description]
-   * @param  [type] $entity [description]
-   * @param  [type] $data   [description]
-   * @return [type]         [description]
+   * The one method to rule them all.
+   * @param  Entity $entity the entity to map with
+   * @param  array $data   the data to map to.
    */
   public function execute($entity, $data);
 

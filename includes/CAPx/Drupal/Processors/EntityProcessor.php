@@ -11,8 +11,10 @@ use CAPx\Drupal\Util\CAPx;
 class EntityProcessor extends ProcessorAbstract {
 
   /**
-   * [execute description]
-   * @return [type] [description]
+   * The starting point for processing any entity. This function executes and
+   * handles the saving and/or updating of an entity with the data that is
+   * set to it.
+   * @return Entity The new or updated entity.
    */
   public function execute() {
     $data = $this->getData();
@@ -44,11 +46,13 @@ class EntityProcessor extends ProcessorAbstract {
   }
 
   /**
-   * [updateEntity description]
-   * @param  [type] $entity [description]
-   * @param  [type] $data   [description]
-   * @param  [type] $mapper [description]
-   * @return [type]         [description]
+   * Update the entity.
+   * Slightly different from the new entity. If we have an entity we will
+   * execute the mapper on it and re-save it.
+   * @param  Entity $entity the entity to be updated
+   * @param  array $data   The data to map into it.
+   * @param  EntityMapper $mapper the entity mapper instance
+   * @return Entity         the updated entity.
    */
   public function updateEntity($entity, $data, $mapper) {
 
@@ -63,12 +67,15 @@ class EntityProcessor extends ProcessorAbstract {
   }
 
   /**
-   * [newEntity description]
-   * @param  [type] $entityType [description]
-   * @param  [type] $bundleType [description]
-   * @param  [type] $data       [description]
-   * @param  [type] $mapper     [description]
-   * @return [type]             [description]
+   * New entity.
+   * An existing entity was not found and a new one should be created. Provide
+   * some default values, create the entity, map the fields to it, and store
+   * some additional data about where it came from.
+   * @param  String $entityType the type of entity being created
+   * @param  String $bundleType the bundle type of the entity being created
+   * @param  array $data       the data to be mapped to the new entity
+   * @param  EntityMapper $mapper     the EntityMapper instance
+   * @return Entity             the new entity after it has been saved.
    */
   public function newEntity($entityType, $bundleType, $data, $mapper) {
 

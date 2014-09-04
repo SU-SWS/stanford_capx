@@ -9,9 +9,8 @@ namespace CAPx\Drupal\Processors\FieldProcessors;
 interface FieldProcessorInterface {
 
   /**
-   * [put description]
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * One entry point for them all!
+   * @param  array $data Data from the CAP API.
    */
   public function put($data);
 

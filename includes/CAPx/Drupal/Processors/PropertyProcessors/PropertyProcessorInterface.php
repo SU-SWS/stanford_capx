@@ -9,7 +9,7 @@ namespace CAPx\Drupal\Processors\PropertyProcessors;
 interface PropertyProcessorInterface {
 
   /**
-   * [put description]
+   * One way in. No way out!
    * @param  [type] $data [description]
    * @return [type]       [description]
    */

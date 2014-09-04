@@ -34,9 +34,9 @@ class CAPxMapper {
   }
 
   /**
-   * [loadEntityMappery description]
-   * @param  [type] $key [description]
-   * @return [type]      [description]
+   * Loads an EntityMapper instance by id or machine name
+   * @param  mixed $key machine name or id.
+   * @return EntityMapper      a fully loaded entity Mapper instance.
    */
   public static function loadEntityMapper($key) {
 

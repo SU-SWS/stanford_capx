@@ -30,8 +30,11 @@ class CAPxConnection {
   }
 
   /**
-   * [testConnection description]
-   * @return [type] [description]
+   * Test that inputted settings can authenticate with the CAP API.
+   * @param  string $username a decrypted username
+   * @param  string $password a decrypted password
+   * @param  string $authpoint a full url to the authentication point.
+   * @return object Information about the status
    */
   public static function testAuthConnection($username = null, $password = null, $authpoint = null) {
 
@@ -112,8 +115,7 @@ class CAPxConnection {
   }
 
   /**
-   * [renewConnectionToken description]
-   * @return [type] [description]
+   * Tokens can expire. This function renews the token with valid credentials.
    */
   public static function renewConnectionToken() {
 

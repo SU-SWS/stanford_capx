@@ -10,14 +10,14 @@ use CAPx\Drupal\Mapper\EntityMapper;
 interface ProcessorInterface {
 
   /**
-   * [__construct description]
-   * @param $mapper  [description]
-   * @param Array  $capData [description]
+   * Constructor function
+   * @param $mapper  A fully loaded and configured EntityMapper instance.
+   * @param Array  $capData An array of information from the CAP API.
    */
   public function __construct($mapper, $capData);
 
   /**
-   * [execute description]
+   * One way street.
    * @return [type] [description]
    */
   public function execute();

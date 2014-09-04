@@ -13,36 +13,44 @@ class FileFieldProcessor extends FieldTypeProcessor {
   protected $saveDir = "public://capx/profile-files/";
 
   /**
-   * [put description]
-   * @param  [type] $data [description]
+   * Override the default put implementation because file needs special things.
+   * The file put needs an array of information per entry. This is ok because
+   * the CAP API provides it in a way we can use.
+   * @param   array $data [description]
    *                $data['contentType']  = "image/jpeg"
    *                $data['placeholder']  = false
    *                $data['type']         = "big"
    *                $data['url']          = "https://...."
-   * @return [type]       [description]
    */
   public function put($data) {
 
     // Normalize data because it comes in a bit funky as we take whole array
+    // from the CAP API data.
     $data = $data[0];
 
     if (!is_array($data)) {
       throw new \Exception("FileFieldProcessor Requires Data to be an array");
     }
 
+    // Loop through each and ensure that the values are there.
     foreach ($data as $index => $values) {
       // Validate we have our data
       if (!isset($values['contentType']) || !isset($values['url'])) {
         throw new \Exception("Missing required information for field processor.");
       }
+
+      // Ok, enough validation lets make bacon.
       $this->process($values);
     }
 
   }
 
   /**
-   * [process description]
-   * @param  [type] $values [description]
+   * The meat function of this processor. Take the data and turn it into a file.
+   * This function will fetch the remote file and save it to the file system.
+   * @todo : Put a check in place to see if the file has changed. Waiting on the
+   * cap api to provide a 'last updated' timestamp on the file itself.
+   * @param  array $data any array of information from the CAP API
    * @return [type]         [description]
    */
   public function process($data) {
@@ -51,9 +59,10 @@ class FileFieldProcessor extends FieldTypeProcessor {
     $fieldName = $this->getFieldName();
     $fieldInfo = field_info_field($fieldName);
 
+    // Allow altering as this could get messy.
     drupal_alter('capx_pre_fetch_remote_file', $data);
 
-    // Request the file.
+    // Request the file from the remote server.
     $response = $this->fetchRemoteFile($data);
 
     // Save the file.
@@ -64,6 +73,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
       throw new \Exception("Could not save file: " . $data['url']);
     }
 
+    // We have a file, allow more altering.
     drupal_alter('capx_post_save_remote_file', $file, $filename);
 
     // All went well go and save it.
@@ -81,13 +91,13 @@ class FileFieldProcessor extends FieldTypeProcessor {
 
     // Set the thing.
     $entity->{$fieldName}->set($setData);
-
   }
 
   /**
-   * [fetchRemoteFile description]
-   * @param  [type] $values [description]
-   * @return [type]         [description]
+   * Fetches a remote file from the CAP API servers.
+   * @param  array $data an array of information needed to fetch a file from
+   * the CAP API servers
+   * @return Response         Guzzle response object
    */
   public function fetchRemoteFile($data) {
     // Fetch the image from CAP.
@@ -103,9 +113,10 @@ class FileFieldProcessor extends FieldTypeProcessor {
   }
 
   /**
-   * [getFileName description]
+   * Gets the file name for the remote file by appending the appropriate
+   * file extension to it.
    * @param  [type] $data [description]
-   * @return [type]       [description]
+   * @return string       a unique filename
    */
   public function getFileName($data) {
 
@@ -119,9 +130,10 @@ class FileFieldProcessor extends FieldTypeProcessor {
 
 
   /**
-   * [getExtentionByType description]
-   * @param  [type] $type [description]
-   * @return [type]       [description]
+   * The file type is provided by the CAP api but a file extention is not. Here
+   * we match them up.
+   * @param  string $type the type of file being saved.
+   * @return string       the matching extension with leading period.
    */
   public function getExtentionByType($type) {
 
@@ -144,16 +156,16 @@ class FileFieldProcessor extends FieldTypeProcessor {
   }
 
   /**
-   * [getSaveDir description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the destination to save the file. PUBLIC.
    */
   public function getSaveDir() {
     return $this->saveDir;
   }
 
   /**
-   * [setSaveDir description]
-   * @param [type] $dir [description]
+   * Setter function
+   * @param string $dir the destination to save the file. PUBLIC.
    */
   public function setSaveDir($dir) {
     $this->saveDir = $dir;

@@ -11,10 +11,10 @@ use CAPx\Drupal\Processors\FieldProcessors\FieldProcessorAbstract;
 class FieldTypeProcessor extends FieldProcessorAbstract {
 
   /**
-   * [__construct description]
-   * @param [type] $entity    [description]
-   * @param [type] $fieldName [description]
-   * @param [type] $type      [description]
+   * Constructor function
+   * @param Entity $entity    The entity with the field being worked on.
+   * @param String $fieldName the name of the field to be worked on.
+   * @param String $type      The type of the field being worked on.
    */
   public function __construct($entity, $fieldName, $type = null) {
     parent::__construct($entity, $fieldName, $type);
@@ -23,8 +23,9 @@ class FieldTypeProcessor extends FieldProcessorAbstract {
 
   /**
    * Default implementation of widget function.
-   * @param  [type] $type      [description]
-   * @return [type]            [description]
+   * Provides an alter and returns self.
+   * @param  string $type
+   * @return FieldTypeProcessor
    */
   public function widget($type) {
     $widget = $this;

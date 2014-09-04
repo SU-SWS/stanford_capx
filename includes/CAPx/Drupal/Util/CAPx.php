@@ -57,7 +57,7 @@ class CAPx {
   }
 
   /**
-   * [getEntityIdByProfileId description]
+   * Returns an entity by its profile id, type, and bundle.
    * @param  [type] $entityType [description]
    * @param  [type] $bundleType [description]
    * @param  [type] $profileId  [description]
@@ -79,7 +79,7 @@ class CAPx {
   }
 
   /**
-   * Returns the profile Id
+   * Returns the profile Id of a loaded entity.
    * @param  [type] $entity [description]
    * @return [type]         [description]
    */
@@ -101,9 +101,9 @@ class CAPx {
   }
 
   /**
-   * [insertNewProfileRecord description]
-   * @param  [type] $entity [description]
-   * @return [type]         [description]
+   * Inserts a record into the capx_profiles table with information that helps
+   * the rest of the module keep track of what it is and where it came from.
+   * @param  Entity $entity the entity that was just saved.
    */
   public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
     $id = $entity->getIdentifier();
@@ -128,9 +128,9 @@ class CAPx {
   }
 
   /**
-   * [insertNewProfileRecord description]
-   * @param  [type] $entity must be wrapped in entity_metadata_wrapper
-   * @return [type]         [description]
+   * Removes a profile record from the capx_profiles table when an entity is
+   * deleted. No longer need to keep track of it.
+   * @param  Entity $entity the entity that is being deleted.
    */
   public static function deleteProfileRecord($entity) {
 
@@ -148,32 +148,32 @@ class CAPx {
   }
 
   /**
-   * [getAPIEndpoint description]
-   * @return [type] [description]
+   * Returns the API endpoint.
+   * @return string full URL to the API endpoint
    */
   public static function getAPIEndpoint() {
     return variable_get('stanford_capx_api_base_url', 'https://api.stanford.edu');
   }
 
   /**
-   * [getAuthEndpoint description]
-   * @return [type] [description]
+   * Returns the authentication endpoint
+   * @return string full url to the auth endpoint
    */
   public static function getAuthEndpoint() {
     return variable_get('stanford_capx_api_auth_uri', 'https://authz.stanford.edu/oauth/token');
   }
 
   /**
-   * [getAuthUsername description]
-   * @return [type] [description]
+   * Returns a decrypted username that authenticates with the cap api.
+   * @return string the username
    */
   public static function getAuthUsername() {
     return decrypt(variable_get('stanford_capx_username', ''));
   }
 
   /**
-   * [getAuthPassword description]
-   * @return [type] [description]
+   * Returns a decrypted password that authenticates with the cap api.
+   * @return string the password
    */
   public static function getAuthPassword() {
     return decrypt(variable_get('stanford_capx_password', ''));

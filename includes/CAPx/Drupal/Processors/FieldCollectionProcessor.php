@@ -17,8 +17,11 @@ class FieldCollectionProcessor extends EntityProcessor {
   protected $parentEntity = null;
 
   /**
-   * [execute description]
-   * @return [type] [description]
+   * Override method execute
+   * The field collection processor will assume all updates will create a new
+   * field collection and toss the old one. No need to check for existing item.
+   * @see  parent::execute();
+   * @return FieldCollection the saved field collection.
    */
   public function execute() {
     $data = $this->getData();
@@ -32,12 +35,8 @@ class FieldCollectionProcessor extends EntityProcessor {
 
 
   /**
-   * [newEntity description]
-   * @param  [type] $entityType [description]
-   * @param  [type] $bundleType [description]
-   * @param  [type] $data       [description]
-   * @param  [type] $mapper     [description]
-   * @return [type]             [description]
+   * New entity override as FieldCollections have some different defualts.
+   * @see  parent:newEntity();
    */
   public function newEntity($entityType, $bundleType, $data, $mapper) {
 
@@ -72,32 +71,33 @@ class FieldCollectionProcessor extends EntityProcessor {
 
 
   /**
-   * [setFieldCollectionEntity description]
-   * @param [type] $entity [description]
+   * Setter function
+   * @param FieldCollectionItem $entity the field collection item to be acted on
    */
   public function setFieldCollectionEntity($entity) {
     $this->fieldCollectionEntity = $entity;
   }
 
   /**
-   * [getFieldCollectionEntity description]
-   * @return [type] [description]
+   * Getter function
+   * @return FieldCollectionItem the field collection item.
    */
   public function getFieldCollectionEntity() {
     return $this->fieldCollectionEntity;
   }
 
   /**
-   * [setParentEntity description]
-   * @param [type] $entity [description]
+   * Setter function
+   * @param Entity $entity The parent entity that the field collection
+   * belongs to
    */
   public function setParentEntity($entity) {
     $this->parentEntity = $entity;
   }
 
   /**
-   * [getParentEntity description]
-   * @return [type] [description]
+   * Getter function
+   * @return Entity The parent entity that the field collection belongs to.
    */
   public function getParentEntity() {
     return $this->parentEntity;

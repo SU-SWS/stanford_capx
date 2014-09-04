@@ -9,8 +9,9 @@ namespace CAPx\Drupal\Processors\FieldProcessors;
 class LinkFieldProcessor extends FieldTypeProcessor {
 
   /**
-   * Default implementation of put
-   * @param  [type] $data [description]
+   * Link field override of the put function.
+   * @see  parent::put();
+   * @param  array $data an array of CAP API data
    * @return [type]       [description]
    */
   public function put($data) {

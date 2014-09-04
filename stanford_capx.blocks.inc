@@ -58,7 +58,8 @@ function stanford_capx_block_view($delta = '') {
 }
 
 /**
- * [stanford_capx_connection_status_block description]
+ * Connection status block content callback.
+ * Tests the API connection and outputs a text message.
  * @return [type] [description]
  */
 function stanford_capx_connection_status_block() {
@@ -86,7 +87,8 @@ function stanford_capx_connection_status_block() {
 }
 
 /**
- * [stanford_capx_data_browser_block description]
+ * Data browser launch block content callback.
+ * Creates the blocks contents for the mapper edit/new page.
  * @return [type] [description]
  */
 function stanford_capx_data_browser_launch_block() {

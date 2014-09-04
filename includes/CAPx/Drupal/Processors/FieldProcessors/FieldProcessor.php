@@ -47,9 +47,11 @@ use CAPx\Drupal\Processors\FieldProcessors\FieldProcessorAbstract;
 class FieldProcessor extends FieldProcessorAbstract {
 
   /**
-   * [field description]
-   * @param  [type] $type [description]
-   * @return [type]       [description]
+   * Pretty much a big switch statement in order to return the correct type
+   * of field processor. The field processor is determined by the type of field
+   * that is being processed on the Drupal side.
+   * @param  string $type the type of field that is being processed.
+   * @return FieldProcessor       a specific field processor instance.
    */
   public function field($type) {
 
@@ -120,16 +122,22 @@ class FieldProcessor extends FieldProcessorAbstract {
         $processor = $this;
     }
 
+    // Allow altering of the processor so that others may hook in and change
+    // things.
     drupal_alter('capx_field_processor_field', $processor, $type, $fieldName, $entity);
 
+    // Return processor.
     return $processor;
-
   }
 
   /**
    * Widget processing.
-   * @param  [type] $type [description]
-   * @return [type]              [description]
+   * Some fields have specific widgets that need specific processors. This
+   * method is also defined in a number of the FieldProcessors themselves and
+   * should continue to be used. This is a core implementation and should be
+   * left untouched.
+   * @param  string $type The widget type.
+   * @return FieldProcessor              a widget specific field processor.
    */
   public function widget($type) {
 

@@ -18,7 +18,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   protected $type;
 
   /**
-   * [__construct description]
+   * Construction method
    * @param [type] $entity    [description]
    * @param [type] $fieldName [description]
    */
@@ -33,11 +33,14 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   }
 
   /**
-   * Default implementation of put
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Default implementation of put. Puts the information from the CAP API
+   * In to the field via entity_metadata_wrapper. Tries to handle information
+   * being provided to it for most field types. Specific FieldProcessors may
+   * override this function to provide their own custom procsessing.
+   * @param  array $data an array of data from the CAP API.
    */
   public function put($data) {
+
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
     $fieldInfo = field_info_field($fieldName);
@@ -62,9 +65,10 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
       return;
     }
 
+    // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
-    // Only want the first value for one card field
+    // Only want the first value for one cardinality field
     if ($fieldInfo['cardinality'] == "1") {
       $field->set($data[0][$key]);
     }
@@ -76,9 +80,10 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   }
 
   /**
-   * [repackageJsonDataForDrupal description]
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   * Takes the data from the CAP API and turns it into an array that can be
+   * used by entity_metadata_wrapper's set function.
+   * @param  array $data CAP API data
+   * @return array       an array of data suitable for saving to a field.
    */
   public function repackageJsonDataForDrupal($data, $fieldInfo) {
     $return = array();
@@ -108,37 +113,37 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   }
 
 
-  //
+  // Getters and Setters
   // ---------------------------------------------------------------------------
   //
 
   /**
-   * [getEntity description]
-   * @return [type] [description]
+   * Getter function
+   * @return Entity the entity being worked on.
    */
   public function getEntity() {
     return $this->entity;
   }
 
   /**
-   * [setEntity description]
-   * @param [type] $entity [description]
+   * Setter function
+   * @param Entity $entity the entity to be worked on.
    */
   public function setEntity($entity) {
     $this->entity = $entity;
   }
 
   /**
-   * [getFieldName description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the field name being processed.
    */
   public function getFieldName() {
     return $this->fieldName;
   }
 
   /**
-   * [setFieldName description]
-   * @param [type] $name [description]
+   * Setter function
+   * @param string $name the field name to be processed.
    */
   public function setFieldName($name) {
     $this->fieldName = $name;
@@ -146,16 +151,16 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
 
 
   /**
-   * [setType description]
-   * @param [type] $type [description]
+   * Setter function
+   * @param string $type The field type.
    */
   public function setType($type) {
     $this->type = $type;
   }
 
   /**
-   * [getType description]
-   * @return [type] [description]
+   * Getter function
+   * @return string the field type.
    */
   public function getType() {
     return $this->type;

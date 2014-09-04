@@ -40,9 +40,9 @@ class CAPxImporter {
   }
 
   /**
-   * [loadEntityImporter description]
-   * @param  [type] $key [description]
-   * @return [type]      [description]
+   * Loads an EntityImporter by machine name or id.
+   * @param  mixed $key either a machine name or id.
+   * @return EntityImporter      a fully instantiated EntityImporter
    */
   public static function loadEntityImporter($key) {
 

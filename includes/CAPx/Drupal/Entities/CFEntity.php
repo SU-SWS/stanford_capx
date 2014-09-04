@@ -15,7 +15,9 @@ use CAPx\Drupal\Importer\EntityImporter;
 class CFEntity extends \Entity {
 
   /**
-   * [__construct description]
+   * This constructor takes the top level items in the settings property array
+   * and exposes them as properties of the instance. This is just a syntax
+   * reducing bit of fun.
    */
   public function __construct(array $values = array(), $entityType = NULL) {
     parent::__construct($values, $entityType);
@@ -42,7 +44,7 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * [defaultLabel description]
+   * Implements defaultLable()
    * @return [type] [description]
    */
   protected function defaultLabel() {
@@ -50,7 +52,7 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * [defaultUri description]
+   * Implements defaultUIR
    * @return [type] [description]
    */
   protected function defaultUri() {
@@ -58,7 +60,8 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * Returns the entity Mapper for this CFE.
+   * Returns the entity Mapper for this CFE. The entity mapper is different from
+   * the mapper configuration entity.
    * @return [type] [description]
    */
   public function getEntityMapper() {
@@ -134,8 +137,8 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * [getEntityImporter description]
-   * @return [type] [description]
+   * Returns a ready to use entity importer
+   * @return EntityImporter - Ready to use entity importer.
    */
   public function getEntityImporter() {
 

@@ -12,7 +12,7 @@ class CFEntityType extends \Entity {
   public $weight = 0;
 
   /**
-   * [__construct description]
+   * Constructor method.
    * @param array $values [description]
    */
   public function __construct($values = array()) {
@@ -20,7 +20,7 @@ class CFEntityType extends \Entity {
   }
 
   /**
-   * [isLocked description]
+   * Implements isLocked();
    * @return boolean [description]
    */
   function isLocked() {

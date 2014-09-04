@@ -9,7 +9,7 @@ namespace CAPx\Drupal\Entities;
 class CFEControllerExportable extends \EntityAPIControllerExportable {
 
   /**
-   * [create description]
+   * Create a new entity and provide some default values.
    * @param  array  $values [description]
    * @return [type]         [description]
    */

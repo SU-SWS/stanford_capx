@@ -11,12 +11,10 @@ use CAPx\Drupal\Util\CAPx;
 class UserProcessor extends EntityProcessor {
 
   /**
-   * [newEntity description]
-   * @param  [type] $entityType [description]
-   * @param  [type] $bundleType [description]
-   * @param  [type] $data       [description]
-   * @param  [type] $mapper     [description]
-   * @return [type]             [description]
+   * newEntity method override.
+   * @see  parent:newEntity();
+   * User entities have some special needs around their default values.
+   * return Entity the saved user entity.
    */
   public function newEntity($entityType, $bundleType, $data, $mapper) {
 

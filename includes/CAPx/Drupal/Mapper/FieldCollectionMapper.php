@@ -11,8 +11,9 @@ class FieldCollectionMapper extends EntityMapper {
   protected $bundle = null;
 
   /**
-   * [__construct description]
-   * @param [type] $config [description]
+   * @see parent::__construct()
+   * Additionaly to the parent set the bundle "field_name"
+   * @param array $config additional configuration.
    */
   public function __construct($config) {
     parent::__construct($config);
@@ -36,7 +37,7 @@ class FieldCollectionMapper extends EntityMapper {
   }
 
   /**
-   * [setBundle description]
+   * Set the bundle type of this FieldCollectionMapper.
    * @param [type] $name [description]
    */
   public function setBundle($name) {
