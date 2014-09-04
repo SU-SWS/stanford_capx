@@ -735,6 +735,11 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   $description = t('Like seeing your parents get intimate, this action cannot be undone.');
   $name = 'confirm_mapper_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+
+  if (count($items)) {
+    $form['actions']['#disabled'] = 'disabled';
+  }
+
   return $form;
 }
 
