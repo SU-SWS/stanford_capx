@@ -56,4 +56,21 @@ class CAPxImporter {
     return $importer;
   }
 
+  /**
+   * Loads EntityImporter's filtered by mapper.
+   * @param  [type] $mapper [description]
+   * @return [type] [description]
+   */
+  public static function loadImportersByMapper($mapper) {
+    $importers = array();
+    $allImporters = self::loadAllImporters();
+
+    foreach ($allImporters as $id => $importer) {
+      if ($importer->mapper == $mapper->machine_name) {
+        $importers[$id] = $importer;
+      }
+    }
+
+    return $importers;
+  }
 }
