@@ -709,6 +709,23 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
     throw new Exception("Could not load a mapper with provided machine name. Please check url.");
   }
 
+  $importers = CAPxImporter::loadImportersByMapper($mapper);
+  $items = array();
+
+  foreach ($importers as $importer) {
+    $items[] = $importer->title;
+  }
+
+  if (count($items)) {
+    $list = array(
+      'title' => 'This mapper is being used by these importers:',
+      'items' => $items,
+    );
+    $form['importers'] = array(
+      '#markup' => theme('item_list', $list),
+    );
+  }
+
   $form['machine-name'] = array(
     '#type' => 'hidden',
     '#value' => $mapper->machine_name,
