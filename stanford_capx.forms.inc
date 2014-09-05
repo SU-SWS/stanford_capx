@@ -713,7 +713,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   $items = array();
 
   foreach ($importers as $importer) {
-    $items[] = $importer->title;
+    $items[] = l($importer->title, 'admin/config/capx/importer/edit/' . $importer->machine_name);
   }
 
   if (count($items)) {
