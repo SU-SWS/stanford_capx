@@ -62,12 +62,11 @@ class CAPxImporter {
    * @return [type] [description]
    */
   public static function loadImportersByMapper($mapper) {
-    $importers = array();
-    $allImporters = self::loadAllImporters();
+    $importers = self::loadAllImporters();
 
-    foreach ($allImporters as $id => $importer) {
-      if ($importer->mapper == $mapper->machine_name) {
-        $importers[$id] = $importer;
+    foreach ($importers as $id => $importer) {
+      if ($importer->mapper != $mapper->machine_name) {
+        unset($importers[$id]);
       }
     }
 
