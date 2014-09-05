@@ -273,25 +273,26 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['settings']['field'] = 'settings';
   $handler->display->display_options['fields']['settings']['label'] = 'Mapper Name';
-  $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/capx/mapper/edit/[settings]';
-  $handler->display->display_options['fields']['settings']['format'] = 'key';
-  $handler->display->display_options['fields']['settings']['key'] = 'mapper';
+  $handler->display->display_options['fields']['settings']['format'] = 'mapper';
+  $handler->display->display_options['fields']['settings']['key'] = '';
+  $handler->display->display_options['fields']['settings']['mapper'] = 0;
   /* Field: Configuration Entity: Meta Data */
   $handler->display->display_options['fields']['meta']['id'] = 'meta';
   $handler->display->display_options['fields']['meta']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['meta']['field'] = 'meta';
   $handler->display->display_options['fields']['meta']['label'] = 'Number of profiles';
-  $handler->display->display_options['fields']['meta']['format'] = 'key';
+  $handler->display->display_options['fields']['meta']['format'] = 'count';
   $handler->display->display_options['fields']['meta']['key'] = 'count';
+  $handler->display->display_options['fields']['meta']['timestamp'] = 0;
   /* Field: Configuration Entity: Meta Data */
   $handler->display->display_options['fields']['meta_1']['id'] = 'meta_1';
   $handler->display->display_options['fields']['meta_1']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['meta_1']['field'] = 'meta';
   $handler->display->display_options['fields']['meta_1']['label'] = 'Last Update';
   $handler->display->display_options['fields']['meta_1']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['meta_1']['format'] = 'key';
+  $handler->display->display_options['fields']['meta_1']['format'] = 'lastUpdateHuman';
   $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdateHuman';
+  $handler->display->display_options['fields']['meta_1']['timestamp'] = 0;
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
@@ -306,7 +307,6 @@ function stanford_capx_views_default_views() {
 
   /* Display: Importer Manage Block */
   $handler = $view->new_display('block', 'Importer Manage Block', 'importer_manage_block');
-
 
   $views['capx_importers'] = $view;
 
@@ -418,22 +418,25 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['settings']['label'] = 'Mapper';
   $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/capx/mapper/edit/[settings]';
-  $handler->display->display_options['fields']['settings']['format'] = 'key';
+  $handler->display->display_options['fields']['settings']['format'] = 'mapper';
   $handler->display->display_options['fields']['settings']['key'] = 'mapper';
+  $handler->display->display_options['fields']['settings']['mapper'] = 0;
   /* Field: Configuration Entity: Meta Data */
   $handler->display->display_options['fields']['meta_1']['id'] = 'meta_1';
   $handler->display->display_options['fields']['meta_1']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['meta_1']['field'] = 'meta';
   $handler->display->display_options['fields']['meta_1']['label'] = 'Number of profiles';
-  $handler->display->display_options['fields']['meta_1']['format'] = 'key';
+  $handler->display->display_options['fields']['meta_1']['format'] = 'count';
   $handler->display->display_options['fields']['meta_1']['key'] = 'count';
+  $handler->display->display_options['fields']['meta_1']['timestamp'] = 0;
   /* Field: Configuration Entity: Meta Data */
   $handler->display->display_options['fields']['meta']['id'] = 'meta';
   $handler->display->display_options['fields']['meta']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['meta']['field'] = 'meta';
   $handler->display->display_options['fields']['meta']['label'] = 'Last Update';
-  $handler->display->display_options['fields']['meta']['format'] = 'key';
+  $handler->display->display_options['fields']['meta']['format'] = 'lastUpdateHuman';
   $handler->display->display_options['fields']['meta']['key'] = 'lastUpdateHuman';
+  $handler->display->display_options['fields']['meta']['timestamp'] = 0;
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';

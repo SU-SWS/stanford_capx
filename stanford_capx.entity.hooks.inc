@@ -328,7 +328,7 @@ function stanford_capx_taxonomy_term_update($term) {
     ->condition('tid', $term->tid)
     ->execute();
 
-  $insert = db_insert('capx_org_alises');
+  $insert = db_insert('capx_org_aliases');
   foreach ($term->capx['aliases'] as $al) {
     $insert->fields(array(
       'tid' => $term->tid,
