@@ -65,7 +65,7 @@ class CAPxImporter {
     $importers = self::loadAllImporters();
 
     foreach ($importers as $id => $importer) {
-      if ($importer->mapper != $mapper->machine_name) {
+      if ($importer->mapper != $mapper->identifier()) {
         unset($importers[$id]);
       }
     }
