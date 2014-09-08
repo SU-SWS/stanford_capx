@@ -709,6 +709,23 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
     throw new Exception("Could not load a mapper with provided machine name. Please check url.");
   }
 
+  $importers = CAPxImporter::loadImportersByMapper($mapper);
+  $items = array();
+
+  foreach ($importers as $importer) {
+    $items[] = l($importer->title, 'admin/config/capx/importer/edit/' . $importer->identifier());
+  }
+
+  if (count($items)) {
+    $list = array(
+      'title' => 'This mapper is being used by these importers:',
+      'items' => $items,
+    );
+    $form['importers'] = array(
+      '#markup' => theme('item_list', $list),
+    );
+  }
+
   $form['machine-name'] = array(
     '#type' => 'hidden',
     '#value' => $mapper->machine_name,
@@ -718,6 +735,11 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   $description = t('Like seeing your parents get intimate, this action cannot be undone.');
   $name = 'confirm_mapper_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+
+  if (count($items)) {
+    $form['actions']['#disabled'] = 'disabled';
+  }
+
   return $form;
 }
 
