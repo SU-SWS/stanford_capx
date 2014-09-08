@@ -310,6 +310,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
   $entity_types = capx_entity_get_info();
   $field_collections = array();
   global $mapper;
+  global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
   $form['field-mapping'] = array(
     '#type' => 'fieldset',
@@ -430,7 +431,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
         }
 
         foreach ($field_info_field['columns'] as $column_key => $column_info) {
-          if (!stanford_capx_filter_field_property($column_key)) {
+          if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
             $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
               '#type' => 'textfield',
               '#title' => t($column_key),
@@ -496,7 +497,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           }
 
           foreach ($fc_field_info['columns'] as $column_key => $column_info) {
-            if (!stanford_capx_filter_field_property($column_key)) {
+            if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
               $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key] = array(
                 '#type' => 'textfield',
                 '#title' => t($column_key),
@@ -623,21 +624,6 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $properties = array_intersect_key($properties, $allowed);
 
   return $properties;
-}
-
-/**
- * Checks if a field property should be available as an import target.
- * E.g. WYSIWYG input format.
- * @param  string  $property [description]
- * @return [type]             [description]
- */
-function stanford_capx_filter_field_property($property) {
-
-  $blacklist = array(
-    'format',
-  );
-
-  return in_array($property, $blacklist);
 }
 
 /**

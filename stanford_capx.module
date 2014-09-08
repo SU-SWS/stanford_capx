@@ -34,6 +34,10 @@ $CAP_RESTRICTED_ENTITY_TYPES = array(
   'field_collection_item',
 );
 
+global $CAP_RESTRICTED_FIELD_PROPERTIES;
+$CAP_RESTRICTED_FIELD_PROPERTIES = array(
+  'format',
+);
 
 /**
  * Implements hook_help().
