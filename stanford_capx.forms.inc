@@ -430,6 +430,10 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
           continue;
         }
 
+        // Relation module doesn't have this column key set.
+        if (!isset($field_info_field['columns'])) {
+          continue;
+        }
         foreach ($field_info_field['columns'] as $column_key => $column_info) {
           if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
             $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
