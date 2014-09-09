@@ -37,6 +37,7 @@ $CAP_RESTRICTED_ENTITY_TYPES = array(
 global $CAP_RESTRICTED_FIELD_PROPERTIES;
 $CAP_RESTRICTED_FIELD_PROPERTIES = array(
   'format',
+  'attributes',
 );
 
 /**
