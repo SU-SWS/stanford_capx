@@ -41,7 +41,8 @@ $CAP_RESTRICTED_FIELD_PROPERTIES = array(
   'attributes',
 );
 
-define('STANFORD_CAPX_SCHEMA_FILE', 'private://stanford_capx/schema.json');
+define('STANFORD_CAPX_FILE_PATH', 'private://stanford_capx/');
+define('STANFORD_CAPX_SCHEMA_FILE', 'schema.json');
 
 /**
  * Implements hook_help().
@@ -537,12 +538,14 @@ function stanford_capx_debug() {
  * @return [type] [description]
  */
 function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
+  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+
   // If forcing a refesh or the schema hasn't been downloaded, download it!
-  if ($reset || !file_exists(STANFORD_CAPX_SCHEMA_FILE)) {
+  if ($reset || !file_exists($file)) {
     $file_contents = stanford_capx_schema_refresh();
   }
   else {
-    $file_contents = file_get_contents(STANFORD_CAPX_SCHEMA_FILE);
+    $file_contents = file_get_contents($file);
   }
 
   if ($format === 'decoded') {
@@ -559,12 +562,16 @@ function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
  * @return [type] [description]
  */
 function stanford_capx_schema_refresh() {
+  $dir = STANFORD_CAPX_FILE_PATH;
+  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+  file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
+
   // Query the API for the profile schema.
   $client = CAPxConnection::getAuthenticatedHTTPClient();
   $schema = $client->api('schema')->profile();
 
   // Cache the result in a private file. We can't retrieve raw JSON using API.
-  file_unmanaged_save_data(json_encode($schema), STANFORD_CAPX_SCHEMA_FILE, FILE_EXISTS_REPLACE);
+  file_unmanaged_save_data(json_encode($schema), $file, FILE_EXISTS_REPLACE);
 
   return $schema;
 }
