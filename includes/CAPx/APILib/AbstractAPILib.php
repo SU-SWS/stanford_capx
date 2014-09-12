@@ -111,8 +111,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
    * The default request function for all libraries. This function is passed a
    * number of parameters and requests data from the CAP API. If no usable data
    * is returned or something went wrong it returns false. This function will
-   * return an array. The raw response is also stored and can be retrieved using
-   * the getLastResponse() method.
+   * return an array.
    * @param  string $endpoint The fully qualified url endpoint
    * @param  array $params   Additional query string parameters stored in an
    *                         associative. eg: q=something.
@@ -122,6 +121,26 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
    *                         something went wrong.
    */
   protected function makeRequest($endpoint, $params = array(), $extraOptions = null) {
+    $response = $this->makeRawRequest($endpoint, $params, $extraOptions);
+
+    // JSON decode a valid response.
+    return $response ? $response->json() : $response;
+  }
+
+  /**
+   * This function is passed a number of parameters and requests data from the
+   * CAP API. If no usable data is returned or something went wrong it returns
+   * false. This function will return JSON. The raw response is also stored and
+   * can be retrieved using the getLastResponse() method.
+   * @param  string $endpoint The fully qualified url endpoint
+   * @param  array $params   Additional query string parameters stored in an
+   *                         associative. eg: q=something.
+   * @param  array $options  Additional options to pass through to the
+   *                         http client.
+   * @return mixed           Returns either a JSON string or false if
+   *                         something went wrong.
+   */
+  protected function makeRawRequest($endpoint, $params = array(), $extraOptions = null) {
     // Get the guzzle client.
     $client = $this->getClient();
 
@@ -144,8 +163,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     // @todo: Handle non-valid response codes.
     switch ($code) {
       case '200':
-          $json = $response->json();
-          return $json;
+        return $response;
 
       default:
         return FALSE;
@@ -153,6 +171,5 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
   }
-
 
 }
