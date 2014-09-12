@@ -570,8 +570,11 @@ function stanford_capx_schema_refresh() {
   $client = CAPxConnection::getAuthenticatedHTTPClient();
   $schema = $client->api('schema')->profile();
 
+  // @TODO: Remove this when the API is fixed.
+  $schema = json_encode($schema);
+
   // Cache the result in a private file. We can't retrieve raw JSON using API.
-  file_unmanaged_save_data(json_encode($schema), $file, FILE_EXISTS_REPLACE);
+  file_unmanaged_save_data($schema, $file, FILE_EXISTS_REPLACE);
 
   return $schema;
 }
