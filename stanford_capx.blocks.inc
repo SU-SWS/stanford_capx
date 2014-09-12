@@ -97,7 +97,7 @@ function stanford_capx_data_browser_launch_block() {
   $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "</p>";
 
   // @TODO: THIS!
-  $output .= "<p>" . l('Open Data Schema', 'admin/config/capx', array('attributes' => array('class' => 'btn button'))) . "</p>";
+  $output .= "<p>" . l('Open Data Schema', 'admin/config/capx/data-browser', array('attributes' => array('class' => 'btn button'))) . "</p>";
 
   $output .= "<p>Here are some commonly used settings:</p>";
   $rows = array();

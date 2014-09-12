@@ -2,7 +2,6 @@
 /**
  * @file
  * @author [author]
- *
  */
 
 // Make sure this is loaded.
@@ -22,6 +21,7 @@ use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
+use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Organizations\Orgs;
 
 // No mapping into these entity types.
@@ -40,6 +40,8 @@ $CAP_RESTRICTED_FIELD_PROPERTIES = array(
   'format',
   'attributes',
 );
+
+define('STANFORD_CAPX_SCHEMA_FILE', 'private://stanford_capx/schema.json');
 
 /**
  * Implements hook_help().
@@ -129,6 +131,17 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 10,
   );
+
+  // Data Browser
+  $items['admin/config/capx/data-browser'] = array(
+    'title' => 'Data Browser',
+    'page callback' => 'stanford_capx_admin_config_data_browser',
+    'file' => 'stanford_capx.docs.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+  );
+
 
   // Mapper pages
   // ---------------------------------------------------------------------------
@@ -515,4 +528,43 @@ function stanford_capx_debug() {
  // \CAPx\Drupal\Organizations\Orgs::syncOrganizations();
 
   return $output;
+}
+
+/**
+ * [stanford_capx_schema_load]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
+  // If forcing a refesh or the schema hasn't been downloaded, download it!
+  if ($reset || !file_exists(STANFORD_CAPX_SCHEMA_FILE)) {
+    $file_contents = stanford_capx_schema_refresh();
+  }
+  else {
+    $file_contents = file_get_contents(STANFORD_CAPX_SCHEMA_FILE);
+  }
+
+  if ($format === 'decoded') {
+    $file_contents = json_decode($file_contents);
+  }
+
+  return !empty($file_contents) ? $file_contents : FALSE;
+}
+
+/**
+ * [stanford_capx_schema_refresh]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_refresh() {
+  // Query the API for the profile schema.
+  $client = CAPxConnection::getAuthenticatedHTTPClient();
+  $schema = $client->api('schema')->profile();
+
+  // Cache the result in a private file. We can't retrieve raw JSON using API.
+  file_unmanaged_save_data(json_encode($schema), STANFORD_CAPX_SCHEMA_FILE, FILE_EXISTS_REPLACE);
+
+  return $schema;
 }
