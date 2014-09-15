@@ -566,15 +566,15 @@ function stanford_capx_schema_refresh() {
   $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
   file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
 
-  // Query the API for the profile schema.
+  // Query the API for the profile schema as raw JSON.
   $client = CAPxConnection::getAuthenticatedHTTPClient();
-  $schema = $client->api('schema')->profile();
+  $response = $client->api('schema')->getRaw('profile');
+  $schema = $response->getBody(TRUE);
 
-  // @TODO: Remove this when the API is fixed.
-  $schema = json_encode($schema);
-
-  // Cache the result in a private file. We can't retrieve raw JSON using API.
-  file_unmanaged_save_data($schema, $file, FILE_EXISTS_REPLACE);
+  // Cache the result in a private file.
+  if ($schema && strlen($schema)) {
+    file_unmanaged_save_data($schema, $file, FILE_EXISTS_REPLACE);
+  }
 
   return $schema;
 }
