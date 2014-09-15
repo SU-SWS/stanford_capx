@@ -52,35 +52,34 @@ function stanford_capx_jqTree_get($schema_json) {
 }
 
 function stanford_capx_jqTree_render(&$schema) {
-  // has children?
   $branch = array();
+  $metadata = array();
   foreach ($schema as $name => $element) {
-    // is it stdClass or string?
     $leaf = new stdClass();
+
     switch (gettype($element)) {
       case 'string':
-        // Deal with other things we want?
+        // Strings describe the properties of the element.
         switch ($name) {
           case 'title':
             $leaf->label = t('Title:') . ' ' . check_plain($element);
-            $branch[] = $leaf;
+            $metadata[0] = $leaf;
             break;
 
           case 'type':
             $leaf->label = t('Type:') . ' ' . check_plain($element);
-            $branch[] = $leaf;
+            $metadata[1] = $leaf;
             break;
 
           case 'description':
             $leaf->label = t('Description:') . ' ' . check_plain($element);
-            $branch[] = $leaf;
+            $metadata[2] = $leaf;
             break;
         }
-        // Do something with $child.
         break;
 
       case 'object':
-        // Set the output
+        // An object indicates another child (branch) in the tree to render.
         $new_branch = new stdClass();
         $new_branch->label = check_plain($name);
         $new_branch->children = stanford_capx_jqTree_render($element);
@@ -89,6 +88,5 @@ function stanford_capx_jqTree_render(&$schema) {
     }
   }
 
-  // @TODO: Sort this using usort().
-  return $branch;
+  return array_merge($metadata, $branch);
 }
