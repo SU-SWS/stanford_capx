@@ -540,6 +540,7 @@ function stanford_capx_debug() {
 function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
   $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
 
+  // @TODO: Refresh automatically under some condition? Weekly?
   // If forcing a refesh or the schema hasn't been downloaded, download it!
   if ($reset || !file_exists($file)) {
     $file_contents = stanford_capx_schema_refresh();
