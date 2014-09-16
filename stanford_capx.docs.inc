@@ -63,7 +63,7 @@ function stanford_capx_jqTree_get($schema_json) {
  *
  * @return [type] [description]
  */
-function stanford_capx_jqTree_render(&$schema) {
+function stanford_capx_jqTree_render(&$schema, $parents = array()) {
   $branch = array();
   $metadata = array();
   foreach ($schema as $name => $element) {
@@ -81,6 +81,11 @@ function stanford_capx_jqTree_render(&$schema) {
           case 'type':
             $leaf->label = t('Type:') . ' ' . check_plain($element);
             $metadata[1] = $leaf;
+
+            // Calculate selector.
+            $selector = new stdClass();
+            $selector->label = t('Selector:') . ' $.' . implode($parents, '.');
+            $metadata[3] = $selector;
             break;
 
           case 'description':
@@ -94,18 +99,24 @@ function stanford_capx_jqTree_render(&$schema) {
         // An object indicates another child (branch) in the tree to render.
         $new_branch = new stdClass();
         $new_branch->label = check_plain($name);
+        $parents[] = $new_branch->label;
 
         if ($element->type === 'object' && isset($element->properties)) {
-          $new_branch->children = stanford_capx_jqTree_render($element->properties);
+          $new_branch->children = stanford_capx_jqTree_render($element->properties, $parents);
         }
         else {
-          $new_branch->children = stanford_capx_jqTree_render($element);
+          $new_branch->children = stanford_capx_jqTree_render($element, $parents);
         }
+
+        array_pop($parents);
 
         $branch[] = $new_branch;
         break;
     }
   }
+
+  // Sort the display order of element metadata by key.
+  ksort($metadata);
 
   return array_merge($metadata, $branch);
 }
