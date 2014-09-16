@@ -46,11 +46,23 @@ function stanford_capx_admin_config_data_browser() {
   return $output;
 }
 
+/**
+ * [stanford_capx_jqTree_get]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
 function stanford_capx_jqTree_get($schema_json) {
   $decoded_json = json_decode($schema_json);
   return stanford_capx_jqTree_render($decoded_json->properties);
 }
 
+/**
+ * [stanford_capx_jqTree_render]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
 function stanford_capx_jqTree_render(&$schema) {
   $branch = array();
   $metadata = array();
@@ -82,7 +94,14 @@ function stanford_capx_jqTree_render(&$schema) {
         // An object indicates another child (branch) in the tree to render.
         $new_branch = new stdClass();
         $new_branch->label = check_plain($name);
-        $new_branch->children = stanford_capx_jqTree_render($element);
+
+        if ($element->type === 'object') {
+          $new_branch->children = stanford_capx_jqTree_render($element->properties);
+        }
+        else {
+          $new_branch->children = stanford_capx_jqTree_render($element);
+        }
+
         $branch[] = $new_branch;
         break;
     }
