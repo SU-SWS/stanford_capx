@@ -95,7 +95,7 @@ function stanford_capx_jqTree_render(&$schema) {
         $new_branch = new stdClass();
         $new_branch->label = check_plain($name);
 
-        if ($element->type === 'object') {
+        if ($element->type === 'object' && isset($element->properties)) {
           $new_branch->children = stanford_capx_jqTree_render($element->properties);
         }
         else {
