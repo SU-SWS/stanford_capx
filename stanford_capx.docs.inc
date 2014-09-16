@@ -73,11 +73,6 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
       case 'string':
         // Strings describe the properties of the element.
         switch ($name) {
-          case 'title':
-            $leaf->label = t('Title:') . ' ' . check_plain($element);
-            $metadata[0] = $leaf;
-            break;
-
           case 'type':
             $leaf->label = t('Type:') . ' ' . check_plain($element);
             $metadata[1] = $leaf;
@@ -92,16 +87,23 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
             $leaf->label = t('Description:') . ' ' . check_plain($element);
             $metadata[2] = $leaf;
             break;
+
+          case 'metadata':
+            $leaf->label = t('Metadata:') . ' ' . check_plain($element);
+            $metadata[4] = $leaf;
+            break;
         }
         break;
 
       case 'object':
         // An object indicates another child (branch) in the tree to render.
         $new_branch = new stdClass();
-        $new_branch->label = check_plain($name);
-        $parents[] = $new_branch->label;
 
-        if ($element->type === 'object' && isset($element->properties)) {
+        $new_branch->label = isset($element->title) ? check_plain($element->title) : check_plain($name);
+
+        $parents[] = $name;
+
+        if (isset($element->properties)) {
           $new_branch->children = stanford_capx_jqTree_render($element->properties, $parents);
         }
         else {
