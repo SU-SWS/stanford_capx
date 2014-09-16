@@ -60,59 +60,73 @@ function stanford_capx_jqTree_get($schema_json) {
 /**
  * [stanford_capx_jqTree_render]
  * @param [type] [description]
+ * @param [type] [description]
  *
  * @return [type] [description]
  */
 function stanford_capx_jqTree_render(&$schema, $parents = array()) {
+  // Initialize variables for collecting the field metadata.
   $branch = array();
   $metadata = array();
+
+  // Iterate over each property of the schema objects.
   foreach ($schema as $name => $element) {
+    // Initialize the leaf to collect a single piece of metadata E.g. Type.
     $leaf = new stdClass();
 
+    // Is the current object property a string or a child object?
     switch (gettype($element)) {
       case 'string':
-        // Strings describe the properties of the element.
+        // Strings describe the field metadata.
         switch ($name) {
           case 'type':
+            // Render field type.
             $leaf->label = t('Type:') . ' ' . check_plain($element);
             $metadata[1] = $leaf;
 
-            // Calculate selector.
+            // Calculate and render the JSON selector.
             $selector = new stdClass();
             $selector->label = t('Selector:') . ' $.' . implode($parents, '.');
-            $metadata[3] = $selector;
+            $metadata[4] = $selector;
             break;
 
           case 'description':
+            // Render field description.
             $leaf->label = t('Description:') . ' ' . check_plain($element);
             $metadata[2] = $leaf;
             break;
 
           case 'metadata':
+            // Render field metadata property. Always 'true' if present.
             $leaf->label = t('Metadata:') . ' ' . check_plain($element);
-            $metadata[4] = $leaf;
+            $metadata[3] = $leaf;
             break;
         }
         break;
 
       case 'object':
         // An object indicates another child (branch) in the tree to render.
-        $new_branch = new stdClass();
+        $child_branch = new stdClass();
 
-        $new_branch->label = isset($element->title) ? check_plain($element->title) : check_plain($name);
+        // Fall back to the element name if title property not set.
+        $child_branch->label = isset($element->title) ? check_plain($element->title) : check_plain($name);
 
-        $parents[] = $name;
+        // Push the current element name for calculating the JSON selector.
+        array_push($parents, $name);
 
+        // Recursively process child properties - avoid rendering "properties".
         if (isset($element->properties)) {
-          $new_branch->children = stanford_capx_jqTree_render($element->properties, $parents);
+          $child_branch->children = stanford_capx_jqTree_render($element->properties, $parents);
         }
         else {
-          $new_branch->children = stanford_capx_jqTree_render($element, $parents);
+          $child_branch->children = stanford_capx_jqTree_render($element, $parents);
         }
 
+        // Pop the current element name; it was just recursively processed.
         array_pop($parents);
 
-        $branch[] = $new_branch;
+        // Add the child branch to the current branch.
+        $branch[] = $child_branch;
         break;
     }
   }
@@ -120,5 +134,6 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
   // Sort the display order of element metadata by key.
   ksort($metadata);
 
+  // Merge the arrays, forcing the metadata to the top of each property.
   return array_merge($metadata, $branch);
 }
