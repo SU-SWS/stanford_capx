@@ -96,7 +96,7 @@ function stanford_capx_data_browser_launch_block() {
 
   $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "</p>";
 
-  // @TODO: THIS!
+  // Generate a link to the data browser, which opens in a new window.
   $browser_link = l(t('Open Data Schema'),
     'admin/config/capx/data-browser', array(
       'attributes' => array(
