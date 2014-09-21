@@ -118,5 +118,3 @@ function stanford_capx_data_browser_launch_block() {
 
   return $output;
 }
-
-

@@ -54,7 +54,7 @@ function stanford_capx_admin_config_data_browser() {
  */
 function stanford_capx_jqTree_get($schema_json) {
   $decoded_json = json_decode($schema_json);
-  return stanford_capx_jqTree_render($decoded_json->properties);
+  return is_object($decoded_json) ? stanford_capx_jqTree_render($decoded_json->properties) : FALSE;
 }
 
 /**
