@@ -99,10 +99,7 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
 
               // Find and render the sample profile data.
               $sample_data = stanford_capx_sample_data($selector);
-              $sample_data = current($sample_data);
-              // Some elements are an array E.g. 'keywords'.
-              $sample_data = is_array($sample_data) ? current($sample_data) : $sample_data;
-
+              $sample_data = check_plain(stanford_capx_sample_data_render($sample_data));
 
               // Only display if sample data exists.
               if (!empty($sample_data)) {
@@ -162,6 +159,42 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
   return array_merge($metadata, $branch);
 }
 
+/**
+ * [stanford_capx_sample_data_render]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_sample_data_render($sample_data) {
+  // Is there a boolean value in the $sample_data array?
+  if (is_array($sample_data)) {
+    if (count($sample_data)) {
+      // Pull out the value.
+      $sample_data = current($sample_data);
+    }
+    else {
+      // No data was found.
+      return FALSE;
+    }
+  }
+
+  // Sometimes, the data is an array in an array E.g. 'keywords'.
+  $sample_data = is_array($sample_data) ? stanford_capx_sample_data_render(array_pop($sample_data)) : $sample_data;
+
+  // Render booleans - so that we don't print empty string for FALSE.
+  if (is_bool($sample_data)) {
+    $sample_data = $sample_data ? t('TRUE') : t('FALSE');
+  }
+
+  return $sample_data;
+}
+
+/**
+ * [stanford_capx_sample_data]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
 function stanford_capx_sample_data($selector) {
   static $sample_profile;
   static $json_parser;
@@ -172,17 +205,19 @@ function stanford_capx_sample_data($selector) {
     if (file_exists($file)) {
       // Load sample data from the file cache.
       $json = file_get_contents(STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE);
-      $sample_profile = json_decode($json, TRUE);
     }
     else {
       // Fetch the profile from CAP and save to file cache.
       $client = CAPxConnection::getAuthenticatedHTTPClient();
       // Profile of "swberg".
       $response = $client->api('profile')->getRaw(32640);
-      $sample_profile = $response->getBody(TRUE);
+      $json = $response->getBody(TRUE);
       // @TODO: Expire this at some point. hook_cron?
-      file_unmanaged_save_data($sample_profile, $file, FILE_EXISTS_REPLACE);
+      file_unmanaged_save_data($json, $file, FILE_EXISTS_REPLACE);
     }
+
+    // Decode to array format, as preferred by JsonParser.
+    $sample_profile = json_decode($json, TRUE);
   }
 
   // Load and persist the parser.
