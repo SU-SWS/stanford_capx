@@ -7,7 +7,10 @@
  * A place to put your documentation related functionality.
  */
 
+use CAPx\Drupal\Util\CAPxConnection;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
+
+define('STANFORD_CAPX_SAMPLE_PROFILE', 'sample_profile.json');
 
 /**
  * [stanford_capx_admin_config description]
@@ -162,11 +165,24 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
 function stanford_capx_sample_data($selector) {
   static $sample_profile;
   static $json_parser;
+  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE;
 
   // Load and static cache the sample data file.
   if (!isset($sample_profile)) {
-    $json = file_get_contents(drupal_get_path('module', 'stanford_capx') . '/sample_data/sample_profile.json');
-    $sample_profile = json_decode($json, TRUE);
+    if (file_exists($file)) {
+      // Load sample data from the file cache.
+      $json = file_get_contents(STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE);
+      $sample_profile = json_decode($json, TRUE);
+    }
+    else {
+      // Fetch the profile from CAP and save to file cache.
+      $client = CAPxConnection::getAuthenticatedHTTPClient();
+      // Profile of "swberg".
+      $response = $client->api('profile')->getRaw(32640);
+      $sample_profile = $response->getBody(TRUE);
+      // @TODO: Expire this at some point. hook_cron?
+      file_unmanaged_save_data($sample_profile, $file, FILE_EXISTS_REPLACE);
+    }
   }
 
   // Load and persist the parser.
