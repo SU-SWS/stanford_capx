@@ -7,6 +7,8 @@
  * A place to put your documentation related functionality.
  */
 
+use \Peekmo\JsonPath\JsonStore as JsonParser;
+
 /**
  * [stanford_capx_admin_config description]
  * @return [type] [description]
@@ -84,10 +86,28 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
             $leaf->label = t('Type:') . ' ' . check_plain($element);
             $metadata[1] = $leaf;
 
-            // Calculate and render the JSON selector.
-            $selector = new stdClass();
-            $selector->label = t('Selector:') . ' $.' . implode($parents, '.');
-            $metadata[4] = $selector;
+            // Don't bother selecting branches, only leaves - actual values.
+            if ($element !== 'object' && $element !== 'array') {
+              // Calculate and render the JSON selector.
+              $leaf = new stdClass();
+              $selector = '$.' . implode($parents, '.');
+              $leaf->label = t('Selector:') . ' ' . $selector;
+              $metadata[4] = $leaf;
+
+              // Find and render the sample profile data.
+              $sample_data = stanford_capx_sample_data($selector);
+              $sample_data = current($sample_data);
+              // Some elements are an array E.g. 'keywords'.
+              $sample_data = is_array($sample_data) ? current($sample_data) : $sample_data;
+
+
+              // Only display if sample data exists.
+              if (!empty($sample_data)) {
+                $leaf = new stdClass();
+                $leaf->label = t('Sample data:') . ' ' . $sample_data;
+                $metadata[5] = $leaf;
+              }
+            }
             break;
 
           case 'description':
@@ -109,10 +129,11 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
         $child_branch = new stdClass();
 
         // Fall back to the element name if title property not set.
-        $child_branch->label = isset($element->title) ? check_plain($element->title) : check_plain($name);
+        $child_branch->label = isset($element->title) && is_string($element->title) ? check_plain($element->title) : check_plain($name);
 
-        // Push the current element name for calculating the JSON selector.
-        array_push($parents, $name);
+        // Push the current element name for calculating the JSON selector or
+        // use the '*' operator to select all elements of the array.
+        $name === 'items' ? array_push($parents, '*') : array_push($parents, $name);
 
         // Recursively process child properties - avoid rendering "properties".
         if (isset($element->properties)) {
@@ -136,4 +157,23 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
 
   // Merge the arrays, forcing the metadata to the top of each property.
   return array_merge($metadata, $branch);
+}
+
+function stanford_capx_sample_data($selector) {
+  static $sample_profile;
+  static $json_parser;
+
+  // Load and static cache the sample data file.
+  if (!isset($sample_profile)) {
+    $json = file_get_contents(drupal_get_path('module', 'stanford_capx') . '/sample_data/sample_profile.json');
+    $sample_profile = json_decode($json, TRUE);
+  }
+
+  // Load and persist the parser.
+  if (!isset($json_parser)) {
+    $json_parser = new JsonParser();
+  }
+
+  // Find the value for the given selector.
+  return $json_parser->get($sample_profile, $selector);
 }
