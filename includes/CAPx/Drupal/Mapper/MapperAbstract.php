@@ -42,8 +42,8 @@ abstract class MapperAbstract implements MapperInterface {
       throw new \Exception("Path cannot be empty", 1);
     }
 
-    $jsonParser = new JsonParser();
-    $parsed = $jsonParser->get($data, $path);
+    $jsonParser = new JsonParser($data);
+    $parsed = $jsonParser->get($path);
     return $parsed;
 
   }
