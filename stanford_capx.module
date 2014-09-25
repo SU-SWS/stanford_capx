@@ -555,11 +555,17 @@ function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
     $file_contents = file_get_contents($file);
   }
 
-  if ($file_contents && $format === 'decoded') {
-    $file_contents = json_decode($file_contents);
+  if (empty($file_contents)) {
+    return FALSE;
   }
 
-  return !empty($file_contents) ? $file_contents : FALSE;
+  if ($format === 'object') {
+    $file_contents = json_decode($file_contents);
+  }
+  elseif ($format === 'array') {
+    $file_contents = json_decode($file_contents, TRUE);
+  }
+  return $file_contents;
 }
 
 /**
