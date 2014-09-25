@@ -638,6 +638,15 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
   // @todo: We should validate the json selectors here.
+
+  // Get the JSON Schema in the right format.
+  $schema = stanford_capx_schema_format_validation();
+
+  // Search for the given selector.
+
+  // Catch Exceptions and set form errors.
+
+
 }
 
 /**
