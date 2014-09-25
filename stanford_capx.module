@@ -614,36 +614,3 @@ function stanford_capx_files_dir_exists() {
 
   return FALSE;
 }
-
-/**
- * [stanford_capx_schema_load]
- * @param [type] [description]
- * @param [type] [description]
- *
- * @return [type] [description]
- */
-function stanford_capx_schema_format_validation($schema = NULL) {
-  $formatted_schema = array();
-
-  if (empty($schema)) {
-    $schema = stanford_capx_schema_load('array');
-  }
-
-  // Format it.
-  if (isset($schema['type'])) {
-    // @TODO: Remove isset() when the schema is fully documented.
-    if ($schema['type'] == 'object' && isset($schema['properties'])) {
-      foreach ($schema['properties'] as $name => $property) {
-        $formatted_schema[$name] = stanford_capx_schema_format_validation($property);
-      }
-    }
-    elseif ($schema['type'] == 'array') {
-      $formatted_schema = stanford_capx_schema_format_validation($schema['items']);
-    }
-    else {
-      $formatted_schema = check_plain($schema['type']);
-    }
-  }
-
-  return $formatted_schema;
-}
