@@ -222,9 +222,9 @@ function stanford_capx_sample_data($selector) {
 
   // Load and persist the parser.
   if (!isset($json_parser)) {
-    $json_parser = new JsonParser();
+    $json_parser = new JsonParser($sample_profile);
   }
 
   // Find the value for the given selector.
-  return $json_parser->get($sample_profile, $selector);
+  return $json_parser->get($selector);
 }
