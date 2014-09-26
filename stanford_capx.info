@@ -8,6 +8,8 @@ dependencies[] = entity
 dependencies[] = date
 dependencies[] = date_api
 dependencies[] = encrypt (>= 2.0-beta3)
+dependencies[] = views
+dependencies[] = ctools
 
 files[] = includes/autoload.php
 files[] = includes/vendor/autoload.php
