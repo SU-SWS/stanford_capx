@@ -149,6 +149,7 @@ class CAPx {
 
   /**
    * Returns the API endpoint.
+   * @todo : move this to CAPxConnection
    * @return string full URL to the API endpoint
    */
   public static function getAPIEndpoint() {
@@ -157,6 +158,7 @@ class CAPx {
 
   /**
    * Returns the authentication endpoint
+   * @todo : move this to CAPxConnection
    * @return string full url to the auth endpoint
    */
   public static function getAuthEndpoint() {
@@ -165,6 +167,7 @@ class CAPx {
 
   /**
    * Returns a decrypted username that authenticates with the cap api.
+   * @todo : move this to CAPxConnection
    * @return string the username
    */
   public static function getAuthUsername() {
@@ -173,10 +176,12 @@ class CAPx {
 
   /**
    * Returns a decrypted password that authenticates with the cap api.
+   * @todo : move this to CAPxConnection
    * @return string the password
    */
   public static function getAuthPassword() {
     return decrypt(variable_get('stanford_capx_password', ''));
   }
+
 
 }

@@ -45,13 +45,27 @@ class EntityImporter implements ImporterInterface {
     $options = $this->getOptions();
     $mapper = $this->getMapper();
     $client = $this->getClient();
+    $data = array();
 
     foreach ($options['types'] as $k => $type) {
+      $children = FALSE;
 
-      $data = $client->api('profile')->search($type, $options['values'][$k]);
+      switch ($type) {
+        case "orgCodes":
+          $children = $options['child_orgs'];
+        case "privGroups":
+        case "uids":
+          $new = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
+          if (!empty($new['values'])) {
+            $data[$type] = $new['values'];
+          }
+          break;
+      }
+    }
 
-      if(isset($data['values'])) {
-        foreach ($data['values'] as $index => $info) {
+    if (!empty($data)) {
+      foreach ($data as $type => $results) {
+        foreach ($results as $index => $info) {
           drupal_alter('capx_pre_entity_processor', $info, $mapper);
 
           $entityType = $mapper->getEntityType();
@@ -68,10 +82,8 @@ class EntityImporter implements ImporterInterface {
             $processor->setEntityImporter($this);
             $processor->execute();
           }
-
         }
       }
-
     }
 
   }

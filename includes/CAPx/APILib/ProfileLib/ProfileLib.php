@@ -53,7 +53,7 @@ class ProfileLib extends APILib {
         $options['query'][$type] = $args;
         break;
       default:
-        throw new Exception("Missing list type.");
+        throw new \Exception("Missing list type.");
     }
 
     $options['query']['exact'] = ($exact) ? "true" : "false";

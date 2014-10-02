@@ -781,6 +781,13 @@ function stanford_capx_importer_form($form, &$form_state) {
 
   global $importer;
 
+  // Do a check to see if the organization codes are available. If not, prompt
+  // the user to update them.
+  $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
+  if (!$has_orgs) {
+    drupal_set_message('The organization codes are not available. ' . l('Sync with the API now.', 'admin/config/capx/organizations/sync', array('query' => array('destination' => current_path()))), 'warning');
+  }
+
   // Configuration group
   // -–-–-–-–-–-–-–-–-–-–-
 
@@ -845,10 +852,17 @@ function stanford_capx_importer_form($form, &$form_state) {
 
   $form['groups']['organization'] = array(
     '#type' => 'textfield',
-    '#title' => t('Organization'),
+    '#title' => t('Organization(s)'),
     '#description' => t('Please select the name of the organization you wish to import. Learn more about !orgchart.', array('!orgchart' => $link)),
     '#default_value' => isset($importer->organization) ? $importer->organization : '',
-    '#autocomplete_path' => 'stanford-cap-api-org-autocomplete', // @todo: this.
+    '#autocomplete_path' => 'admin/config/capx/autocomplete/orgs', // @todo: this.
+  );
+
+  $form['groups']['child_orgs'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include child organizations'),
+    '#description' => t('Enable it to retrieve all the members from child organizations.'),
+    '#default_value' => isset($importer->child_orgs) ? $importer->child_orgs : '',
   );
 
   $link = l(t('workgroup manager website'), 'https://workgroup.stanford.edu');
@@ -944,6 +958,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   // Put settings in here!
   $settings['mapper'] = $values['mapper'];
   $settings['organization'] = $values['organization'];
+  $settings['child_orgs'] = $values['child_orgs'];
   $settings['workgroup'] = $values['workgroup'];
   $settings['sunet_id'] = $values['sunet_id'];
 
