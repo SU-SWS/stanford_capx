@@ -4,7 +4,7 @@
  * @file
  * @author [author] <[email]>
  *
- * A place to put your documentation related functionality.
+ * A place to put documentation related functionality.
  */
 
 use CAPx\Drupal\Util\CAPxConnection;
@@ -13,7 +13,7 @@ use \Peekmo\JsonPath\JsonStore as JsonParser;
 define('STANFORD_CAPX_SAMPLE_PROFILE', 'sample_profile.json');
 
 /**
- * [stanford_capx_admin_config description]
+ * Menu callback to display the CAPx Data Browser.
  * @return [type] [description]
  */
 function stanford_capx_admin_config_data_browser() {
@@ -52,7 +52,8 @@ function stanford_capx_admin_config_data_browser() {
 }
 
 /**
- * [stanford_capx_jqTree_get]
+ * Render the CAP Profile Schema as a jqTree compatible JSON structure.
+ *
  * @param [type] [description]
  *
  * @return [type] [description]
@@ -63,7 +64,8 @@ function stanford_capx_jqTree_get($schema_json) {
 }
 
 /**
- * [stanford_capx_jqTree_render]
+ * Traverse the schema and render the desired schema elements.
+ *
  * @param [type] [description]
  * @param [type] [description]
  *
@@ -160,7 +162,8 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
 }
 
 /**
- * [stanford_capx_sample_data_render]
+ * Prepare the value(s) returned from querying the sample data.
+ *
  * @param [type] [description]
  *
  * @return [type] [description]
@@ -190,7 +193,9 @@ function stanford_capx_sample_data_render($sample_data) {
 }
 
 /**
- * [stanford_capx_sample_data]
+ * Fetch, cache and query the sample data profile.
+ * @TODO: Separate the concerns.
+ *
  * @param [type] [description]
  *
  * @return [type] [description]
@@ -209,8 +214,11 @@ function stanford_capx_sample_data($selector) {
     else {
       // Fetch the profile from CAP and save to file cache.
       $client = CAPxConnection::getAuthenticatedHTTPClient();
+
       // Profile of "swberg".
+      // @TODO: Make this configurable.
       $response = $client->api('profile')->getRaw(32640);
+
       $json = $response->getBody(TRUE);
       // @TODO: Expire this at some point. hook_cron?
       file_unmanaged_save_data($json, $file, FILE_EXISTS_REPLACE);
