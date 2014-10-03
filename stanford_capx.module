@@ -16,6 +16,7 @@ require_once "stanford_capx.views.inc";
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
+use CAPx\Drupal\Importer\EntityImporterBatch;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
@@ -50,7 +51,7 @@ define('STANFORD_CAPX_SCHEMA_FILE', 'schema.json');
 function stanford_capx_help($path, $arg) {
   switch ($path) {
     case 'admin/capx':
-      return '<p>' . t('Contact %email', array('%email' => l('email', 'mailto:no-reply@stanford.edu'))) . '</p>';
+      return '<p>' . t('Contact %email', array('%email' => l(t('email'), 'mailto:no-reply@stanford.edu'))) . '</p>';
   }
 }
 
@@ -59,7 +60,7 @@ function stanford_capx_help($path, $arg) {
  */
 function stanford_capx_permission() {
   return array(
-    'administer capx' =>  array(
+    'administer capx' => array(
       'title' => t('Administer CAPx'),
       'description' => t('Administer and Configure CAPx settings.'),
     ),
@@ -70,14 +71,14 @@ function stanford_capx_permission() {
  * Implements hook_node_access().
  */
 function stanford_capx_node_access($node, $op, $account) {
-
   // Returning nothing from this function would have the same effect.
   return NODE_ACCESS_IGNORE;
 }
 
 /**
- * [stanford_capx_views_api description]
- * @return [type] [description]
+ * Implements hook_views_api.
+ * @return array
+ *   returns views api info
  */
 function stanford_capx_views_api() {
   return array(
@@ -90,7 +91,7 @@ function stanford_capx_views_api() {
  */
 function stanford_capx_menu() {
 
-  // Overview page
+  // Overview page.
   $items['admin/config/capx'] = array(
     'title' => 'CAPx',
     'page callback' => 'stanford_capx_admin_config',
@@ -98,7 +99,7 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // Connect page
+  // Connect page.
   $items['admin/config/capx/connect'] = array(
     'title' => 'CAPx | Connect',
     'page callback' => 'stanford_capx_admin_config_connect',
@@ -107,7 +108,7 @@ function stanford_capx_menu() {
     'weight' => -10,
   );
 
-  // Settings Page
+  // Settings Page.
   $items['admin/config/capx/settings'] = array(
     'title' => 'Settings',
     'page callback' => 'stanford_capx_admin_config_settings',
@@ -116,7 +117,7 @@ function stanford_capx_menu() {
     'weight' => -9,
   );
 
-  // Sync organizations callback
+  // Sync organizations callback.
   $items['admin/config/capx/organizations/sync'] = array(
     'title' => 'Organizations Sync',
     'page callback' => 'stanford_capx_organizations_sync',
@@ -124,7 +125,7 @@ function stanford_capx_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // Help Page
+  // Help Page.
   $items['admin/config/capx/help'] = array(
     'title' => 'Help',
     'page callback' => 'stanford_capx_admin_config_help',
@@ -133,7 +134,7 @@ function stanford_capx_menu() {
     'weight' => 10,
   );
 
-  // Data Browser
+  // Data Browser.
   $items['admin/config/capx/data-browser'] = array(
     'title' => 'Data Browser',
     'page callback' => 'stanford_capx_admin_config_data_browser',
@@ -212,6 +213,14 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  $items['admin/config/capx/importer/sync/%'] = array(
+    'title' => 'Sync Importer',
+    'page callback' => 'stanford_capx_sync_importer',
+    'page arguments' => array(5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
   // Profile pages
   // ---------------------------------------------------------------------------
 
@@ -249,13 +258,33 @@ function stanford_capx_menu() {
  */
 function stanford_capx_cron() {
 
-  // Run all importers.
+  // Call cron on all importers.
   $importers = CAPxImporter::loadAllImporters();
   foreach ($importers as $key => $importer) {
-    $entity_importer = $importer->getEntityImporter();
-    $entity_importer->execute();
+    $entity_importer = CAPxImporter::loadEntityImporter($importer->getMachineName());
+    $entity_importer->cron();
   }
 
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function stanford_capx_cron_queue_info() {
+  $queues['stanford_capx_profiles'] = array(
+    'worker callback' => 'stanford_capx_cron_queue_callback',
+    'time' => variable_get('stanford_capx_runtime_limit', 120),
+    'skip on cron' => FALSE,
+  );
+  return $queues;
+}
+
+/**
+ * This function exists merely as a callback function as the static class function was not able to be called directly.
+ * @param array $item an array of item information to process.
+ */
+function stanford_capx_cron_queue_callback($item) {
+  EntityImporterBatch::queue($item);
 }
 
 
@@ -264,14 +293,15 @@ function stanford_capx_cron() {
 
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford CAPx admin overview page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config() {
-   // Connection Status Block
+  // Connection Status Block.
   $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
 
-  // Content Output
+  // Content Output.
   $output = "";
   $output .= render($connection_block['content']);
   $output .= "<h2>" . t('Importers') . "</h2>";
@@ -281,15 +311,16 @@ function stanford_capx_admin_config() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford CAPX connect page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_connect() {
 
-  // Connection Status Block
+  // Connection Status Block.
   $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
 
-  // Content Output
+  // Content Output.
   $output = "";
   $output .= render($connection_block['content']);
 
@@ -301,8 +332,9 @@ function stanford_capx_admin_config_connect() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Settings page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_settings() {
   $output = "";
@@ -313,14 +345,15 @@ function stanford_capx_admin_config_settings() {
   }
 
   $output .= "<h2>" . t("Organizations") . "</h2>";
-  $output .= "<p>" . t("Sync organization data with CAP API: ") . l('Sync Now', 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  $output .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
 
   return $output;
 }
 
 /**
- * Callback url and utility function for running the organizations sync
- * @return redirects back to page user was on.
+ * Callback url and utility function for running the organizations sync.
+ * @return mixed
+ *   redirects back to page user was on.
  */
 function stanford_capx_organizations_sync() {
   drupal_set_message("Organization codes have been updated.", 'status');
@@ -329,8 +362,9 @@ function stanford_capx_organizations_sync() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford Capx help page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_help() {
   $output = "";
@@ -339,19 +373,21 @@ function stanford_capx_admin_config_help() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford Capx mapper page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_mapper() {
   $output = "";
-  $output .= "<p>" . l('Create new mapper', 'admin/config/capx/mapper/new', array('attributes'=>array('class'=>'new-button btn'))) . "</p>";
+  $output .= "<p>" . l(t('Create new mapper'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button btn'))) . "</p>";
   $output .= views_embed_view('capx_mappers');
   return $output;
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford Capx create new mapper page menu callack.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_mapper_new() {
   $output = "";
@@ -372,13 +408,14 @@ function stanford_capx_admin_config_mapper_new() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Stanford Capx edit mapper page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $output = "";
-  global $mapper;
-  $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
+  global $_capx_mapper;
+  $_capx_mapper = $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
 
   if (!$mapper) {
     throw new Exception("Could not load a mapper with provided machine name. Please check url.");
@@ -392,7 +429,7 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $block_render = _block_get_renderable_array(_block_render_blocks(array($block)));
   $output .= render($block_render);
 
-  // Render form
+  // Render form.
   $form = drupal_get_form('stanford_capx_mapper_form');
   $output .= drupal_render($form);
 
@@ -400,26 +437,28 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Importers page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import() {
   $output = "";
 
-  $output .= "<p>" . l('Create new importer', 'admin/config/capx/importer/new', array('attributes'=>array('class'=>'new-button btn'))) . "</p>";
+  $output .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button btn'))) . "</p>";
   $output .= views_embed_view('capx_importers');
 
   return $output;
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Create new importer page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import_new() {
   $output = "";
 
-   // Get and render the mapper form.
+  // Get and render the mapper form.
   $form = drupal_get_form('stanford_capx_importer_form');
   $output .= drupal_render($form);
 
@@ -427,19 +466,20 @@ function stanford_capx_admin_config_import_new() {
 }
 
 /**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
+ * Edit importer configuration form page menu callback.
+ * @return string
+ *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import_edit($importer_machine_name) {
   $output = "";
-  global $importer;
-  $importer = CAPxImporter::loadImporter($importer_machine_name);
+  global $_capx_importer;
+  $_capx_importer = $importer = CAPxImporter::loadImporter($importer_machine_name);
 
   if (!$importer) {
     throw new Exception("Could not load an importer with provided machine name. Please check url.");
   }
 
-  // Render form
+  // Render form.
   $form = drupal_get_form('stanford_capx_importer_form');
   $output .= drupal_render($form);
 
@@ -447,9 +487,11 @@ function stanford_capx_admin_config_import_edit($importer_machine_name) {
 }
 
 /**
- * Autocomplete callback endpoint for
- * @param  [type] $type [description]
- * @return [type]       [description]
+ * Autocomplete callback endpoint for organizations.
+ * @param  string $type the type of autocomplete callback we are looking up.
+ * @param  string $string the string that is in the autocomplete field.
+ * @return string
+ *   Json results
  */
 function stanford_capx_autocomplete($type, $string) {
   $matches = array();
@@ -457,7 +499,7 @@ function stanford_capx_autocomplete($type, $string) {
   switch ($type) {
     case "orgs":
       $matches += stanford_capx_autocomplete_orgs($string);
-    break;
+      break;
   }
 
   return drupal_json_output($matches);
@@ -465,8 +507,9 @@ function stanford_capx_autocomplete($type, $string) {
 
 /**
  * Matches function for organization lookup.
- * @param  [type] $string [description]
- * @return [type]         [description]
+ * @param  string $string the string that came from the autocomplete field.
+ * @return array
+ *   An array of results
  */
 function stanford_capx_autocomplete_orgs($string) {
   $matches = array();
@@ -474,9 +517,9 @@ function stanford_capx_autocomplete_orgs($string) {
   $last_item = array_pop($items);
   $prefix = implode(', ', $items);
 
-  // Two ways to look up an org. By org code or by name
+  // Two ways to look up an org. By org code or by name.
+  // Look for the exact code match.
 
-  // Look for the exact code match
   $byname = taxonomy_get_term_by_name($last_item);
   if (!empty($byname)) {
     $option = array_pop($byname);
@@ -492,7 +535,8 @@ function stanford_capx_autocomplete_orgs($string) {
   $vocab = Orgs::getVocabulary();
 
   // Partial code lookup. eg: AAH for AAHH
-  // Partial name lookup. eg: Busi for Business and Operations
+  // Partial name lookup. eg: Busi for Business and Operations.
+
   $or = db_or()
     ->condition('name', db_like($last_item) . '%', 'LIKE')
     ->condition('description', db_like($last_item) . '%', 'LIKE');
@@ -511,6 +555,20 @@ function stanford_capx_autocomplete_orgs($string) {
   return $matches;
 }
 
+/**
+ * Runs a batch on a single importer.
+ */
+function stanford_capx_sync_importer($machine_name) {
+
+  $importer = CAPxImporter::loadEntityImporter($machine_name);
+
+  if (!$importer) {
+    throw new Exception("Could not find an importer by that name.");
+  }
+
+  $importer->createBatch();
+  batch_process(drupal_get_destination());
+}
 
 /**
  * [stanford_capx_admin_config description]
@@ -520,23 +578,25 @@ function stanford_capx_autocomplete_orgs($string) {
 function stanford_capx_debug() {
   $output = "";
 
-  $importers = CAPxImporter::loadAllImporters();
-  foreach ($importers as $key => $importer) {
-    $entity_importer = $importer->getEntityImporter();
-    $entity_importer->execute();
-  }
+  // $importers = CAPxImporter::loadAllImporters();
+  // foreach ($importers as $key => $importer) {
+  //   $entity_importer = $importer->getEntityImporter();
+  //   $entity_importer->cron();
+  // }
 
- // \CAPx\Drupal\Organizations\Orgs::syncOrganizations();
+  // batch_process('admin/config/capx/profiles');
 
+  $output .= "Hey!";
   return $output;
 }
 
 /**
- * [stanford_capx_schema_load]
- * @param [type] [description]
- * @param [type] [description]
+ * Implements hook_schema_load.
+ * @param string $format the format type to return in.
+ * @param bool $reset A boolean value to reset the cache or not.
  *
- * @return [type] [description]
+ * @return string
+ *   The file's contents.
  */
 function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
   // If the directory doesn't exist, the file won't either.
@@ -569,9 +629,10 @@ function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
 }
 
 /**
- * [stanford_capx_schema_refresh]
+ * Refresh the schema with fresh information from the API.
  *
- * @return [type] [description]
+ * @return mixed
+ *   FALSE if failed or a json string if success.
  */
 function stanford_capx_schema_refresh() {
   $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
@@ -595,9 +656,10 @@ function stanford_capx_schema_refresh() {
 }
 
 /**
- * [stanford_capx_files_dir_exists]
+ * Check to see if the private directory has been set up properly and is writable.
  *
- * @return [type] [description]
+ * @return bool
+ *   TRUE if check passes FALSE if not
  */
 function stanford_capx_files_dir_exists() {
   $dir = STANFORD_CAPX_FILE_PATH;

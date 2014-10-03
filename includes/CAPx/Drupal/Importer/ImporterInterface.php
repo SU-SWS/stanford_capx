@@ -7,13 +7,20 @@
 namespace CAPx\Drupal\Importer;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\APILib\HTTPClient;
+use CAPx\Drupal\Entities\CFEntity;
 
 interface ImporterInterface {
 
   /**
-   * [__construct description]
-   * @param array $config [description]
+   * A __construct description.
+   *
+   * @param CFEntity     $importer
+   *   [description]
+   * @param EntityMapper $mapper
+   *   [description]
+   * @param HTTPClient   $client
+   *   [description]
    */
-  public function __construct(Array $config, EntityMapper $mapper, HTTPClient $client);
+  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client);
 
 }

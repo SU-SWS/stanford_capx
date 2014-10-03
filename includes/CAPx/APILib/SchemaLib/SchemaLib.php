@@ -20,9 +20,11 @@ use CAPx\APILib\AbstractAPILib as APILib;
 class SchemaLib extends APILib {
 
   /**
-   * Wrapper for get(profile)
-   * @return mixed    either an array of schema data describing profiles or
-   *                  false if there is an error.
+   * Wrapper for get(profile).
+   *
+   * @return mixed
+   *   Either an array of schema data describing profiles or false if there is
+   *   an error.
    */
   public function profile() {
     return $this->get('profile');
@@ -30,11 +32,16 @@ class SchemaLib extends APILib {
 
 
   /**
-   * Get function for the schemas endpoint. Returns an array of information
-   * describing a schema type.
-   * @param  string  $type  currently only known supported type is 'profile'
-   * @return mixed    either an array of schema data describing profiles or
-   *                  false if there is an error.
+   * Get function for the schemas endpoint.
+   *
+   * Returns an array of informationdescribing a schema type.
+   *
+   * @param string $type
+   *   Currently only known supported type is 'profile'
+   *
+   * @return mixed
+   *   Either an array of schema data describing profiles or false if there is
+   *   an error.
    */
   public function get($type) {
     $endpoint = $this->getEndpoint() . "/cap/v1/schemas/" . $type;
@@ -43,11 +50,16 @@ class SchemaLib extends APILib {
 
 
   /**
-   * Get function for the schemas endpoint. Returns a JSON string of information
-   * describing a schema type.
-   * @param  string  $type  currently only known supported type is 'profile'
-   * @return mixed    either an array of schema data describing profiles or
-   *                  false if there is an error.
+   * Get function for the schemas endpoint.
+   *
+   * Returns a JSON string of information describing a schema type.
+   *
+   * @param string $type
+   *   Currently only known supported type is 'profile'
+   *
+   * @return mixed
+   *   Either an array of schema data describing profiles or false if there is
+   *   an error.
    */
   public function getRaw($type) {
     $endpoint = $this->getEndpoint() . "/cap/v1/schemas/" . $type;

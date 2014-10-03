@@ -10,8 +10,12 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
 
   /**
    * Create a new entity and provide some default values.
-   * @param  array  $values [description]
-   * @return [type]         [description]
+   *
+   * @param array $values
+   *   Values to be merged in with the default values.
+   *
+   * @return EntityAPIControllerExportable
+   *   An entity class populated with default values.
    */
   public function create(array $values = array()) {
     global $user;
@@ -30,9 +34,11 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
 
   /**
    * Save function.
-   * @param  [type] $entity      [description]
-   * @param  [type] $transaction [description]
-   * @return [type]              [description]
+   *
+   * @param EntityAPIControllerExportable $entity
+   *   A fully populated entity ready for saving.
+   * @param DatabaseTransaction $transaction
+   *   A DB Object
    */
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     parent::save($entity, $transaction);

@@ -26,53 +26,59 @@ use CAPx\APILib\AbstractAPILib as APILib;
 
 class OrgLib extends APILib {
 
-    /**
-     * Get an array or organization information by an array of org codes.
-     *
-     * @param  array $vars either a single string org code or an array
-     * of org codes
-     * @return mixed false if request fails or an array of data if it resolves.
-     */
-    public function get($vars) {
-      // The endpoint. Usually default hard coded value.
-      $endpoint = $this->getEndpoint();
-      $options = $this->getOptions();
+  /**
+   * Get an array or organization information by an array of org codes.
+   *
+   * @param array $vars
+   *   either a single string org code or an array of org codes
+   *
+   * @return mixed
+   *   false if request fails or an array of data if it resolves.
+   */
+  public function get($vars) {
+    // The endpoint. Usually default hard coded value.
+    $endpoint = $this->getEndpoint();
+    $options = $this->getOptions();
 
-      if (!is_array($vars)) {
-        $endpoint .= "/cap/v1/orgs/" . $vars;
-      }
-      else {
-        $endpoint .= "/cap/v1/orgs";
-        $options['query']['orgCodes'] = implode(",", $vars);
-      }
-
-      return $this->makeRequest($endpoint, array(), $options);
+    if (!is_array($vars)) {
+      $endpoint .= "/cap/v1/orgs/" . $vars;
+    }
+    else {
+      $endpoint .= "/cap/v1/orgs";
+      $options['query']['orgCodes'] = implode(",", $vars);
     }
 
-    /**
-     * Get an array of information about a single organization by org code.
-     * @param  string $orgCode a valid Stanford Org Code
-     * @return mixed false if request fails or an array of data if it resolves.
-     */
-    public function getOrg($orgCode) {
-      $endpoint = $this->getEndpoint();
-      $endpoint .= "/cap/v1/orgs/" . $orgCode;
+    return $this->makeRequest($endpoint, array(), $options);
+  }
 
-      return $this->makeRequest($endpoint);
-    }
+  /**
+   * Get an array of information about a single organization by org code.
+   *
+   * @param string $orgCode
+   *   A valid Stanford Org Code
+   *
+   * @return mixed
+   *   false if request fails or an array of data if it resolves.
+   */
+  public function getOrg($orgCode) {
+    $endpoint = $this->getEndpoint();
+    $endpoint .= "/cap/v1/orgs/" . $orgCode;
+    return $this->makeRequest($endpoint);
+  }
 
-    /**
-     * Get an array of profile information based on their relationship to an
-     * org code.
-     * @param  string $orgCode a valid Stanford organization code
-     * @return mixed false if request fails or an array of data if it resolves.
-     */
-    public function getProfiles($orgCode) {
-      $endpoint = $this->getEndpoint();
-      $endpoint .= "/cap/v1/orgs/" . $orgCode . "/profiles";
-
-      return $this->makeRequest($endpoint);
-    }
-
+  /**
+   * Get an array of profile information based on their relationship to an org code.
+   *
+   * @param string $orgCode
+   *   A valid Stanford organization code
+   *
+   * @return mixed
+   *   False if request fails or an array of data if it resolves.
+   */
+  public function getProfiles($orgCode) {
+    $endpoint = $this->getEndpoint();
+    $endpoint .= "/cap/v1/orgs/" . $orgCode . "/profiles";
+    return $this->makeRequest($endpoint);
+  }
 
 }
