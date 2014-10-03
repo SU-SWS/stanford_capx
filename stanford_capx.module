@@ -139,7 +139,7 @@ function stanford_capx_menu() {
     'page callback' => 'stanford_capx_admin_config_data_browser',
     'file' => 'stanford_capx.docs.inc',
     'access arguments' => array('administer capx'),
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_SUGGESTED_ITEM,
     'weight' => 10,
   );
 
