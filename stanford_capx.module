@@ -534,8 +534,10 @@ function stanford_capx_debug() {
   $importers = CAPxImporter::loadAllImporters();
   foreach ($importers as $key => $importer) {
     $entity_importer = $importer->getEntityImporter();
-    $entity_importer->createQueue();
+    $entity_importer->createBatch();
   }
+
+  batch_process('admin/config/capx/profiles');
 
   $output .= "Hey!";
   return $output;

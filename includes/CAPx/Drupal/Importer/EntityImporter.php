@@ -145,7 +145,7 @@ class EntityImporter implements ImporterInterface {
       $i = 0;
       while($count > 0) {
         $i++;
-        $batch['operations'][] = array('\CAPx\Drupal\Importer\EntityImporterBatch::callback', array($client, $options, $type, $i, $processLimit));
+        $batch['operations'][] = array('\CAPx\Drupal\Importer\EntityImporterBatch::batch', array($type, $this->getMachineName(), $i, $processLimit));
         $count -= $processLimit;
       }
     }
