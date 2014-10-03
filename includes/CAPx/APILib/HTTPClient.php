@@ -110,7 +110,7 @@ class HTTPClient {
    * Getter for $httpOptions
    * @return array An associative array of options to pass to the HTTP client.
    */
-  public function gethttpOptions() {
+  public function getHttpOptions() {
     return $this->httpOptions;
   }
 
@@ -118,7 +118,7 @@ class HTTPClient {
    * Setter for $httpOptions
    * @param array An associative array of options to pass to the HTTP client.
    */
-  public function sethttpOptions($opts) {
+  public function setHttpOptions($opts) {
     $this->httpOptions = $opts;
   }
 
@@ -137,7 +137,7 @@ class HTTPClient {
   public function api($name) {
 
     $client = $this->getHttpClient();
-    $options = $this->gethttpOptions();
+    $options = $this->getHttpOptions();
 
     // Add access token or we wont be able to communicate.
     $options['query']['access_token'] = $this->getApiToken();

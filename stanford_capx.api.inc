@@ -174,9 +174,16 @@ function hook_capx_field_processor_widget_alter(&$processor, $type, $field_name,
 
 }
 
+/**
+ * Act on the results from a API server request. This is the first chance you
+ * get prior to any processing on the item.
+ * @param  [array] $results  an array of results from a request from the server.
+ * @param  [EntityImporter] $importer the entity importer that made the request.
+ * @return [type]           [description]
+ */
+function hook_capx_preprocess_results(&$results, $importer) {
 
-
-
+}
 
 
 

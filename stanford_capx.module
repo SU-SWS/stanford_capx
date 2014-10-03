@@ -17,6 +17,7 @@ require_once "stanford_capx.views.inc";
 
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
+use CAPx\Drupal\Importer\EntityImporterBatch;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
@@ -236,12 +237,36 @@ function stanford_capx_menu() {
 function stanford_capx_cron() {
 
   // Run all importers.
-  $importers = CAPxImporter::loadAllImporters();
-  foreach ($importers as $key => $importer) {
-    $entity_importer = $importer->getEntityImporter();
-    $entity_importer->execute();
-  }
+  // $importers = CAPxImporter::loadAllImporters();
+  // foreach ($importers as $key => $importer) {
+  //   $entity_importer = $importer->getEntityImporter();
+  //   $entity_importer->createBatch();
+  // }
 
+  // batch_process();
+
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function stanford_capx_cron_queue_info() {
+  $queues['stanford_capx_profiles'] = array(
+    'worker callback' => 'stanford_capx_cron_queue_callback',
+    'time' => variable_get('stanford_capx_runtime_limit', 120), // Run for a max of 120 seconds.
+    'skip on cron' => FALSE,
+  );
+  return $queues;
+}
+
+/**
+ * This function exists merely as a callback function as the static
+ * class function was not able to be called directly.
+ * @param  [type] $item [description]
+ * @return [type]       [description]
+ */
+function stanford_capx_cron_queue_callback($item) {
+  EntityImporterBatch::queue($item);
 }
 
 
@@ -509,10 +534,9 @@ function stanford_capx_debug() {
   $importers = CAPxImporter::loadAllImporters();
   foreach ($importers as $key => $importer) {
     $entity_importer = $importer->getEntityImporter();
-    $entity_importer->execute();
+    $entity_importer->createQueue();
   }
 
- // \CAPx\Drupal\Organizations\Orgs::syncOrganizations();
-
+  $output .= "Hey!";
   return $output;
 }
