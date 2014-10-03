@@ -651,6 +651,7 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
 function stanford_capx_mapper_form_validate_element($element, $parents = array()) {
   static $json_parser;
   static $form_error;
+  static $form_field_warnings;
 
   // Load and cache the parser.
   if (!isset($json_parser)) {
@@ -671,12 +672,16 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
 
         // Usually an empty array is returned for an invalid selector.
         if (is_array($data_type) && !is_string(array_pop($data_type))) {
-          throw new Exception('String indicates a valid element.');
+          throw new \Exception('String indicates a valid element.');
         }
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         // Catch any Exception from JsonParser or the condition above.
-        form_set_error(implode('][', $parents));
+        // @TODO: Enable validation when the schema is consistent with the data.
+        // form_set_error(implode('][', $parents));
+
+        // Record the problematic selector for display in a warning message.
+        $form_field_warnings[] = check_plain($child_element);
         $form_error = TRUE;
       }
     }
@@ -685,7 +690,24 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
 
   // Set the error message once when the recursive calls have finished.
   if ($form_error && count($parents) === 1) {
-    drupal_set_message(t('Invalid JSON selectors found. Try using the data browser to find a valid selector.'), 'error');
+    $field_warnings_list = theme('item_list', array(
+      'title' => '',
+      'items' => $form_field_warnings,
+      'type' => 'ul',
+      'attributes' => array()
+    ));
+    $browser_link = l(t('Data Browser'),
+      'admin/config/capx/data-browser', array(
+        'attributes' => array('target' => '_blank')
+      ));
+
+    drupal_set_message(
+      t('Invalid JSON selectors found. Try using the !databrowser to find a valid selector.!warnings',
+        array(
+          '!warnings' => $field_warnings_list,
+          '!databrowser' => $browser_link,
+        )
+      ), 'warning');
   }
 }
 
