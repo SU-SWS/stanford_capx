@@ -41,4 +41,17 @@ class SchemaLib extends APILib {
     return $this->makeRequest($endpoint);
   }
 
+
+  /**
+   * Get function for the schemas endpoint. Returns a JSON string of information
+   * describing a schema type.
+   * @param  string  $type  currently only known supported type is 'profile'
+   * @return mixed    either an array of schema data describing profiles or
+   *                  false if there is an error.
+   */
+  public function getRaw($type) {
+    $endpoint = $this->getEndpoint() . "/cap/v1/schemas/" . $type;
+    return $this->makeRawRequest($endpoint);
+  }
+
 }

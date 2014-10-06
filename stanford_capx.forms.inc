@@ -11,6 +11,7 @@ use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
+use \Peekmo\JsonPath\JsonStore as JsonParser;
 
 // /////////////////////////////////////////////////////////////////////////////
 // CONNECT FORM
@@ -637,7 +638,77 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
-  // @todo: We should validate the json selectors here.
+  // Recursively validate json selectors for mapped fields and properties.
+  stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'], array('field-mapping'));
+}
+
+/**
+ * [stanford_capx_mapper_form_validate description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_mapper_form_validate_element($element, $parents = array()) {
+  static $json_parser;
+  static $form_error;
+  static $form_field_warnings;
+
+  // Load and cache the parser.
+  if (!isset($json_parser)) {
+    $schema = stanford_capx_schema_format_validation();
+    $json_parser = new JsonParser($schema);
+  }
+
+  // Recursively iterate over child elements.
+  foreach ($element as $name => $child_element) {
+    array_push($parents, $name);
+    if (is_array($child_element)) {
+      stanford_capx_mapper_form_validate_element($child_element, $parents);
+    }
+    elseif (is_string($child_element) && strlen(trim($child_element))) {
+      try {
+        // Data types: 'string', 'boolean', 'integer', 'array' or 'object'.
+        $data_type = $json_parser->get($child_element);
+
+        // Usually an empty array is returned for an invalid selector.
+        if (is_array($data_type) && !is_string(array_pop($data_type))) {
+          throw new \Exception('String indicates a valid element.');
+        }
+      }
+      catch (\Exception $e) {
+        // Catch any Exception from JsonParser or the condition above.
+        // @TODO: Enable validation when the schema is consistent with the data.
+        // form_set_error(implode('][', $parents));
+
+        // Record the problematic selector for display in a warning message.
+        $form_field_warnings[] = check_plain($child_element);
+        $form_error = TRUE;
+      }
+    }
+    array_pop($parents);
+  }
+
+  // Set the error message once when the recursive calls have finished.
+  if ($form_error && count($parents) === 1) {
+    $field_warnings_list = theme('item_list', array(
+      'title' => '',
+      'items' => $form_field_warnings,
+      'type' => 'ul',
+      'attributes' => array()
+    ));
+    $browser_link = l(t('Data Browser'),
+      'admin/config/capx/data-browser', array(
+        'attributes' => array('target' => '_blank')
+      ));
+
+    drupal_set_message(
+      t('Invalid JSON selectors found. Try using the !databrowser to find a valid selector.!warnings',
+        array(
+          '!warnings' => $field_warnings_list,
+          '!databrowser' => $browser_link,
+        )
+      ), 'warning');
+  }
 }
 
 /**
@@ -1167,6 +1238,36 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 
 }
 
+/**
+ * [stanford_capx_schema_format_validation]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_format_validation($schema = NULL) {
+  $formatted_schema = array();
 
+  // Load the schema when not making a recursive function call (the first call).
+  if (empty($schema)) {
+    $schema = stanford_capx_schema_load('array');
+  }
 
+  // Iterate through the schema elements according to element type.
+  if (isset($schema['type'])) {
+    // @TODO: Remove isset() when the schema is fully documented.
+    if ($schema['type'] == 'object' && isset($schema['properties'])) {
+      foreach ($schema['properties'] as $name => $property) {
+        $formatted_schema[$name] = stanford_capx_schema_format_validation($property);
+      }
+    }
+    elseif ($schema['type'] == 'array') {
+      $formatted_schema = array(stanford_capx_schema_format_validation($schema['items']));
+    }
+    else {
+      // Leaf element set to a string explaining the data type. E.g. 'integer'.
+      $formatted_schema = check_plain($schema['type']);
+    }
+  }
 
+  return $formatted_schema;
+}

@@ -78,5 +78,15 @@ class ProfileLib extends APILib {
     return $this->makeRequest($endpoint);
   }
 
+  /**
+   * Get all the information about one specific profile. Fetch and return a
+   * JSON string of profile information based on CAP's profile id.
+   * @param  string  $profileId  the CAP API profile id.
+   * @return mixed    An JSON string of profile information or false if none.
+   */
+  public function getRaw($profileId) {
+    $endpoint = $this->getEndpoint() . "/profiles/v1/" . $profileId;
+    return $this->makeRawRequest($endpoint);
+  }
 
 }
