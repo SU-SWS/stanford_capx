@@ -21,6 +21,9 @@ function stanford_capx_admin_config_data_browser() {
 
   $base = drupal_get_path('module', 'stanford_capx');
 
+  // Render the refresh schema form button.
+  $output['refresh'] = drupal_get_form('stanford_capx_admin_config_data_browser_refresh');
+
   // Provide a place to render the tree.
   $output['content']['#markup'] = '<div id="capx-schema"></div>';
 
@@ -49,6 +52,50 @@ function stanford_capx_admin_config_data_browser() {
   );
 
   return $output;
+}
+
+/**
+ * Form to clear the cached CAP schema and sample profile data files.
+ *
+ * @param $form
+ * @param $form_state
+ *
+ * @return array
+ */
+function stanford_capx_admin_config_data_browser_refresh($form, &$form_state) {
+  $form = array();
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh Schema'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form submit handler to clear the cached CAP files.
+ *
+ * @param $form
+ * @param $form_state
+ */
+function stanford_capx_admin_config_data_browser_refresh_submit($form, &$form_state) {
+  stanford_capx_admin_data_browser_schema_flush();
+}
+
+/**
+ * Delete the cached CAP schema files.
+ */
+function stanford_capx_admin_data_browser_schema_flush() {
+  $files = array(
+    'schema_file' => STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE,
+    'sample_data_file' => STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE,
+  );
+
+  // Delete the cached files, which will be re-fetched on next page reload.
+  foreach ($files as $file) {
+    file_unmanaged_delete($file);
+  }
 }
 
 /**
