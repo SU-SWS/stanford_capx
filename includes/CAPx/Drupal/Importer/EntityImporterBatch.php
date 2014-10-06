@@ -25,8 +25,6 @@ class EntityImporterBatch {
    */
   public static function batch($type, $importerMachineName, $page, $limit, &$context) {
 
-    watchdog('stanford_capx', 'Ran a batch', array(), WATCHDOG_DEBUG);
-
     // Define a lot of things...
     $importer = CAPxImporter::loadEntityImporter($importerMachineName);
     $options = $importer->getOptions();
