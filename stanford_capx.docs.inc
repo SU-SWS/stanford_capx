@@ -92,7 +92,7 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
             $metadata[1] = $leaf;
 
             // Don't bother selecting branches, only leaves - actual values.
-            if ($element !== 'object' && $element !== 'array') {
+            if ($element !== 'array') {
               // Calculate and render the JSON selector.
               $leaf = new stdClass();
               $selector = '$.' . implode($parents, '.');
@@ -103,7 +103,7 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
               $sample_data = stanford_capx_sample_data($selector);
               $sample_data = check_plain(stanford_capx_sample_data_render($sample_data));
 
-              // Only display if sample data exists.
+              // Only display sample data if sample data exists.
               if (!empty($sample_data)) {
                 $leaf = new stdClass();
                 $leaf->label = t('Sample data:') . ' ' . $sample_data;
@@ -133,20 +133,20 @@ function stanford_capx_jqTree_render(&$schema, $parents = array()) {
         // Fall back to the element name if title property not set.
         $child_branch->label = isset($element->title) && is_string($element->title) ? check_plain($element->title) : check_plain($name);
 
-        // Push the current element name for calculating the JSON selector or
-        // use the '*' operator to select all elements of the array.
-        $name === 'items' ? array_push($parents, '*') : array_push($parents, $name);
+        // Don't render object "properties" in the selector.
+        if ($name !== 'properties') {
+          // Push the current element name for calculating the JSON selector or
+          // use the '*' operator to select all elements of the array.
+          $name === 'items' ? array_push($parents, '*') : array_push($parents, $name);
+        }
 
-        // Recursively process child properties - avoid rendering "properties".
-        if (isset($element->properties)) {
-          $child_branch->children = stanford_capx_jqTree_render($element->properties, $parents);
-        }
-        else {
-          $child_branch->children = stanford_capx_jqTree_render($element, $parents);
-        }
+        // Recursively process child properties.
+        $child_branch->children = stanford_capx_jqTree_render($element, $parents);
 
         // Pop the current element name; it was just recursively processed.
-        array_pop($parents);
+        if ($name !== 'properties') {
+          array_pop($parents);
+        }
 
         // Add the child branch to the current branch.
         $branch[] = $child_branch;
