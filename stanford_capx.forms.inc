@@ -11,6 +11,7 @@ use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
+use \Peekmo\JsonPath\JsonStore as JsonParser;
 
 // /////////////////////////////////////////////////////////////////////////////
 // CONNECT FORM
@@ -631,17 +632,119 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
 }
 
 /**
- * [stanford_capx_mapper_form_validate description]
+ * Validation function for the mapper form.
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
 function stanford_capx_mapper_form_validate($form, $form_state) {
-  // @todo: We should validate the json selectors here.
+  // Recursively validate json selectors for mapped fields and properties.
+
+  // Only validate the entity/bundle that was selected...
+  $entity = $form_state['values']['entity-type'];
+  $bundle = $form_state['values']['bundle-' . $entity];
+
+  // Right now all entities have fields and properties.
+  stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-properties"], array('field-mapping'));
+  stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"], array('field-mapping'));
+
+  // Only some have field collections.
+  if (isset($form_state['values']['field-mapping'][$entity . "-" . $bundle .  "-collections"])) {
+    stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-collections"], array('field-mapping'));
+  }
+
+  // Set the error messages after everything has been looped through.
+  stanford_capx_mapper_form_validate_element_set_messages();
 }
 
 /**
- * [stanford_capx_mapper_form_submit description]
+ * Validate the user input from the mapper form by checking to see if the
+ * selector finds something in the API schema.
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_mapper_form_validate_element($element, $parents = array()) {
+  static $json_parser;
+  $form_error = &drupal_static(__FUNCTION__ . "_error", FALSE);
+  $form_field_warnings = &drupal_static(__FUNCTION__ . "_warnings", FALSE);
+
+  // Load and cache the parser.
+  if (!isset($json_parser)) {
+    $schema = stanford_capx_schema_format_validation();
+    $json_parser = new JsonParser($schema);
+  }
+
+  // Recursively iterate over child elements.
+  foreach ($element as $name => $child_element) {
+    array_push($parents, $name);
+    if (is_array($child_element)) {
+      stanford_capx_mapper_form_validate_element($child_element, $parents);
+    }
+    elseif (is_string($child_element) && strlen(trim($child_element))) {
+      try {
+        // Data types: 'string', 'boolean', 'integer', 'array' or 'object'.
+        $data_type = $json_parser->get($child_element);
+
+        // Usually an empty array is returned for an invalid selector.
+        if (is_array($data_type) && !is_string(array_pop($data_type))) {
+          throw new \Exception('String indicates a valid element.');
+        }
+      }
+      catch (\Exception $e) {
+        // Catch any Exception from JsonParser or the condition above.
+        // @TODO: Enable validation when the schema is consistent with the data.
+        // form_set_error(implode('][', $parents));
+
+        if ($name == "title") {
+          $field_name = "title";
+        }
+        else {
+          $field_name = $parents[(count($parents) - 2)];
+        }
+
+        // Record the problematic selector for display in a warning message.
+        $form_field_warnings[] = "<b>" . $field_name . "</b> has a selector of  <b>" . check_plain($child_element) . "</b> that does not match any element in the API.";
+        $form_error = TRUE;
+      }
+    }
+    array_pop($parents);
+  }
+
+}
+
+/**
+ * Sets the message for the element validation.
+ */
+function stanford_capx_mapper_form_validate_element_set_messages() {
+  $form_error = &drupal_static("stanford_capx_mapper_form_validate_element_error", FALSE);
+  $form_field_warnings = &drupal_static("stanford_capx_mapper_form_validate_element_warnings", FALSE);
+
+  // Set the error message once when the recursive calls have finished.
+  if ($form_error) {
+    $field_warnings_list = theme('item_list', array(
+      'title' => '',
+      'items' => $form_field_warnings,
+      'type' => 'ul',
+      'attributes' => array()
+    ));
+    $browser_link = l(t('Data Browser'),
+      'admin/config/capx/data-browser', array(
+        'attributes' => array('target' => '_blank')
+      ));
+
+    drupal_set_message(
+      t('The following selectors did not match an element in the profile schema. Try using the !databrowser to find a valid selector.!warnings',
+        array(
+          '!warnings' => $field_warnings_list,
+          '!databrowser' => $browser_link,
+        )
+      ), 'warning');
+  }
+}
+
+/**
+ * Submit handler for the mapper form. Create and save the mapper entity.
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
@@ -701,11 +804,12 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   // Do the save
   capx_mapper_save($mapper);
 
+  // Are we sure we want this?
   drupal_goto('admin/config/capx/mapper');
 }
 
 /**
- * [stanford_capx_admin_config_mapper_delete description]
+ * Delete the mapper by first prompting for a confirmation form.
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
@@ -1167,6 +1271,38 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 
 }
 
+/**
+ * Recursively callled function that provides an array of information that is
+ * used in the mapper form validation callback.
+ * @see stanford_capx_mapper_form_validate_element()
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_format_validation($schema = NULL) {
+  $formatted_schema = array();
 
+  // Load the schema when not making a recursive function call (the first call).
+  if (empty($schema)) {
+    $schema = stanford_capx_schema_load('array');
+  }
 
+  // Iterate through the schema elements according to element type.
+  if (isset($schema['type'])) {
+    // @TODO: Remove isset() when the schema is fully documented.
+    if ($schema['type'] == 'object' && isset($schema['properties'])) {
+      foreach ($schema['properties'] as $name => $property) {
+        $formatted_schema[$name] = stanford_capx_schema_format_validation($property);
+      }
+    }
+    elseif ($schema['type'] == 'array') {
+      $formatted_schema = array(stanford_capx_schema_format_validation($schema['items']));
+    }
+    else {
+      // Leaf element set to a string explaining the data type. E.g. 'integer'.
+      $formatted_schema = check_plain($schema['type']);
+    }
+  }
 
+  return $formatted_schema;
+}

@@ -216,3 +216,31 @@ function stanford_capx_schema() {
 
   return $schema;
 }
+
+/**
+ * Implements hook_requirements().
+ */
+function stanford_capx_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+
+  switch ($phase) {
+    case 'install':
+    case 'runtime':
+      // Ensure the modules' private files directory exists and is writable.
+      if (!variable_get('file_private_path', FALSE)) {
+
+        // Display a message to the user that private files dir must be configured.
+        $summary = $t('The !directory must be configured for the CAPx module to work correctly.',
+          array('!directory' => l($t('private files directory'), 'admin/config/media/file-system')));
+
+        $requirements['stanford_capx'] = array(
+          'title' => $t('Stanford CAPx'),
+          'severity' => REQUIREMENT_ERROR,
+          'value' => $summary,
+        );
+      }
+      break;
+  }
+  return $requirements;
+}

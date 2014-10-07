@@ -2,7 +2,6 @@
 /**
  * @file
  * @author [author]
- *
  */
 
 // Make sure this is loaded.
@@ -23,6 +22,7 @@ use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
+use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Organizations\Orgs;
 
 // No mapping into these entity types.
@@ -41,6 +41,9 @@ $CAP_RESTRICTED_FIELD_PROPERTIES = array(
   'format',
   'attributes',
 );
+
+define('STANFORD_CAPX_FILE_PATH', 'private://stanford_capx/');
+define('STANFORD_CAPX_SCHEMA_FILE', 'schema.json');
 
 /**
  * Implements hook_help().
@@ -130,6 +133,17 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 10,
   );
+
+  // Data Browser
+  $items['admin/config/capx/data-browser'] = array(
+    'title' => 'Data Browser',
+    'page callback' => 'stanford_capx_admin_config_data_browser',
+    'file' => 'stanford_capx.docs.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_SUGGESTED_ITEM,
+    'weight' => 10,
+  );
+
 
   // Mapper pages
   // ---------------------------------------------------------------------------
@@ -541,4 +555,88 @@ function stanford_capx_debug() {
 
   $output .= "Hey!";
   return $output;
+}
+
+/**
+ * [stanford_capx_schema_load]
+ * @param [type] [description]
+ * @param [type] [description]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
+  // If the directory doesn't exist, the file won't either.
+  if (!stanford_capx_files_dir_exists()) {
+    return FALSE;
+  }
+
+  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+
+  // @TODO: Refresh automatically under some condition? Weekly?
+  // If forcing a refesh or the schema hasn't been downloaded, download it!
+  if ($reset || !file_exists($file)) {
+    $file_contents = stanford_capx_schema_refresh();
+  }
+  else {
+    $file_contents = file_get_contents($file);
+  }
+
+  if (empty($file_contents)) {
+    return FALSE;
+  }
+
+  if ($format === 'object') {
+    $file_contents = json_decode($file_contents);
+  }
+  elseif ($format === 'array') {
+    $file_contents = json_decode($file_contents, TRUE);
+  }
+  return $file_contents;
+}
+
+/**
+ * [stanford_capx_schema_refresh]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_schema_refresh() {
+  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+
+  // Ensure the modules' private files directory exists and is writable.
+  if (stanford_capx_files_dir_exists()) {
+
+    // Query the API for the profile schema as raw JSON.
+    $client = CAPxConnection::getAuthenticatedHTTPClient();
+    $response = $client->api('schema')->getRaw('profile');
+    $schema = $response->getBody(TRUE);
+
+    // Cache the result in a private file.
+    if ($schema && !empty($schema)) {
+      file_unmanaged_save_data($schema, $file, FILE_EXISTS_REPLACE);
+    }
+
+    return $schema;
+  }
+  return FALSE;
+}
+
+/**
+ * [stanford_capx_files_dir_exists]
+ *
+ * @return [type] [description]
+ */
+function stanford_capx_files_dir_exists() {
+  $dir = STANFORD_CAPX_FILE_PATH;
+
+  // Ensure the modules' private files directory exists and is writable.
+  if (variable_get('file_private_path', FALSE) && file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
+    return TRUE;
+  }
+
+  // Display an error to the user.
+  $summary = t('The !directory must be configured for the CAPx module to work correctly.',
+    array('!directory' => l(t('private files directory'), 'admin/config/media/file-system')));
+  drupal_set_message($summary, 'error');
+
+  return FALSE;
 }
