@@ -333,6 +333,12 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
   // ---------------------------------------------------------------------
   foreach ($entity_types as $entity_machine_name => $entity_info_values) {
 
+    // If this is an edit mapper form (mapper exists) do not render the other
+    // entities or bundles
+    if (isset($mapper->settings['entity_type']) && $mapper->settings['entity_type'] !== $entity_machine_name) {
+      continue;
+    }
+
     // Get all the properties of the entity type.
     $entity_info = entity_get_property_info($entity_machine_name);
 
@@ -371,6 +377,13 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
   // FIELDS
   // ---------------------------------------------------------------------
   foreach ($entity_types as $entity_machine_name => $entity_info_values) {
+
+    // If this is an edit mapper form (mapper exists) do not render the other
+    // entities or bundles
+    if (isset($mapper->settings['entity_type']) && $mapper->settings['entity_type'] !== $entity_machine_name) {
+      continue;
+    }
+
     // Get all the properties of the entity type.
     $entity_info = entity_get_property_info($entity_machine_name);
 
@@ -380,6 +393,12 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
     }
 
     foreach($entity_info['bundles'] as $bundle_machine_name => $bundle_info) {
+
+      // Skip bundles that dont match a loaded mapper.
+      if (isset($mapper->settings['bundle_type']) && $bundle_machine_name !== $mapper->settings['bundle_type']) {
+        continue;
+      }
+
       $fields = $entity_info['bundles'][$bundle_machine_name]['properties'];
       $field_container = $entity_machine_name . "-" . $bundle_machine_name . "-fields";
 
