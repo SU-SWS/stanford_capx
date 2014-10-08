@@ -64,7 +64,7 @@ class Orgs {
    */
   public static function getOrganizations($parent = 0) {
     $vocab = Orgs::getVocabulary();
-    return taxonomy_get_tree($vocab->vid, $parent);
+    return $vocab ? taxonomy_get_tree($vocab->vid, $parent) : FALSE;
   }
 
   /**
