@@ -146,12 +146,52 @@ class CFEntity extends \Entity {
       throw new \Exception("Cannot call getEntityImporter on non importer type.");
     }
 
-    $config = self::getEntityImporterConfig();
+    $importer = $this;
     $mapper = CAPxMapper::loadEntityMapper($this->mapper);
     $client = CAPxConnection::getAuthenticatedHTTPClient();
+    $meta = $this->meta;
 
-    $importer = new EntityImporter($config, $mapper, $client);
+    $importer = new EntityImporter($importer, $mapper, $client);
     return $importer;
+  }
+
+  /**
+   * Sets the meta information about the last time the importer was executed
+   * @param [type] $time [description]
+   */
+  public function setLastCronRun($time = REQUEST_TIME) {
+
+    if ($this->type !== "importer") {
+      throw new \Exception("Cannot call getEntityImporter on non importer type.");
+    }
+
+    $this->meta['lastUpdate'] = $time;
+    $this->save();
+  }
+
+  /**
+   * Returns the metadata
+   * @return [type] [description]
+   */
+  public function getMeta() {
+    return $this->meta;
+  }
+
+  /**
+   * Sets the metadata array
+   * @param [type] $meta [description]
+   */
+  public function setMeta($meta = null) {
+
+    /**
+     * Populate some defaults if empty.
+     */
+    if (is_null($meta)) {
+      $meta = array('lastUpdate' => 0, 'count' => 0);
+    }
+
+    // Set the stuff.
+    $this->meta = $meta;
   }
 
 }

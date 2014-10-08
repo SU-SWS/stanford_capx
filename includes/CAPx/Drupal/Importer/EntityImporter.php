@@ -12,15 +12,22 @@ use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Processors\EntityProcessor as EntityProcessor;
 use CAPx\Drupal\Processors\UserProcessor as UserProcessor;
 use CAPx\APILib\HTTPClient;
+use CAPx\Drupal\Entities\CFEntity;
 
 
 class EntityImporter implements ImporterInterface {
 
-  // Options and configuration array
+  // Options and configuration array.
   protected $options = array();
 
-  // The mapping scheme object
+  // The configuration entity called importer
+  protected $importer;
+
+  // The mapping scheme object.
   protected $mapper;
+
+  // Metadata about this importer.
+  protected $meta;
 
   // The machine name of the CFE Importer entity.
   protected $machineName = '';
@@ -29,62 +36,123 @@ class EntityImporter implements ImporterInterface {
    * Constructor class. Sets a number of items.
    * @param [type] $config [description]
    */
-  public function __construct(Array $config, EntityMapper $mapper, HTTPClient $client) {
+  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
+
+    $config = $importer->getEntityImporterConfig();
+
     $this->addOptions($config);
+    $this->setImporter($importer);
     $this->setMapper($mapper);
     $this->setClient($client);
+    $this->setMeta($importer->meta);
     $this->setMachineName($config['machine_name']);
+
   }
 
   /**
-   * Run the show!
-   * This function is the entry point to importing the whole thing.
+   * The open method for executing cron callback functionality.
+   * 1. Check settings to see if this should run.
+   * 2. Create queue items to run next cron run.
    */
-  public function execute() {
+  public function cron() {
 
-    // $options = $this->getOptions();
-    // $mapper = $this->getMapper();
-    // $client = $this->getClient();
-    // $data = array();
+    // Don't do anything if cron settings say don't do it.
+    if (!$this->shouldIRunCron()) {
+      return;
+    }
 
-    // foreach ($options['types'] as $k => $type) {
-    //   $children = FALSE;
+    // Create the queue items.
+    $this->createQueue();
 
-    //   switch ($type) {
-    //     case "orgCodes":
-    //       $children = $options['child_orgs'];
-    //     case "privGroups":
-    //     case "uids":
-    //       $new = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
-    //       if (!empty($new['values'])) {
-    //         $data[$type] = $new['values'];
-    //       }
-    //       break;
-    //   }
-    // }
+  }
 
-    // if (!empty($data)) {
-    //   foreach ($data as $type => $results) {
-    //     foreach ($results as $index => $info) {
-    //       drupal_alter('capx_pre_entity_processor', $info, $mapper);
+  /**
+   * Check to see if this importer's setting should run cron or not.
+   * @return boolean True if cron action should run, false otherwise.
+   */
+  protected function shouldIRunCron() {
+    $now = time();
+    $options = $this->getOptions();
 
-    //       $entityType = $mapper->getEntityType();
-    //       $entityType = ucfirst(strtolower($entityType));
-    //       $className = "\CAPx\Drupal\Processors\\" . $entityType . 'Processor';
+    switch ($options['cron_option']) {
+      case 'none':
+        return FALSE;
+      case 'all':
+        return TRUE;
+      case 'daily':
+        $lastRun = $this->getLastCronRun();
+        $nextRun = $lastRun + (60 * 60 * 24); // One days time.
+        if ($now >= $nextRun ) {
+          return TRUE;
+        }
+        break;
+    }
 
-    //       if (class_exists($className)) {
-    //         $processor = new $className($mapper, $info);
-    //         $processor->setEntityImporter($this);
-    //         $processor->execute();
-    //       }
-    //       else {
-    //         $processor = new EntityProcessor($mapper, $info);
-    //         $processor->setEntityImporter($this);
-    //         $processor->execute();
-    //       }
-    //     }
-    //   }
-    // }
+    return FALSE;
+  }
+
+  /**
+   * Execute the whole importprocess as one huge request.
+   * This is generally a bad idea for large imports but may be useful for small.
+   */
+  public function justDoIt() {
+
+    $options = $this->getOptions();
+    $mapper = $this->getMapper();
+    $client = $this->getClient();
+    $data = array();
+
+    foreach ($options['types'] as $k => $type) {
+      $children = FALSE;
+
+      switch ($type) {
+        case "orgCodes":
+          $children = $options['child_orgs'];
+        case "privGroups":
+        case "uids":
+
+          // Set the results to a huge number so we get all results in one
+          // request.
+          $httpOptions = $client->getHttpOptions();
+          $httpOptions['query']['ps'] = 99999;
+          $client->setHttpOptions($httpOptions);
+
+          $new = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
+          if (!empty($new['values'])) {
+            $data[$type] = $new['values'];
+          }
+          break;
+      }
+    }
+
+    if (!empty($data)) {
+      foreach ($data as $type => $results) {
+        foreach ($results as $index => $info) {
+          drupal_alter('capx_pre_entity_processor', $info, $mapper);
+
+          $entityType = $mapper->getEntityType();
+          $entityType = ucfirst(strtolower($entityType));
+          $className = "\CAPx\Drupal\Processors\\" . $entityType . 'Processor';
+
+          if (class_exists($className)) {
+            $processor = new $className($mapper, $info);
+            $processor->setEntityImporter($this);
+            $processor->execute();
+          }
+          else {
+            $processor = new EntityProcessor($mapper, $info);
+            $processor->setEntityImporter($this);
+            $processor->execute();
+          }
+        }
+      }
+    }
+
+    // Update some meta information.
+    $meta = $this->getImporter()->getMeta();
+    $meta['count'] = $new['totalCount'];
+    $this->getImporter()->setMeta($meta);
+    $this->getImporter()->save();
 
   }
 
@@ -99,6 +167,7 @@ class EntityImporter implements ImporterInterface {
     $options = $this->getOptions();
     $client = $this->getClient();
     $responses = array();
+    $numberOfProfiles = 0;
 
     // Loop through each of the import type options and ping the server for just
     // one item of each to get an idea of how many items there actually is.
@@ -124,11 +193,12 @@ class EntityImporter implements ImporterInterface {
       // Keep a track of the number of items.
       $responses[$type] = array();
       $responses[$type]['totalCount'] = $results['totalCount'];
+      $numberOfProfiles += $results['totalCount'];
 
     }
 
     // How many to run per batch
-    $processLimit = variable_get('stanford_capx_batch_limit', 50);
+    $processLimit = variable_get('stanford_capx_batch_limit', 100);
 
     // Batch definition
     $batch = array(
@@ -150,6 +220,12 @@ class EntityImporter implements ImporterInterface {
       }
     }
 
+    // Update some meta information.
+    $meta = $this->getImporter()->getMeta();
+    $meta['count'] = $numberOfProfiles;
+    $this->getImporter()->setMeta($meta);
+    $this->getImporter()->save();
+
     // Set the big batch after all...
     batch_set($batch);
   }
@@ -161,10 +237,11 @@ class EntityImporter implements ImporterInterface {
    */
   public function createQueue() {
 
-    $queue = \DrupalQueue::get('stanford_capx_profiles', TRUE); // should be reliable?
+    $queue = \DrupalQueue::get('stanford_capx_profiles'); // should be reliable?
     $options = $this->getOptions();
     $client = $this->getClient();
-    $limit = variable_get('stanford_capx_batch_limit', 50);
+    $limit = variable_get('stanford_capx_batch_limit', 100);
+    $numberOfProfiles = 0;
 
     // Loop through each of the import type options and ping the server for just
     // one item of each to get an idea of how many items there actually is.
@@ -191,6 +268,7 @@ class EntityImporter implements ImporterInterface {
 
       // Total number of profiles.
       $total = $results['totalCount'];
+      $numberOfProfiles += $total;
       $page = 1;
 
       // Create queues for each page
@@ -205,6 +283,12 @@ class EntityImporter implements ImporterInterface {
 
     }
 
+    // Update some meta information.
+    $meta = $this->getImporter()->getMeta();
+    $meta['count'] = $numberOfProfiles;
+    $this->getImporter()->setMeta($meta);
+    $this->getImporter()->save();
+
   }
 
   // ===========================================================================
@@ -212,12 +296,37 @@ class EntityImporter implements ImporterInterface {
   // ===========================================================================
 
   /**
+   * Returns the timestamp of the last time this importer was called.
+   * @return [type] [description]
+   */
+  protected function getLastCronRun() {
+    $meta = $this->getMeta();
+    return isset($meta['lastUpdate']) ? $meta['lastUpdate'] : 0;
+  }
+
+  /**
+   * Returns the meta information about this importer
+   * @return [type] [description]
+   */
+  public function getMeta() {
+    return $this->meta;
+  }
+
+  /**
+   * Set the metadata information
+   * @param [type] $meta [description]
+   */
+  public function setMeta($meta) {
+    $this->meta = $meta;
+  }
+
+  /**
    * A template item function. Returns the default options for an item that
    * is going to go into the Queues API.
    * @return array a keyed array with values that need to be passed to the queue
    */
   protected function getQueueItem() {
-    $limit = variable_get('stanford_capx_batch_limit', 50);
+    $limit = variable_get('stanford_capx_batch_limit', 100);
 
     // Each queue needs some items. Here is a template for that.
     $item = array(
@@ -302,6 +411,22 @@ class EntityImporter implements ImporterInterface {
    */
   public function setMachineName($name) {
     $this->machineName = $name;
+  }
+
+  /**
+   * The importer configuration entitty
+   * @param [type] $importer [description]
+   */
+  public function setImporter($importer) {
+    $this->importer = $importer;
+  }
+
+  /**
+   * The importer configuration entity
+   * @return [type] [description]
+   */
+  public function getImporter() {
+    return $this->importer;
   }
 
 }

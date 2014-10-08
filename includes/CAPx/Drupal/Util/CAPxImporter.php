@@ -46,14 +46,12 @@ class CAPxImporter {
    */
   public static function loadEntityImporter($key) {
 
-    $importerConfig = self::loadImporter($key);
-    $config = $importerConfig->getEntityImporterConfig();
-
-    $mapper = CAPxMapper::loadEntityMapper($importerConfig->mapper);
+    $importer = self::loadImporter($key);
+    $mapper = CAPxMapper::loadEntityMapper($importer->mapper);
     $client = CAPxConnection::getAuthenticatedHTTPClient();
 
-    $importer = new EntityImporter($config, $mapper, $client);
-    return $importer;
+    $entityImporter = new EntityImporter($importer, $mapper, $client);
+    return $entityImporter;
   }
 
   /**
@@ -71,5 +69,17 @@ class CAPxImporter {
     }
 
     return $importers;
+  }
+
+  /**
+   * Return the options for running cron on an importer.
+   * @return array An array of options for a select field.
+   */
+  public static function getCronOptions() {
+    return array(
+      'none' => t('Do not sync'),
+      'daily' => t('Every day'),
+      'all' => t('As often as possible'),
+    );
   }
 }

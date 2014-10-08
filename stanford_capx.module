@@ -71,7 +71,6 @@ function stanford_capx_permission() {
  * Implements hook_node_access().
  */
 function stanford_capx_node_access($node, $op, $account) {
-
   // Returning nothing from this function would have the same effect.
   return NODE_ACCESS_IGNORE;
 }
@@ -213,6 +212,14 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  $items['admin/config/capx/importer/sync/%'] = array(
+    'title' => 'Sync Importer',
+    'page callback' => 'stanford_capx_sync_importer',
+    'page arguments' => array(5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
   // Profile pages
   // ---------------------------------------------------------------------------
 
@@ -250,14 +257,12 @@ function stanford_capx_menu() {
  */
 function stanford_capx_cron() {
 
-  // Run all importers.
-  // $importers = CAPxImporter::loadAllImporters();
-  // foreach ($importers as $key => $importer) {
-  //   $entity_importer = $importer->getEntityImporter();
-  //   $entity_importer->createBatch();
-  // }
-
-  // batch_process();
+  // Call cron on all importers.
+  $importers = CAPxImporter::loadAllImporters();
+  foreach ($importers as $key => $importer) {
+    $entity_importer = $importer->getEntityImporter();
+    $entity_importer->cron();
+  }
 
 }
 
@@ -536,6 +541,21 @@ function stanford_capx_autocomplete_orgs($string) {
   return $matches;
 }
 
+/**
+ * Runs a batch on a single importer
+ * @return [type] [description]
+ */
+function stanford_capx_sync_importer($machine_name) {
+
+  $importer = CAPxImporter::loadEntityImporter($machine_name);
+
+  if (!$importer) {
+    throw new Exception("Could not find an importer by that name.");
+  }
+
+  $importer->createBatch();
+  batch_process(drupal_get_destination());
+}
 
 /**
  * [stanford_capx_admin_config description]
@@ -545,13 +565,13 @@ function stanford_capx_autocomplete_orgs($string) {
 function stanford_capx_debug() {
   $output = "";
 
-  $importers = CAPxImporter::loadAllImporters();
-  foreach ($importers as $key => $importer) {
-    $entity_importer = $importer->getEntityImporter();
-    $entity_importer->createBatch();
-  }
+  // $importers = CAPxImporter::loadAllImporters();
+  // foreach ($importers as $key => $importer) {
+  //   $entity_importer = $importer->getEntityImporter();
+  //   $entity_importer->cron();
+  // }
 
-  batch_process('admin/config/capx/profiles');
+  // batch_process('admin/config/capx/profiles');
 
   $output .= "Hey!";
   return $output;

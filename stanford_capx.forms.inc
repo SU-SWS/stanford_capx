@@ -941,6 +941,24 @@ function stanford_capx_importer_form($form, &$form_state) {
     // '#disabled' => isset($importer->mapper),
   );
 
+  // Cron Settings
+  // -–-–-–-–-–-–-–-–-–-–-
+
+  $form['cron'] = array(
+    '#title' => t('Sync options'),
+    '#type' => 'fieldset',
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    '#description' => t('Configuration options on how often this importer should be ran.'),
+  );
+
+  $form['cron']['cron_option'] = array(
+    '#title' => t('Sync'),
+    '#type' => 'select',
+    '#options' => CAPxImporter::getCronOptions(),
+    '#default_value' => isset($importer->cron_option) ? $importer->cron_option : 'daily',
+  );
+
   // Profile group
   // -–-–-–-–-–-–-–-–-–-–-
 
@@ -1037,7 +1055,7 @@ function stanford_capx_importer_machine_name_exits($name) {
  * @return [type]             [description]
  */
 function stanford_capx_importer_form_validate($form, &$form_state) {
-  // Todo: validate options
+  // @todo: validate options
 }
 
 /**
@@ -1056,7 +1074,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   $importer->title = $values['title'];
   $importer->machine_name = $values['machine-name'];
-  $importer->meta = array('count' => 0, 'lastUpdated' => 0);
+  $importer->setMeta();
   $settings = array();
 
   // Put settings in here!
@@ -1065,6 +1083,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   $settings['child_orgs'] = $values['child_orgs'];
   $settings['workgroup'] = $values['workgroup'];
   $settings['sunet_id'] = $values['sunet_id'];
+  $settings['cron_option'] = $values['cron_option'];
 
   $importer->settings = $settings;
 

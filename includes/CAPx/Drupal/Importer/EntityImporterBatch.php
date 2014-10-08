@@ -9,7 +9,7 @@ use CAPx\Drupal\Processors\EntityProcessor;
 use CAPx\Drupal\Util\CAPxImporter;
 
 /**
- * A static class for handling Batch API callbacks.
+ * A static class for handling Batch/Queue API callbacks.
  */
 class EntityImporterBatch {
 
@@ -49,6 +49,8 @@ class EntityImporterBatch {
 
     EntityImporterBatch::processResults($results, $importer);
 
+    $now = time();
+    $importer->getImporter()->setLastCronRun($now);
   }
 
   /**
@@ -84,6 +86,9 @@ class EntityImporterBatch {
     $results = $response['values'];
 
     EntityImporterBatch::processResults($results, $importer);
+
+    $now = time();
+    $importer->getImporter()->setLastCronRun($now);
 
   }
 
