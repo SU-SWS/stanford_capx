@@ -5,17 +5,6 @@
  */
 
 /**
- * [hook_capx_pre_entity_processor description]
- * @see  EntityImporter.php
- * @param  [type] $data   [description]
- * @param  [type] $mapper [description]
- * @return [type]         [description]
- */
-function hook_capx_pre_entity_processor_alter(&$data, &$mapper) {
-
-}
-
-/**
  * [hook_capx_pre_map_field description]
  * @see  EntityMapper.php
  * @param  [type] $entity            [description]

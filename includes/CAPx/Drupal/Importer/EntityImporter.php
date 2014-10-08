@@ -118,6 +118,7 @@ class EntityImporter implements ImporterInterface {
           $client->setHttpOptions($httpOptions);
 
           $new = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
+
           if (!empty($new['values'])) {
             $data[$type] = $new['values'];
           }
@@ -128,22 +129,11 @@ class EntityImporter implements ImporterInterface {
     if (!empty($data)) {
       foreach ($data as $type => $results) {
         foreach ($results as $index => $info) {
-          drupal_alter('capx_pre_entity_processor', $info, $mapper);
-
-          $entityType = $mapper->getEntityType();
-          $entityType = ucfirst(strtolower($entityType));
-          $className = "\CAPx\Drupal\Processors\\" . $entityType . 'Processor';
-
-          if (class_exists($className)) {
-            $processor = new $className($mapper, $info);
-            $processor->setEntityImporter($this);
-            $processor->execute();
-          }
-          else {
-            $processor = new EntityProcessor($mapper, $info);
-            $processor->setEntityImporter($this);
-            $processor->execute();
-          }
+          // Allow altering of the results.
+          drupal_alter('stanford_capx_preprocess_results', $info, $this);
+          $processor = new EntityProcessor($mapper, $info);
+          $processor->setEntityImporter($this);
+          $processor->execute();
         }
       }
     }
@@ -313,7 +303,9 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Set the metadata information
+   * Set the metadata information. This is for storage only and does not update
+   * the configuration entity. To set the meta information use
+   * CFEntity::setMeta()
    * @param [type] $meta [description]
    */
   public function setMeta($meta) {

@@ -898,8 +898,8 @@ function stanford_capx_importer_form($form, &$form_state) {
   $form['naming'] = array(
     '#title' => t('Configuration'),
     '#type' => 'fieldset',
-    '#collapsed' => FALSE,
-    '#collapsible' => FALSE,
+    '#collapsed' => isset($importer),
+    '#collapsible' => isset($importer),
     '#description' => t('Provide a human-readable name and machine name for this selection of profiles.'),
   );
 
@@ -949,11 +949,11 @@ function stanford_capx_importer_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
-    '#description' => t('Configuration options on how often this importer should be ran.'),
   );
 
   $form['cron']['cron_option'] = array(
     '#title' => t('Sync'),
+    '#description' => t('Select an interval on how often this importer should syncronize with the CAP server. This setting is dependant on !cron.', array('!cron' => l('cron configuration', 'admin/config/system/cron'))),
     '#type' => 'select',
     '#options' => CAPxImporter::getCronOptions(),
     '#default_value' => isset($importer->cron_option) ? $importer->cron_option : 'daily',
@@ -1017,9 +1017,17 @@ function stanford_capx_importer_form($form, &$form_state) {
   );
 
   $form['actions']['saveandimport'] = array(
-    '#type' => 'submit',
+    '#type' => 'button',
+    '#name' => 'saveandimport',
+    '#submit' => array(
+      'stanford_capx_importer_form_submit',
+      'stanford_capx_importer_form_submit_run_import',
+    ),
+    '#executes_submit_callback' => TRUE,
     '#value' => t('Save & Import Now'),
   );
+
+  $form['#redirect'] = "admin/config/capx/importer";
 
   return $form;
 }
@@ -1074,7 +1082,8 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   $importer->title = $values['title'];
   $importer->machine_name = $values['machine-name'];
-  $importer->setMeta();
+  $meta = $importer->getMeta();
+  $importer->setMeta($meta);
   $settings = array();
 
   // Put settings in here!
@@ -1098,7 +1107,25 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   // Do the save
   capx_importer_save($importer);
 
-  drupal_goto('admin/config/capx/importer');
+}
+
+/**
+ * Submit callback function that runs the batch api import for this importer
+ * @return [type] [description]
+ */
+function stanford_capx_importer_form_submit_run_import($form, $form_state) {
+  $values = $form_state['values'];
+  $importer = CAPxImporter::loadEntityImporter($values['machine-name']);
+
+  if (!$importer) {
+    throw new \Exception("Could not load importer by machine name");
+  }
+
+  $importer->createBatch();
+
+  drupal_set_message('Profiles successfully imported', 'status');
+  batch_process($form['#redirect']);
+
 }
 
 /**

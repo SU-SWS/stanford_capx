@@ -25,6 +25,8 @@ class CAPxImporter {
 
   /**
    * Wrapper for capx_cfe_load_by_machine_name & capx_cfe_load
+   * Loads the configuration entity and not the entity importer class which
+   * does the actual importing.
    * @param  [type] $key [description]
    * @return [type]      [description]
    */

@@ -47,10 +47,13 @@ class EntityImporterBatch {
     $response = $client->api('profile')->search($type, $search, FALSE, $children);
     $results = $response['values'];
 
-    EntityImporterBatch::processResults($results, $importer);
+    $success = EntityImporterBatch::processResults($results, $importer);
 
-    $now = time();
-    $importer->getImporter()->setLastCronRun($now);
+    if ($success) {
+      $now = time();
+      $importer->getImporter()->setLastCronRun($now);
+    }
+
   }
 
   /**
@@ -85,10 +88,12 @@ class EntityImporterBatch {
     $response = $client->api('profile')->search($type, $search, FALSE, $children);
     $results = $response['values'];
 
-    EntityImporterBatch::processResults($results, $importer);
+    $success = EntityImporterBatch::processResults($results, $importer);
 
-    $now = time();
-    $importer->getImporter()->setLastCronRun($now);
+    if ($success) {
+      $now = time();
+      $importer->getImporter()->setLastCronRun($now);
+    }
 
   }
 
@@ -96,9 +101,14 @@ class EntityImporterBatch {
    * Process the results from the response from the API.
    * @param  [type] $results  [description]
    * @param  [type] $importer [description]
-   * @return [type]           [description]
+   * @return boolean          success status.
    */
   public static function processResults($results, $importer) {
+
+    // No results.
+    if (empty($results)) {
+      return FALSE;
+    }
 
     $mapper = $importer->getMapper();
 
@@ -123,6 +133,7 @@ class EntityImporterBatch {
 
     }
 
+    return TRUE;
   }
 
 }
