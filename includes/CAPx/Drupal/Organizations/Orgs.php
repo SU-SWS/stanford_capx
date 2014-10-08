@@ -20,7 +20,7 @@ class Orgs {
     if (!$vocab) {
       $vocab = new \StdClass();
       $vocab->name = t('CAPx Organizations');
-      $vocab->machine_name = $this->getVocabularyMachineName();
+      $vocab->machine_name = Orgs::getVocabularyMachineName();
       $vocab->description = t("A hierarchy of organization codes and information");
       $vocab->module = "stanford_capx";
       taxonomy_vocabulary_save($vocab);
@@ -64,7 +64,7 @@ class Orgs {
    */
   public static function getOrganizations($parent = 0) {
     $vocab = Orgs::getVocabulary();
-    return taxonomy_get_tree($vocab->vid, $parent);
+    return $vocab ? taxonomy_get_tree($vocab->vid, $parent) : FALSE;
   }
 
   /**
