@@ -20,7 +20,7 @@ class Orgs {
     if (!$vocab) {
       $vocab = new \StdClass();
       $vocab->name = t('CAPx Organizations');
-      $vocab->machine_name = $this->getVocabularyMachineName();
+      $vocab->machine_name = Orgs::getVocabularyMachineName();
       $vocab->description = t("A hierarchy of organization codes and information");
       $vocab->module = "stanford_capx";
       taxonomy_vocabulary_save($vocab);
