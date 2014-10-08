@@ -166,6 +166,7 @@ class CFEntity extends \Entity {
     }
 
     $this->meta['lastUpdate'] = $time;
+    $this->meta['lastUpdateHuman'] = format_date($time);
     $this->save();
   }
 
@@ -187,7 +188,7 @@ class CFEntity extends \Entity {
      * Populate some defaults if empty.
      */
     if (is_null($meta)) {
-      $meta = array('lastUpdate' => 0, 'count' => 0);
+      $meta = array('lastUpdate' => 0, 'lastUpdateHuman' => t('Never'), 'count' => 0);
     }
 
     // Set the stuff.

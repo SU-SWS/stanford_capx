@@ -281,7 +281,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['meta_1']['label'] = 'Last Update';
   $handler->display->display_options['fields']['meta_1']['alter']['alter_text'] = TRUE;
   $handler->display->display_options['fields']['meta_1']['format'] = 'key';
-  $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdate';
+  $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdateHuman';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
@@ -422,7 +422,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['meta']['field'] = 'meta';
   $handler->display->display_options['fields']['meta']['label'] = 'Last Update';
   $handler->display->display_options['fields']['meta']['format'] = 'key';
-  $handler->display->display_options['fields']['meta']['key'] = 'lastUpdate';
+  $handler->display->display_options['fields']['meta']['key'] = 'lastUpdateHuman';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
