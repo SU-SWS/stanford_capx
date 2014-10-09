@@ -20,7 +20,7 @@ class EntityImporter implements ImporterInterface {
   // Options and configuration array.
   protected $options = array();
 
-  // The configuration entity called importer
+  // The configuration entity called importer.
   protected $importer;
 
   // The mapping scheme object.
@@ -34,7 +34,13 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * Constructor class. Sets a number of items.
-   * @param [type] $config [description]
+   *
+   * @param CFEntity $importer
+   *   The configuration entity importer
+   * @param EntityMapper $mapper
+   *   The entity mapper object
+   * @param HTTPClient $client
+   *   The HTTPClient to use. Usually GuzzleClient.
    */
   public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
 
@@ -51,6 +57,7 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * The open method for executing cron callback functionality.
+   *
    * 1. Check settings to see if this should run.
    * 2. Create queue items to run next cron run.
    */
@@ -68,7 +75,9 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * Check to see if this importer's setting should run cron or not.
-   * @return boolean True if cron action should run, false otherwise.
+   *
+   * @return bool
+   *   True if cron action should run, false otherwise.
    */
   protected function shouldIRunCron() {
     $now = time();
@@ -77,11 +86,14 @@ class EntityImporter implements ImporterInterface {
     switch ($options['cron_option']) {
       case 'none':
         return FALSE;
+
       case 'all':
         return TRUE;
+
       case 'daily':
+        // One days time.
         $lastRun = $this->getLastCronRun();
-        $nextRun = $lastRun + (60 * 60 * 24); // One days time.
+        $nextRun = $lastRun + (60 * 60 * 24);
         if ($now >= $nextRun ) {
           return TRUE;
         }
@@ -93,6 +105,7 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * Execute the whole importprocess as one huge request.
+   *
    * This is generally a bad idea for large imports but may be useful for small.
    */
   public function justDoIt() {
@@ -147,10 +160,10 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Executes the import process as a series of batch processors. First pings
-   * the server for each type and finds out how many results there are. It then
-   * breaks up the results into sensible batch sizes.
-   * @return [type] [description]
+   * Executes the import process as a series of batch processors.
+   *
+   * First pings the server for each type and finds out how many results there
+   * are. It then breaks up the results into sensible batch sizes.
    */
   public function createBatch() {
 
@@ -175,22 +188,24 @@ class EntityImporter implements ImporterInterface {
           $httpOptions['query']['ps'] = 1;
           $client->setHttpOptions($httpOptions);
 
-          // Fire off request
+          // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
           break;
       }
 
       // Keep a track of the number of items.
+      // Because we have set the page results to 1 the number of pages will be
+      // the number of results we get back.
       $responses[$type] = array();
       $responses[$type]['totalCount'] = $results['totalCount'];
       $numberOfProfiles += $results['totalCount'];
 
     }
 
-    // How many to run per batch
+    // How many to run per batch.
     $processLimit = variable_get('stanford_capx_batch_limit', 100);
 
-    // Batch definition
+    // Batch definition.
     $batch = array(
       'operations' => array(),
       'title' => t('Downloading and processing profile information...'),
@@ -203,7 +218,7 @@ class EntityImporter implements ImporterInterface {
     foreach ($responses as $type => $info) {
       $count = $info['totalCount'];
       $i = 0;
-      while($count > 0) {
+      while ($count > 0) {
         $i++;
         $batch['operations'][] = array('\CAPx\Drupal\Importer\EntityImporterBatch::batch', array($type, $this->getMachineName(), $i, $processLimit));
         $count -= $processLimit;
@@ -222,12 +237,12 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * Create a list of queued items that need to be ran on cron.
-   * @see  Queues API.
-   * @return [type] [description]
+   *
+   * @see QueuesAPI.
    */
   public function createQueue() {
 
-    $queue = \DrupalQueue::get('stanford_capx_profiles'); // should be reliable?
+    $queue = \DrupalQueue::get('stanford_capx_profiles', TRUE);
     $options = $this->getOptions();
     $client = $this->getClient();
     $limit = variable_get('stanford_capx_batch_limit', 100);
@@ -251,7 +266,7 @@ class EntityImporter implements ImporterInterface {
           $httpOptions['query']['ps'] = 1;
           $client->setHttpOptions($httpOptions);
 
-          // Fire off request
+          // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
           break;
       }
@@ -261,7 +276,7 @@ class EntityImporter implements ImporterInterface {
       $numberOfProfiles += $total;
       $page = 1;
 
-      // Create queues for each page
+      // Create queues for each page.
       while ($total > 0) {
         $item = $this->getQueueItem();
         $item['type'] = $type;
@@ -287,7 +302,8 @@ class EntityImporter implements ImporterInterface {
 
   /**
    * Returns the timestamp of the last time this importer was called.
-   * @return [type] [description]
+   * @return int
+   *   epoc time integer
    */
   protected function getLastCronRun() {
     $meta = $this->getMeta();
@@ -295,27 +311,36 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Returns the meta information about this importer
-   * @return [type] [description]
+   * Returns the meta information about this importer.
+   *
+   * @return array
+   *   An array of mixed values
    */
   public function getMeta() {
     return $this->meta;
   }
 
   /**
-   * Set the metadata information. This is for storage only and does not update
-   * the configuration entity. To set the meta information use
-   * CFEntity::setMeta()
-   * @param [type] $meta [description]
+   * Set the metadata information.
+   *
+   * This is for storage only and does not update the configuration entity.
+   * To set the meta information use CFEntity::setMeta()
+   *
+   * @param array $meta
+   *   An array of meta information
    */
   public function setMeta($meta) {
     $this->meta = $meta;
   }
 
   /**
-   * A template item function. Returns the default options for an item that
-   * is going to go into the Queues API.
-   * @return array a keyed array with values that need to be passed to the queue
+   * A template item function.
+   *
+   * Returns the default options for an item that is going to go into the Queues
+   * API.
+   *
+   * @return array
+   *   A keyed array with values that need to be passed to the queue
    */
   protected function getQueueItem() {
     $limit = variable_get('stanford_capx_batch_limit', 100);
@@ -332,16 +357,20 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Getter function
-   * @return array an arry of options
+   * Getter function.
+   *
+   * @return array
+   *   An array of options
    */
   public function getOptions() {
     return $this->options;
   }
 
   /**
-   * Adder function
-   * @param array - Adds an array of options into the already defined options.
+   * Adder function.
+   *
+   * @param array $newOpts
+   *   Adds an array of options into the already defined options.
    */
   public function addOptions($newOpts) {
     $opts = $this->getOptions();
@@ -350,72 +379,89 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * Setter function
-   * @param array - an array of options
+   * Setter function.
+   *
+   * @param array $opts
+   *   An array of options.
    */
   protected function setOptions($opts) {
     $this->options = $opts;
   }
 
   /**
-   * Getter function
-   * @return EntityMapper an EntityMapper instance.
+   * Getter function.
+   *
+   * @return EntityMapper
+   *   An EntityMapper instance.
    */
   public function getMapper() {
     return $this->mapper;
   }
 
   /**
-   * Setter function
-   * @param EntityMapper - an EntityMapper instance
+   * Setter function.
+   * @param EntityMapper
+   *   An EntityMapper instance
    */
   public function setMapper($map) {
     $this->mapper = $map;
   }
 
   /**
-   * Getter function
-   * @return HTTPClient the HTTPClient instance.
+   * Getter function.
+   *
+   * @return HTTPClient
+   *   The HTTPClient instance.
    */
   public function getClient() {
     return $this->client;
   }
 
   /**
-   * Setter function
-   * @param HTTPClient the HTTPClient instance.
+   * Setter function.
+   *
+   * @param HTTPClient
+   *   The HTTPClient instance.
    */
   public function setClient($client) {
     $this->client = $client;
   }
 
   /**
-   * Getter function
-   * @return string The machine name of the importer configuration entity.
+   * Getter function.
+   *
+   * @return string
+   *   The machine name of the importer configuration entity.
    */
   public function getMachineName() {
     return $this->machineName;
   }
 
   /**
-   * Setter function
-   * @param string $name the machine name of the importer configuration entity.
+   * Setter function.
+   *
+   * @param string $name
+   *   The machine name of the importer configuration entity.
    */
   public function setMachineName($name) {
     $this->machineName = $name;
   }
 
   /**
-   * The importer configuration entitty
-   * @param [type] $importer [description]
+   * The importer configuration entitty.
+   *
+   * @param CFEntity $importer
+   *   A configuration entity importer object
    */
   public function setImporter($importer) {
     $this->importer = $importer;
   }
 
   /**
-   * The importer configuration entity
-   * @return [type] [description]
+   * The importer configuration entity.
+   *
+   * @return CFEntity
+   *   The configuration entity importer object
    */
   public function getImporter() {
     return $this->importer;

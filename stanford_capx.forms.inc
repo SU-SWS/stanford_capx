@@ -206,8 +206,9 @@ function stanford_capx_mapper_form($form, &$form_state) {
  */
 function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
 
-  // Globally loaded mapper
-  global $mapper;
+  // Globally loaded mapper.
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
 
   $form['naming'] = array(
     '#title' => t('Mapper title'),
@@ -883,7 +884,8 @@ function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
  */
 function stanford_capx_importer_form($form, &$form_state) {
 
-  global $importer;
+  global $_capx_importer;
+  $importer = $_capx_importer;
 
   // Do a check to see if the organization codes are available. If not, prompt
   // the user to update them.

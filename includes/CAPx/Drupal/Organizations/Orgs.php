@@ -11,8 +11,7 @@ class Orgs {
   public static $vocabularyMachineName = "capx_organizations";
 
   /**
-   * Prepares the taxonomy vocabulary for saving an org tree
-   * @return
+   * Prepares the taxonomy vocabulary for saving an org tree.
    */
   public static function prepareVocabulary() {
     $vocab = Orgs::getVocabulary();
@@ -33,7 +32,9 @@ class Orgs {
 
   /**
    * Returns the vocabulary object that orgs use.
-   * @return [type] [description]
+   *
+   * @return object
+   *   The vocabulary object that is being used.
    */
   public static function getVocabulary() {
     return taxonomy_vocabulary_machine_name_load(Orgs::getVocabularyMachineName());
@@ -41,7 +42,8 @@ class Orgs {
 
   /**
    * Returns the top most level term in the vocabulary.
-   * @return object The root term
+   * @return object
+   *   The root term
    */
   public static function getRootTerm() {
     $terms = Orgs::getOrganizations();
@@ -50,8 +52,11 @@ class Orgs {
 
   /**
    * Checks to see if there are org codes available.
-   * Returns True if there are values and false if there are no values
-   * @return [type] [description]
+   *
+   * Returns True if there are values and false if there are no values.
+   *
+   * @return bool
+   *   True if there are values and false if there are no values
    */
   public static function checkOrgs() {
     $vals = Orgs::getOrganizations();
@@ -59,8 +64,10 @@ class Orgs {
   }
 
   /**
-   * Returns an array of organizations keyed by org code
-   * @return array Organization information
+   * Returns an array of organizations keyed by org code.
+   *
+   * @return array
+   *   An array of organizations keyed by org code
    */
   public static function getOrganizations($parent = 0) {
     $vocab = Orgs::getVocabulary();
@@ -68,9 +75,10 @@ class Orgs {
   }
 
   /**
-   * Gets and syncs the Organization data from the CAP API
-   * @param  $batch  boolean value on wether or not to use batch api.
-   * @return [type] [description]
+   * Gets and syncs the Organization data from the CAP API.
+   *
+   * @param bool $batch
+   *   boolean value on wether or not to use batch api.
    */
   public static function syncOrganizations($batch = FALSE) {
 
@@ -84,13 +92,13 @@ class Orgs {
 
     Orgs::prepareVocabulary();
 
-    // No batch
+    // No batch.
     if (!$batch) {
       $termTree = Orgs::saveOrganizations($orgInfo);
       return;
     }
 
-    // Batching
+    // Batching.
     $batch = array(
       'operations' => array(
         array('\CAPx\Drupal\Organizations\Orgs::syncOrganizationsBatch', array($orgInfo)),
@@ -106,9 +114,12 @@ class Orgs {
   }
 
   /**
-   * Batch callback for syncOrganizations
-   * @param  [type] $orgInfo [description]
-   * @return [type]          [description]
+   * Batch callback for syncOrganizations.
+   *
+   * @param array $orgInfo
+   *   An array of organization information.
+   * @param array $context
+   *   An array of batch context information.
    */
   public static function syncOrganizationsBatch($orgInfo, &$context) {
     $sandbox = $context['sandbox'];
@@ -127,7 +138,7 @@ class Orgs {
     $context['sandbox']['progress']++;
     $limb = $orgInfo['children'][$context['sandbox']['progress']];
 
-    // Save one limb of the tree at a time
+    // Save one limb of the tree at a time.
     $parents = Orgs::saveOrgParents($limb, array($root->tid));
     Orgs::saveOrgChildren($limb, $parents);
 
@@ -135,11 +146,13 @@ class Orgs {
     // and provide an estimation of the completion level we reached.
     if ($context['sandbox']['progress'] !== $context['sandbox']['max']) {
       $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
-      $context['message'] = t('Now processing group ' . $context['sandbox']['progress'] . " of " . $context['sandbox']['max']);
+      $context['message'] = t('Now processing group %a1 of %a2', array('%a1' => $context['sandbox']['progress'], '%a2' => $context['sandbox']['max']));
     }
   }
 
   /**
+   * Processes an org tree array.
+   *
    * Takes an Org tree array response from the server and processes the root
    * organization and each nested tree of children. The organization response
    * from the API looks like:
@@ -154,8 +167,8 @@ class Orgs {
    * The org codes on the server are in a hierarchical order when the taxonomy
    * listing will display them alphabetically in their hierarchy.
    *
-   * @param  [type] $orgTree [description]
-   * @return [type]          [description]
+   * @param array $orgTree
+   *   An array of organization information in it's hierarchy.
    */
   public static function saveOrganizations($orgTree) {
     $termTree = array();
@@ -185,8 +198,12 @@ class Orgs {
 
   /**
    * Save organization terms and return their tids.
-   * @param  [type] $org [description]
-   * @return [type]      [description]
+   *
+   * @param array $org
+   *   A single organization and its information.
+   *
+   * @return array
+   *   An array of parent organizations
    */
   public static function saveOrgParents($org, $parents = array()) {
 
@@ -219,10 +236,12 @@ class Orgs {
   }
 
   /**
-   * Save the organization terms children
-   * @param  [type] $org     [description]
-   * @param  [type] $parents [description]
-   * @return [type]          [description]
+   * Save the organization terms children.
+   *
+   * @param array $org
+   *   An array of organization information.
+   * @param  array $parents
+   *   An array of parent organizations.
    */
   public static function saveOrgChildren($org, $parents) {
 
@@ -230,7 +249,7 @@ class Orgs {
       throw new \Exception("Invalid parents passed to saveOrgChildren");
     }
 
-    // No children just return
+    // No children just return.
     if (empty($org['children'])) {
       return;
     }
@@ -242,9 +261,13 @@ class Orgs {
   }
 
   /**
+   * Gets vocabulary machine name.
+   *
    * Returns the vocabulary machine name that we decided to use for storing
    * the organization terms.
-   * @return [type] [description]
+   *
+   * @return string
+   *   Machine name of the vocabulary for storing organization codes.
    */
   public static function getVocabularyMachineName() {
     return Orgs::$vocabularyMachineName;

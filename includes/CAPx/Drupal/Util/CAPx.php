@@ -12,8 +12,14 @@ class CAPx {
 
   /**
    * Returns an array of loaded profile entities.
-   * @param  array  $conditions [description]
-   * @return [type]             [description]
+   *
+   * @param string $type
+   *   The entity type to load
+   * @param array $conditions
+   *   An array of conditions to use in the DB query when looking for profiles.
+   *
+   * @return array
+   *   An array of loaded profile entities.
    */
   public static function getProfiles($type, $conditions = array()) {
 
@@ -38,12 +44,20 @@ class CAPx {
   }
 
   /**
-   * Returns a fully loaded entity from the DB
-   * @param  [type] $profileId [description]
-   * @return [type]            [description]
+   * Returns a fully loaded entity from the DB.
+   *
+   * @param string $entityType
+   *   The entity type (eg: node, block, user)
+   * @param string $bundleType
+   *   The name of the bundle we a loading (eg: page, article)
+   * @param int $profileId
+   *   The profile id from the CAP API.
+   *
+   * @return object
+   *   A fully loaded entity from the DB.
    */
   public static function getEntityByProfileId($entityType, $bundleType, $profileId) {
-    // @TODO: CACHE THIS!
+    // @todo: CACHE THIS!
 
     $entityId = CAPx::getEntityIdByProfileId($entityType, $bundleType, $profileId);
 
@@ -51,17 +65,23 @@ class CAPx {
       return FALSE;
     }
 
-    $entity =  entity_load_single($entityType, $entityId);
+    $entity = entity_load_single($entityType, $entityId);
     return $entity;
 
   }
 
   /**
-   * Returns an entity by its profile id, type, and bundle.
-   * @param  [type] $entityType [description]
-   * @param  [type] $bundleType [description]
-   * @param  [type] $profileId  [description]
-   * @return [type]             [description]
+   * Returns an entity id by its profile id, type, and bundle.
+   *
+   * @param string $entityType
+   *   The entity type (eg: node, block, user)
+   * @param string $bundleType
+   *   The name of the bundle we a loading (eg: page, article)
+   * @param int $profileId
+   *   The profile id from the CAP API.
+   *
+   * @return int
+   *   The entity id (not CAP API id)
    */
   public static function getEntityIdByProfileId($entityType, $bundleType, $profileId) {
 
@@ -80,8 +100,12 @@ class CAPx {
 
   /**
    * Returns the profile Id of a loaded entity.
-   * @param  [type] $entity [description]
-   * @return [type]         [description]
+   *
+   * @param object $entity
+   *   A loaded entity object
+   *
+   * @return int
+   *   The cap API profile id.
    */
   public static function getProfileIdByEntity($entity) {
     $id = $entity->getIdentifier();
@@ -101,9 +125,13 @@ class CAPx {
   }
 
   /**
+   * Create new profile record.
+   *
    * Inserts a record into the capx_profiles table with information that helps
    * the rest of the module keep track of what it is and where it came from.
-   * @param  Entity $entity the entity that was just saved.
+   *
+   * @param Entity $entity
+   *   The entity that was just saved.
    */
   public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
     $id = $entity->getIdentifier();
@@ -128,14 +156,18 @@ class CAPx {
   }
 
   /**
+   * Remove a profile record.
+   *
    * Removes a profile record from the capx_profiles table when an entity is
    * deleted. No longer need to keep track of it.
-   * @param  Entity $entity the entity that is being deleted.
+   *
+   * @param Entity $entity
+   *   The entity that is being deleted.
    */
   public static function deleteProfileRecord($entity) {
 
     // BEAN is returning its delta when using this.
-    //$id = $entity->getIdentifier();
+    // $id = $entity->getIdentifier();
 
     $entityType = $entity->type();
     $entityRaw = $entity->raw();
@@ -149,17 +181,21 @@ class CAPx {
 
   /**
    * Returns the API endpoint.
-   * @todo : move this to CAPxConnection
-   * @return string full URL to the API endpoint
+   * @todo Move this to CAPxConnection
+   *
+   * @return string
+   *  Full URL to the API endpoint
    */
   public static function getAPIEndpoint() {
     return variable_get('stanford_capx_api_base_url', 'https://api.stanford.edu');
   }
 
   /**
-   * Returns the authentication endpoint
-   * @todo : move this to CAPxConnection
-   * @return string full url to the auth endpoint
+   * Returns the authentication endpoint.
+   *
+   * @todo Move this to CAPxConnection
+   * @return string
+   *   Full url to the auth endpoint
    */
   public static function getAuthEndpoint() {
     return variable_get('stanford_capx_api_auth_uri', 'https://authz.stanford.edu/oauth/token');
@@ -167,8 +203,11 @@ class CAPx {
 
   /**
    * Returns a decrypted username that authenticates with the cap api.
-   * @todo : move this to CAPxConnection
-   * @return string the username
+   *
+   * @todo Mmove this to CAPxConnection
+   *
+   * @return string
+   *   The username
    */
   public static function getAuthUsername() {
     return decrypt(variable_get('stanford_capx_username', ''));
@@ -176,8 +215,9 @@ class CAPx {
 
   /**
    * Returns a decrypted password that authenticates with the cap api.
-   * @todo : move this to CAPxConnection
-   * @return string the password
+   * @todo Move this to CAPxConnection
+   * @return string
+   *   The password
    */
   public static function getAuthPassword() {
     return decrypt(variable_get('stanford_capx_password', ''));

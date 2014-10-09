@@ -21,48 +21,60 @@ use CAPx\APILib\AbstractAPILib as APILib;
 class LayoutsLib extends APILib {
 
   /**
-   * Wrapper for getType(faculty)
-   * @return false or an array of layout data
+   * Wrapper for getType(faculty).
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function faculty() {
     return $this->getType('faculty');
   }
 
   /**
-   * Wrapper for getType(staff)
-   * @return false or an array of layout data
+   * Wrapper for getType(staff).
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function staff() {
     return $this->getType('staff');
   }
 
   /**
-   * [physician description]
-   * @return [type] [description]
+   * Wrapper for getType('physician').
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function physician() {
     return $this->getType('physician');
   }
 
   /**
-   * [postdoc description]
-   * @return [type] [description]
+   * Wrapper for getType('postdoc').
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function postdoc() {
     return $this->getType('postdoc');
   }
 
   /**
-   * [student description]
-   * @return [type] [description]
+   * Wrapper for getType('student').
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function student() {
     return $this->getType('student');
   }
 
   /**
-   * [invitee description]
-   * @return [type] [description]
+   * Wrapper for getType('invitee').
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function invitee() {
     return $this->getType('invitee');
@@ -70,8 +82,12 @@ class LayoutsLib extends APILib {
 
   /**
    * Requests layout information from the CAP API layouts endpoint by type.
-   * @param  string $type the type of profile. eg: staff
-   * @return mixed false or an array of layout data
+   *
+   * @param string $type
+   *   The type of profile. eg: staff
+   *
+   * @return mixed
+   *   false or an array of layout data
    */
   public function getType($type) {
     $endpoint = $this->getEndpoint() . "/cap/v1/layouts/" . $type;

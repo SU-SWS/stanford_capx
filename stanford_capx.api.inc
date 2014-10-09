@@ -170,7 +170,7 @@ function hook_capx_field_processor_widget_alter(&$processor, $type, $field_name,
  * @param  [EntityImporter] $importer the entity importer that made the request.
  * @return [type]           [description]
  */
-function hook_capx_preprocess_results(&$results, $importer) {
+function hook_capx_preprocess_results_alter(&$results, $importer) {
 
 }
 

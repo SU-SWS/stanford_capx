@@ -16,12 +16,16 @@ class EntityImporterBatch {
 
   /**
    * Callback for batch import functionality.
-   * @param  [type] $type         [description]
-   * @param  [type] $importerMachineName [description]
-   * @param  [type] $page         [description]
-   * @param  [type] $limit        [description]
-   * @param  [type] $context      [description]
-   * @return [type]               [description]
+   * @param string $type
+   *   The type of import bing executed (orgcodes, workgroup, sunets)
+   * @param string $importerMachineName
+   *   The machine name of the importer configuration entity.
+   * @param int $page
+   *   The page of results to process
+   * @param int $limit
+   *   The limit of results per page to process
+   * @param array $context
+   *   Batch context information passed by reference.
    */
   public static function batch($type, $importerMachineName, $page, $limit, &$context) {
 
@@ -58,8 +62,14 @@ class EntityImporterBatch {
 
   /**
    * Callback function for cron queue processing.
-   * @param  [type] $item [description]
-   * @return [type]       [description]
+   *
+   * Fetches and parses results from the CAP API server based on settings from
+   * the item array that is being passed in. This function loads up fresh
+   * configuration from the importer and mapper so it is possible that things
+   * have changed since the queue item was established.
+   *
+   * @param array $item
+   *   An array of information to use during the queue call.
    */
   public static function queue($item) {
 
@@ -99,9 +109,17 @@ class EntityImporterBatch {
 
   /**
    * Process the results from the response from the API.
-   * @param  [type] $results  [description]
-   * @param  [type] $importer [description]
-   * @return boolean          success status.
+   *
+   * This function handles the values that the CAP API server has returned from
+   * either the batch or queue processes.
+   *
+   * @param array $results
+   *   An array of profile information to process
+   * @param EntityImporter $importer
+   *   The EntityImporter object that is currently importing the profiles.
+   *
+   * @return bool
+   *   success status.
    */
   public static function processResults($results, $importer) {
 

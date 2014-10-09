@@ -16,19 +16,27 @@ use CAPx\Drupal\Importer\EntityImporter;
 class CAPxImporter {
 
   /**
-   * Wrapper for capx_cfe_load_multiple(mappers)
-   * @return [type] [description]
+   * Wrapper for capx_cfe_load_multiple(mappers).
+   *
+   * @return array
+   *   An array of loaded importers
    */
   public static function loadAllImporters() {
     return capx_cfe_load_multiple(FALSE, array('type' => 'importer'));
   }
 
   /**
-   * Wrapper for capx_cfe_load_by_machine_name & capx_cfe_load
+   * Wrapper for capx_cfe_load_by_machine_name & capx_cfe_load.
+   *
    * Loads the configuration entity and not the entity importer class which
    * does the actual importing.
-   * @param  [type] $key [description]
-   * @return [type]      [description]
+   *
+   * @param mixed $key
+   *   int - cfid
+   *   string - machine name
+   *
+   * @return array
+   *  One loaded importer.
    */
   public static function loadImporter($key) {
 
@@ -43,8 +51,12 @@ class CAPxImporter {
 
   /**
    * Loads an EntityImporter by machine name or id.
-   * @param  mixed $key either a machine name or id.
-   * @return EntityImporter      a fully instantiated EntityImporter
+   *
+   * @param mixed $key
+   *   Either a machine name or id.
+   *
+   * @return EntityImporter
+   *   A fully instantiated EntityImporter
    */
   public static function loadEntityImporter($key) {
 
@@ -58,8 +70,12 @@ class CAPxImporter {
 
   /**
    * Loads EntityImporter's filtered by mapper.
-   * @param  [type] $mapper [description]
-   * @return [type] [description]
+   *
+   * @param CFEntity $mapper
+   *   The configuration entity mapper
+   *
+   * @return array
+   *   An arry of loaded importers that use the passed in mapper.
    */
   public static function loadImportersByMapper($mapper) {
     $importers = self::loadAllImporters();
@@ -75,7 +91,9 @@ class CAPxImporter {
 
   /**
    * Return the options for running cron on an importer.
-   * @return array An array of options for a select field.
+   *
+   * @return array
+   *   An array of options for a select field.
    */
   public static function getCronOptions() {
     return array(
