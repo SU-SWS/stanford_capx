@@ -60,117 +60,6 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * Returns the entity Mapper for this CFE. The entity mapper is different from
-   * the mapper configuration entity.
-   * @return [type] [description]
-   */
-  public function getEntityMapper() {
-
-    if ($this->type !== "mapper") {
-      throw new \Exception("Cannot call getEntityMapper on non mapper type.");
-    }
-
-    $mapperConfig = $this->getEntityMapperConfig();
-    $mapper = new EntityMapper($mapperConfig);
-    return $mapper;
-  }
-
-  /**
-   * This function takes the saved settings and retuns an array that
-   * matches the API importer library settings.
-   * @return [type] [description]
-   */
-  public function getEntityMapperConfig() {
-
-    if ($this->type !== "mapper") {
-      throw new \Exception("Cannot call getEntityMapperConfig on non mapper type.");
-    }
-
-    $settings = $this->settings;
-    $settings['fieldCollections'] = array();
-
-    if (isset($settings['collections'])) {
-      foreach ($settings['collections'] as $fieldName => $fields) {
-        $collectionConfig = array();
-        $collectionConfig['bundle_type'] = $fieldName;
-        $collectionConfig['fields'] = $fields;
-        $collectionConfig['properties'] = array();
-        $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($collectionConfig);
-      }
-    }
-
-    unset($settings['collections']);
-
-    return $settings;
-  }
-
-  /**
-   * This function takes the saved settings and retuns an array that
-   * matches the API importer library settings.
-   * @return [type] [description]
-   */
-  public function getEntityImporterConfig() {
-
-    if ($this->type !== "importer") {
-      throw new \Exception("Cannot call getEntityImporterConfig on non importer type.");
-    }
-
-    $settings = $this->settings;
-    $settings['machine_name'] = $this->machine_name;
-
-    if (!empty($settings['organization'])) {
-      $settings['types'][] = 'orgCodes';
-      $settings['values'][] = explode(",", $settings['organization']);
-    }
-
-    if (!empty($settings['workgroup'])) {
-      $settings['types'][] = 'privGroups';
-      $settings['values'][] = explode(",", $settings['workgroup']);
-    }
-
-    if (!empty($settings['sunet_id'])) {
-      $settings['types'][] = 'uids';
-      $settings['values'][] = explode(",", $settings['sunet_id']);
-    }
-
-    return $settings;
-  }
-
-  /**
-   * Returns a ready to use entity importer
-   * @return EntityImporter - Ready to use entity importer.
-   */
-  public function getEntityImporter() {
-
-    if ($this->type !== "importer") {
-      throw new \Exception("Cannot call getEntityImporter on non importer type.");
-    }
-
-    $importer = $this;
-    $mapper = CAPxMapper::loadEntityMapper($this->mapper);
-    $client = CAPxConnection::getAuthenticatedHTTPClient();
-    $meta = $this->meta;
-
-    $importer = new EntityImporter($importer, $mapper, $client);
-    return $importer;
-  }
-
-  /**
-   * Sets the meta information about the last time the importer was executed
-   * @param [type] $time [description]
-   */
-  public function setLastCronRun($time = REQUEST_TIME) {
-
-    if ($this->type !== "importer") {
-      throw new \Exception("Cannot call getEntityImporter on non importer type.");
-    }
-
-    $this->meta['lastUpdate'] = $time;
-    $this->meta['lastUpdateHuman'] = format_date($time, 'custom', 'F j - g:ia');
-    $this->save();
-  }
-
-  /**
    * Returns the metadata
    * @return [type] [description]
    */
@@ -188,11 +77,25 @@ class CFEntity extends \Entity {
      * Populate some defaults if empty.
      */
     if (empty($meta)) {
-      $meta = array('lastUpdate' => 0, 'lastUpdateHuman' => t('Never'), 'count' => 0);
+      $meta = array(
+        'lastUpdate' => 0,
+        'lastUpdateHuman' => t('Never'),
+        'count' => 0,
+      );
     }
 
     // Set the stuff.
     $this->meta = $meta;
+  }
+
+  /**
+   * Returns the machine name of this entity.
+   *
+   * @return string
+   *   The machine name
+   */
+  public function getMachineName() {
+    return $this->machine_name;
   }
 
 }

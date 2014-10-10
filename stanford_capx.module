@@ -261,7 +261,7 @@ function stanford_capx_cron() {
   // Call cron on all importers.
   $importers = CAPxImporter::loadAllImporters();
   foreach ($importers as $key => $importer) {
-    $entity_importer = $importer->getEntityImporter();
+    $entity_importer = CAPxImporter::loadEntityImporter($importer->getMachineName());
     $entity_importer->cron();
   }
 
@@ -415,7 +415,7 @@ function stanford_capx_admin_config_mapper_new() {
 function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $output = "";
   global $_capx_mapper;
-  $_capx_mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
+  $_capx_mapper = $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
 
   if (!$mapper) {
     throw new Exception("Could not load a mapper with provided machine name. Please check url.");
@@ -473,7 +473,7 @@ function stanford_capx_admin_config_import_new() {
 function stanford_capx_admin_config_import_edit($importer_machine_name) {
   $output = "";
   global $_capx_importer;
-  $_capx_importer = CAPxImporter::loadImporter($importer_machine_name);
+  $_capx_importer = $importer = CAPxImporter::loadImporter($importer_machine_name);
 
   if (!$importer) {
     throw new Exception("Could not load an importer with provided machine name. Please check url.");

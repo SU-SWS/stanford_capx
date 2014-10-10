@@ -253,7 +253,8 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
   $entity_types = capx_entity_get_info();
   $entity_options = array();
   $bundle_options = array();
-  global $mapper;
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
 
   foreach ($entity_types as $entity_name => $values) {
     $entity_options[$entity_name] = $values['label'];
@@ -311,7 +312,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
 
   $entity_types = capx_entity_get_info();
   $field_collections = array();
-  global $mapper;
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
   global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
   $form['field-mapping'] = array(

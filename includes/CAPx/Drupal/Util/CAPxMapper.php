@@ -52,8 +52,7 @@ class CAPxMapper {
   public static function loadEntityMapper($key) {
 
     $mapperConfig = self::loadMapper($key);
-    $config = $mapperConfig->getEntityMapperConfig();
-    $mapper = new EntityMapper($config);
+    $mapper = new EntityMapper($mapperConfig);
 
     return $mapper;
   }

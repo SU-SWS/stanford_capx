@@ -44,13 +44,13 @@ class EntityImporter implements ImporterInterface {
    */
   public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
 
-    $config = $importer->getEntityImporterConfig();
-
-    $this->addOptions($config);
     $this->setImporter($importer);
     $this->setMapper($mapper);
     $this->setClient($client);
     $this->setMeta($importer->meta);
+
+    $config = $this->getEntityImporterConfig();
+    $this->addOptions($config);
     $this->setMachineName($config['machine_name']);
 
   }
@@ -305,9 +305,51 @@ class EntityImporter implements ImporterInterface {
    * @return int
    *   epoc time integer
    */
-  protected function getLastCronRun() {
+  public function getLastCronRun() {
     $meta = $this->getMeta();
     return isset($meta['lastUpdate']) ? $meta['lastUpdate'] : 0;
+  }
+
+  /**
+   * Sets the meta information about the last time the importer was executed.
+   *
+   * @param int $time
+   *   set the epoc time of the last cron run
+   */
+  public function setLastCronRun($time = REQUEST_TIME) {
+    $importer = $this->getImporter();
+    $importer->meta['lastUpdate'] = $time;
+    $importer->meta['lastUpdateHuman'] = format_date($time, 'custom', 'F j - g:ia');
+    $importer->save();
+  }
+
+    /**
+   * This function takes the saved settings and retuns an array that
+   * matches the API importer library settings.
+   * @return [type] [description]
+   */
+  protected function getEntityImporterConfig() {
+    $importer = $this->getImporter();
+
+    $settings = $importer->settings;
+    $settings['machine_name'] = $importer->machine_name;
+
+    if (!empty($settings['organization'])) {
+      $settings['types'][] = 'orgCodes';
+      $settings['values'][] = explode(",", $settings['organization']);
+    }
+
+    if (!empty($settings['workgroup'])) {
+      $settings['types'][] = 'privGroups';
+      $settings['values'][] = explode(",", $settings['workgroup']);
+    }
+
+    if (!empty($settings['sunet_id'])) {
+      $settings['types'][] = 'uids';
+      $settings['values'][] = explode(",", $settings['sunet_id']);
+    }
+
+    return $settings;
   }
 
   /**

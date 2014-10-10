@@ -55,7 +55,7 @@ class EntityImporterBatch {
 
     if ($success) {
       $now = time();
-      $importer->getImporter()->setLastCronRun($now);
+      $importer->setLastCronRun($now);
     }
 
   }
@@ -102,7 +102,7 @@ class EntityImporterBatch {
 
     if ($success) {
       $now = time();
-      $importer->getImporter()->setLastCronRun($now);
+      $importer->setLastCronRun($now);
     }
 
   }
