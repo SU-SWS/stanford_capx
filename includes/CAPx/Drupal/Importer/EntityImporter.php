@@ -490,7 +490,7 @@ class EntityImporter implements ImporterInterface {
   }
 
   /**
-   * The importer configuration entitty.
+   * The importer configuration entity.
    *
    * @param CFEntity $importer
    *   A configuration entity importer object
