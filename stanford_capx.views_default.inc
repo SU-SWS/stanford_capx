@@ -211,6 +211,24 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'Sorry, there are no importers available. To get started click on the create new importer link above.';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
+  /* Field: Global: Base url */
+  $handler->display->display_options['fields']['base_url']['id'] = 'base_url';
+  $handler->display->display_options['fields']['base_url']['table'] = 'views';
+  $handler->display->display_options['fields']['base_url']['field'] = 'base_url';
+  $handler->display->display_options['fields']['base_url']['label'] = '';
+  $handler->display->display_options['fields']['base_url']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['base_url']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['base_url']['show_link'] = 0;
+  $handler->display->display_options['fields']['base_url']['show_link_options'] = array(
+    'link_path' => '',
+    'link_text' => '',
+    'link_class' => '',
+    'link_title' => '',
+    'link_rel' => '',
+    'link_fragment' => '',
+    'link_query' => '',
+    'link_target' => '',
+  );
   /* Field: Configuration Entity: Machine name */
   $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
   $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
@@ -263,13 +281,13 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['meta_1']['label'] = 'Last Update';
   $handler->display->display_options['fields']['meta_1']['alter']['alter_text'] = TRUE;
   $handler->display->display_options['fields']['meta_1']['format'] = 'key';
-  $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdate';
+  $handler->display->display_options['fields']['meta_1']['key'] = 'lastUpdateHuman';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
   $handler->display->display_options['fields']['nothing_2']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing_2']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1] | Sync';
+  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1] | <a href="[base_url]/admin/config/capx/importer/sync/[machine_name]?destination=admin/config/capx/importer" title="Synchronize all profiles in this importer from the API">Sync profiles now</a>';
   /* Filter criterion: Configuration Entity: type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'capx_cfe';
@@ -351,6 +369,24 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
   );
+  /* Field: Global: Base url */
+  $handler->display->display_options['fields']['base_url']['id'] = 'base_url';
+  $handler->display->display_options['fields']['base_url']['table'] = 'views';
+  $handler->display->display_options['fields']['base_url']['field'] = 'base_url';
+  $handler->display->display_options['fields']['base_url']['label'] = '';
+  $handler->display->display_options['fields']['base_url']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['base_url']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['base_url']['show_link'] = 0;
+  $handler->display->display_options['fields']['base_url']['show_link_options'] = array(
+    'link_path' => '',
+    'link_text' => '',
+    'link_class' => '',
+    'link_title' => '',
+    'link_rel' => '',
+    'link_fragment' => '',
+    'link_query' => '',
+    'link_target' => '',
+  );
   /* Field: Configuration Entity: Machine name */
   $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
   $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
@@ -386,13 +422,13 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['meta']['field'] = 'meta';
   $handler->display->display_options['fields']['meta']['label'] = 'Last Update';
   $handler->display->display_options['fields']['meta']['format'] = 'key';
-  $handler->display->display_options['fields']['meta']['key'] = 'lastUpdate';
+  $handler->display->display_options['fields']['meta']['key'] = 'lastUpdateHuman';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
   $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing']['alter']['text'] = 'Update all profiles now';
+  $handler->display->display_options['fields']['nothing']['alter']['text'] = '<a href="[base_url]/admin/config/capx/importer/sync/[machine_name]?destination=admin/config/capx">Update all profiles now</a>';
   /* Sort criterion: Configuration Entity: Title */
   $handler->display->display_options['sorts']['title']['id'] = 'title';
   $handler->display->display_options['sorts']['title']['table'] = 'capx_cfe';

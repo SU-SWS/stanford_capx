@@ -12,7 +12,9 @@ class CAPxConnection {
 
   /**
    * Test that both the API and Auth endpoints work.
-   * @return [type] [description]
+   *
+   * @return bool
+   *   True for success.
    */
   public static function testConnection() {
     $auth = CAPxConnection::testAuthConnection();
@@ -31,10 +33,16 @@ class CAPxConnection {
 
   /**
    * Test that inputted settings can authenticate with the CAP API.
-   * @param  string $username a decrypted username
-   * @param  string $password a decrypted password
-   * @param  string $authpoint a full url to the authentication point.
-   * @return object Information about the status
+   *
+   * @param string $username
+   *   A decrypted username
+   * @param string $password
+   *   A decrypted password
+   * @param string $authpoint
+   *   A full url to the authentication point.
+   *
+   * @return object
+   *   Information about the status
    */
   public static function testAuthConnection($username = null, $password = null, $authpoint = null) {
 
@@ -77,10 +85,15 @@ class CAPxConnection {
 
 
   /**
-   * Tests a token against the API for validity
-   * @param  [type] $token [description]
-   * @return object        $object->value
-   *                       $obj
+   * Tests a token against the API for validity.
+   *
+   * @param string $token
+   *   The authentication token.
+   * @param string $endpoint
+   *   The authentication uri.
+   *
+   * @return object
+   *   $object->value
    */
   public static function testApiConnection($token = null, $endpoint = null) {
 
@@ -116,6 +129,8 @@ class CAPxConnection {
 
   /**
    * Tokens can expire. This function renews the token with valid credentials.
+   * @throws Exception
+   *   If could not authenticate
    */
   public static function renewConnectionToken() {
 
@@ -138,7 +153,9 @@ class CAPxConnection {
 
   /**
    * Returns an authenticated HTTP Client for use.
-   * @return HTTPClient an authenticated HTTP client ready to use.
+   *
+   * @return HTTPClient
+   *   An authenticated HTTP client ready to use.
    */
   public static function getAuthenticatedHTTPClient() {
     $username   = CAPx::getAuthUsername();

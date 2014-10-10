@@ -67,10 +67,12 @@ class FileFieldProcessor extends FieldTypeProcessor {
 
     // Save the file.
     $filename = $this->getFileName($data);
-    $file = file_save_data($response->getBody(), $filename, FILE_EXISTS_REPLACE);
+    $body = $response->getBody();
+    $file = file_save_data($body, $filename, FILE_EXISTS_REPLACE);
 
     if (!$file) {
-      throw new \Exception("Could not save file: " . $data['url']);
+      watchdog('stanford_capx', 'Could not save file: ' . $data['url'], array(), WATCHDOG_DEBUG);
+      return;
     }
 
     // We have a file, allow more altering.

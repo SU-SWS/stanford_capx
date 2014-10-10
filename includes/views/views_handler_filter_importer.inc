@@ -8,7 +8,7 @@
 use CAPx\Drupal\Util\CAPxImporter;
 
 /**
- * Filter by node type.
+ * Filter by Importer type.
  *
  * @ingroup views_filter_handlers
  */
