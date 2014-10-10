@@ -15,6 +15,8 @@ use CAPx\Drupal\Importer\EntityImporter;
 class CFEntity extends \Entity {
 
   /**
+   * Constructor of the class.
+   *
    * This constructor takes the top level items in the settings property array
    * and exposes them as properties of the instance. This is just a syntax
    * reducing bit of fun.
@@ -22,18 +24,12 @@ class CFEntity extends \Entity {
   public function __construct(array $values = array(), $entityType = NULL) {
     parent::__construct($values, $entityType);
 
-    /**
-     * Expose settings for easier get access.
-     */
-
+    // Expose settings for easier get access.
     if (isset($this->settings)) {
-
       $ar = $this->settings;
-
       if (!is_array($this->settings)) {
         $ar = unserialize($this->settings);
       }
-
       foreach ($ar as $key => $value) {
         if (!isset($this->{$key})) {
           $this->{$key} = $value;
@@ -44,38 +40,41 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * Implements defaultLable()
-   * @return [type] [description]
+   * Implements defaultLabel().
+   * @return string
+   *   What to call this thing.
    */
   protected function defaultLabel() {
     return $this->title;
   }
 
   /**
-   * Implements defaultUIR
-   * @return [type] [description]
+   * Implements defaultUIR.
+   * @return array
+   *   Path settings
    */
   protected function defaultUri() {
     return array('path' => 'cfe/' . $this->identifier());
   }
 
   /**
-   * Returns the metadata
-   * @return [type] [description]
+   * Returns the metadata information that is stored in the DB.
+   * @return array
+   *   An array of arbitrary information
    */
   public function getMeta() {
     return $this->meta;
   }
 
   /**
-   * Sets the metadata array
-   * @param [type] $meta [description]
+   * Sets the metadata array.
+   *
+   * @param array $meta
+   *   Set or create the default metadata.
    */
   public function setMeta($meta = null) {
 
-    /**
-     * Populate some defaults if empty.
-     */
+    // Populate some defaults if empty.
     if (empty($meta)) {
       $meta = array(
         'lastUpdate' => 0,

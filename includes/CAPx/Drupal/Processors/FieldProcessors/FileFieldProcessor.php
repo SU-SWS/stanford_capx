@@ -73,7 +73,6 @@ class FileFieldProcessor extends FieldTypeProcessor {
     if (!$file) {
       watchdog('stanford_capx', 'Could not save file: ' . $data['url'], array(), WATCHDOG_DEBUG);
       return;
-      // throw new \Exception("Could not save file: " . $data['url']);
     }
 
     // We have a file, allow more altering.
