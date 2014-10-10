@@ -25,7 +25,16 @@ class EntityProcessor extends ProcessorAbstract {
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
-    // $entity = CAPx::getEntityByProfileId($entityType, $bundleType, $data['profileId']);
+    // Check to see if we have already processed this profile during this run.
+    $processCache = CAPx::getProcessCache();
+    if (in_array($data['profile_id'], $processCache)) {
+      // Do I need a log here or something?
+      if (function_exists('drush_log')) {
+        drush_log('Skipping already processed id: ' . $data['profile_id'], 'info');
+      }
+      return;
+    }
+
     $entity = null;
     $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
     if (is_array($entities)) {
@@ -41,8 +50,11 @@ class EntityProcessor extends ProcessorAbstract {
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
     }
 
-    return $entity;
+    // Add this key to the process cache so it doesn't get called again.
+    $processCache[] = $data['profile_id'];
+    CAPx::setProcessCache($processCache);
 
+    return $entity;
   }
 
   /**
