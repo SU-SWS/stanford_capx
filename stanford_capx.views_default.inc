@@ -258,6 +258,16 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing_1']['alter']['text'] = 'Delete';
   $handler->display->display_options['fields']['nothing_1']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['nothing_1']['alter']['path'] = 'admin/config/capx/importer/delete/[machine_name]';
+  /* Field: Global: Custom text */
+  $handler->display->display_options['fields']['nothing_3']['id'] = 'nothing_3';
+  $handler->display->display_options['fields']['nothing_3']['table'] = 'views';
+  $handler->display->display_options['fields']['nothing_3']['field'] = 'nothing';
+  $handler->display->display_options['fields']['nothing_3']['label'] = 'orhpans';
+  $handler->display->display_options['fields']['nothing_3']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['nothing_3']['alter']['text'] = 'Check for orphans';
+  $handler->display->display_options['fields']['nothing_3']['alter']['make_link'] = TRUE;
+  $handler->display->display_options['fields']['nothing_3']['alter']['path'] = 'admin/config/capx/importer/orphans/[machine_name]?destination=admin/config/capx/importer';
+  $handler->display->display_options['fields']['nothing_3']['element_label_colon'] = FALSE;
   /* Field: Configuration Entity: Configuration Settings */
   $handler->display->display_options['fields']['settings']['id'] = 'settings';
   $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
@@ -287,7 +297,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
   $handler->display->display_options['fields']['nothing_2']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing_2']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1] | <a href="[base_url]/admin/config/capx/importer/sync/[machine_name]?destination=admin/config/capx/importer" title="Synchronize all profiles in this importer from the API">Sync profiles now</a>';
+  $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[nothing] | [nothing_1] |  <a href="[base_url]/admin/config/capx/importer/sync/[machine_name]?destination=admin/config/capx/importer" title="Synchronize all profiles in this importer from the API">Update profiles now</a> | [nothing_3]';
   /* Filter criterion: Configuration Entity: type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'capx_cfe';
@@ -296,6 +306,7 @@ function stanford_capx_views_default_views() {
 
   /* Display: Importer Manage Block */
   $handler = $view->new_display('block', 'Importer Manage Block', 'importer_manage_block');
+
 
   $views['capx_importers'] = $view;
 

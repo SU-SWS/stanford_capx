@@ -23,4 +23,5 @@ interface ImporterInterface {
    */
   public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client);
 
+
 }

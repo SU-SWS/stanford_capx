@@ -140,6 +140,44 @@ class HTTPClient {
     $this->httpOptions = $opts;
   }
 
+  /**
+   * [setLimit description]
+   * @param [type] $int [description]
+   */
+  public function setLimit($int) {
+    $httpOpts = $this->getHttpOptions();
+    $httpOpts['query']['ps'] = $int;
+    $this->setHttpOptions($httpOpts);
+  }
+
+  /**
+   * [getLimit description]
+   * @return [type] [description]
+   */
+  public function getLimit() {
+    $httpOpts = $this->getHttpOptions();
+    return $httpOpts['query']['ps'];
+  }
+
+  /**
+   * [setPage description]
+   * @param [type] $int [description]
+   */
+  public function setPage($int) {
+    $httpOpts = $this->getHttpOptions();
+    $httpOpts['query']['p'] = $int;
+    $this->setHttpOptions($httpOpts);
+  }
+
+  /**
+   * [getPage description]
+   * @return [type] [description]
+   */
+  public function getPage() {
+    $httpOpts = $this->getHttpOptions();
+    return $httpOpts['query']['ps'];
+  }
+
   //
   // ---------------------------------------------------------------------------
   //

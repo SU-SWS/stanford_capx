@@ -809,6 +809,23 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   // If there are collections...
   $collections = @$values['field-mapping'][$entity . "-" . $bundle . "-collections"];
+
+  // If there are field collections check to see if they are any values in them.
+  // if (!empty($collections)) {
+  //   foreach ($collections as $collection => $fields) {
+  //     foreach ($fields as $field_name => $values) {
+  //       $value = array_pop($values);
+  //       if (empty($value)) {
+  //         unset($collections[$collection][$field_name]);
+  //       }
+  //     }
+  //     if (empty($collections[$collection])) {
+  //       unset($collections[$collection]);
+  //     }
+  //   }
+  // }
+
+  // We have values!
   if (!empty($collections)) {
     $settings['collections'] = $collections;
   }
@@ -823,7 +840,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
     drupal_set_message("Your mapper has been updated.", 'status', FALSE);
   }
 
-  // Do the save
+  // Do the save.
   capx_mapper_save($mapper);
 
   // Are we sure we want this?
@@ -867,7 +884,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   );
   $question = "Are you sure you want to delete " . $mapper->title . "?";
   $path = "admin/config/capx/mapper";
-  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
+  $description = t('This action cannot be undone.');
   $name = 'confirm_mapper_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
 
@@ -1172,7 +1189,7 @@ function stanford_capx_admin_config_importer_delete($form, $form_state, $machine
 
   $question = "Are you sure you want to delete " . $importer->title . "?";
   $path = "admin/config/capx/importer";
-  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
+  $description = t('This action cannot be undone.');
   $name = 'confirm_importer_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
   return $form;
@@ -1374,4 +1391,58 @@ function stanford_capx_schema_format_validation($schema = NULL) {
   }
 
   return $formatted_schema;
+}
+
+
+/**
+ * The global configuration settings form for CAPx.
+ *
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_forms_config_settings($form, &$form_state) {
+
+  $form['#tree'] = TRUE;
+  $form['variables']['stanford_capx_batch_limit'] = array(
+    '#title' => t('Batch, or cron, processing limit'),
+    '#description' => t('The number of profiles to process on one sync operation.'),
+    '#type' => 'textfield',
+    '#required' => TRUE,
+    '#default_value' => variable_get("stanford_capx_batch_limit", 100),
+  );
+
+  $form['variables']['stanford_capx_orphan_action'] = array(
+    '#title' => t('Action to perform on orphaned profiles'),
+    '#description' => t('What should happen to a profile that is marked as orphaned?'),
+    '#type' => "select",
+    '#options' => array(
+      'unpublish' => t('Unpublish'),
+      'delete' => t('Delete'),
+    ),
+    '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
+  );
+
+  $form['submit'] = array(
+    "#type" => 'submit',
+    "#name" => 'submit',
+    "#value" => "Submit",
+  );
+
+  return $form;
+}
+
+/**
+ * [stanford_capx_forms_config_settings_form_submit description]
+ * @param  [type] $form        [description]
+ * @param  [type] $form_values [description]
+ * @return [type]              [description]
+ */
+function stanford_capx_forms_config_settings_submit($form, $form_values) {
+  $values = $form_values['values'];
+
+  // Loop through the variables tree and set em.
+  foreach ($values['variables'] as $var_name => $var_value) {
+    variable_set($var_name, $var_value);
+  }
 }

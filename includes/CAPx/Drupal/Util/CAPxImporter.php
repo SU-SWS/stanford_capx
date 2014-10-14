@@ -13,6 +13,20 @@ use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Importer\EntityImporter;
 
+use CAPx\Drupal\Importer\Orphans\EntityImporterOrphans;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareMissingFromApi;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareOrgCodesSunet;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareOrgCodesWorkgroups;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareSunetOrgCodes;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareSunetWorkgroups;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareWorkgroupsOrgCodes;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareWorkgroupsSunet;
+
+use CAPx\Drupal\Importer\Orphans\Lookups\LookupMissingFromAPI;
+use CAPx\Drupal\Importer\Orphans\Lookups\LookupMissingFromSunetList;
+use CAPx\Drupal\Importer\Orphans\Lookups\LookupOrgOrphans;
+use CAPx\Drupal\Importer\Orphans\Lookups\LookupWorkgroupOrphans;
+
 class CAPxImporter {
 
   /**
@@ -101,5 +115,36 @@ class CAPxImporter {
       'daily' => t('Every day'),
       'all' => t('As often as possible'),
     );
+  }
+
+  /**
+   * Return a fully loaded EntityImporterOrphans.
+   *
+   * @param  [type] $profiles [description]
+   * @param  [type] $importer [description]
+   * @return [type]           [description]
+   */
+  public static function getEntityOrphanator($importerName, $profiles = array()) {
+    $importer = CAPxImporter::loadEntityImporter($importerName);
+    $lookups = array();
+    $comparisons = array();
+
+    // Load all the lookups...
+    $lookups[] = new LookupMissingFromAPI();
+    $lookups[] = new LookupMissingFromSunetList();
+    $lookups[] = new LookupOrgOrphans();
+    $lookups[] = new LookupWorkgroupOrphans();
+
+    // Load all the comparisons...
+    $comparisons[] = new CompareMissingFromApi();
+    $comparisons[] = new CompareOrgCodesSunet();
+    $comparisons[] = new CompareOrgCodesWorkgroups();
+    $comparisons[] = new CompareSunetOrgCodes();
+    $comparisons[] = new CompareSunetWorkgroups();
+    $comparisons[] = new CompareWorkgroupsOrgCodes();
+    $comparisons[] = new CompareWorkgroupsSunet();
+
+    $orphanator = new EntityImporterOrphans($importer, $profiles, $lookups, $comparisons);
+    return $orphanator;
   }
 }
