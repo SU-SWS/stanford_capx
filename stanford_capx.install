@@ -214,6 +214,39 @@ function stanford_capx_schema() {
     ),
   );
 
+  // Storage for organization aliases.
+  $schema['capx_org_aliases'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
+      'tid' => array(
+        'description' => 'ID of the term.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'code' => array(
+        'description' => 'The organization code.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'alias' => array(
+        'description' => 'The alias code of the organization code.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'ica' => array('id', 'code', 'alias'),
+      'itc' => array('id', 'tid', 'code'),
+    ),
+  );
+
   return $schema;
 }
 

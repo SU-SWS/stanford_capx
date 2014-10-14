@@ -271,21 +271,50 @@ function stanford_capx_cron() {
  * Implements hook_cron_queue_info().
  */
 function stanford_capx_cron_queue_info() {
+
+  // A queue process for importing/sync profiles.
   $queues['stanford_capx_profiles'] = array(
     'worker callback' => 'stanford_capx_cron_queue_callback',
     'time' => variable_get('stanford_capx_runtime_limit', 120),
     'skip on cron' => FALSE,
   );
+
+  // A queue process for finding and removing orphans.
+  $queues['stanford_capx_profile_orphans'] = array(
+    'worker callback' => 'stanford_capx_cron_orphan_queue_callback',
+    'time' => variable_get('stanford_capx_runtime_limit', 120),
+    'skip on cron' => FALSE,
+  );
+
   return $queues;
 }
 
 /**
- * This function exists merely as a callback function as the static class function was not able to be called directly.
- * @param array $item an array of item information to process.
+ * Callback function.
+ *
+ * This function exists merely as a callback function as the static class
+ * function was not able to be called directly.
+ *
+ * @param array $item
+ *   An array of item information to process.
  */
 function stanford_capx_cron_queue_callback($item) {
   EntityImporterBatch::queue($item);
 }
+
+/**
+ * Callback function.
+ *
+ * This function exists merely as a callback function as the static class
+ * function was not able to be called directly.
+ *
+ * @param array $item
+ *   An array of item information to process.
+ */
+function stanford_capx_cron_orphan_queue_callback($item) {
+  EntityImporterBatch::orphans($item);
+}
+
 
 
 // Pages
@@ -346,6 +375,9 @@ function stanford_capx_admin_config_settings() {
 
   $output .= "<h2>" . t("Organizations") . "</h2>";
   $output .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+
+  $form = drupal_get_form('stanford_capx_forms_config_settings');
+  $output .= drupal_render($form);
 
   return $output;
 }
@@ -583,6 +615,10 @@ function stanford_capx_debug() {
   //   $entity_importer = $importer->getEntityImporter();
   //   $entity_importer->cron();
   // }
+
+  $keys = array(174,173,172,171,170);
+  $vocab_name = \CAPx\Drupal\Organizations\Orgs::getVocabularyMachineName();
+  $aliases = \CAPx\Drupal\Organizations\Orgs::getAliases($keys);
 
   // batch_process('admin/config/capx/profiles');
 

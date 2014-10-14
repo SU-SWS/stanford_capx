@@ -24,7 +24,7 @@ class CAPx {
   public static function getProfiles($type, $conditions = array()) {
 
     if (!$type) {
-      throw new Exception("Type required for getProfiles", 1);
+      throw new \Exception("Type required for getProfiles", 1);
     }
 
     $query = db_select("capx_profiles", 'capx')

@@ -68,8 +68,10 @@ class EntityImporter implements ImporterInterface {
       return;
     }
 
-    // Create the queue items.
-    $this->createQueue();
+    // Create the import/sync queue items.
+    // $this->createQueue();
+    // Create the orphan queue items.
+    $this->findOrphans();
 
   }
 
@@ -293,6 +295,42 @@ class EntityImporter implements ImporterInterface {
     $meta['count'] = $numberOfProfiles;
     $this->getImporter()->setMeta($meta);
     $this->getImporter()->save();
+
+  }
+
+  /**
+   * Search through the values we have and find orphans in the api.
+   *
+   * Create queue api queues that run on cron to check for orphans.
+   *
+   */
+  public function findOrphans() {
+    $limit = variable_get('stanford_capx_batch_limit', 100);
+
+    // Get a list of all the profiles that are associated with this importer.
+    $query = db_select("capx_profiles", 'capx')
+      ->fields('capx', array('entity_type', 'entity_id', 'profile_id'))
+      ->condition('importer', $this->getMachineName())
+      ->condition('sync', TRUE)
+      ->orderBy('profile_id', 'ASC');
+
+    $result = $query->execute();
+    $assoc = $result->fetchAllAssoc('profile_id');
+    $profiles = array_keys($assoc);
+
+    // Don't process empty sets.
+    if (empty($profiles)) {
+      return;
+    }
+
+    $chunk = array_chunk($profiles, $limit);
+    foreach ($chunk as $slice) {
+      $queue = \DrupalQueue::get('stanford_capx_profile_orphans', TRUE);
+      $item = array();
+      $item['importer'] = $this->getMachineName();
+      $item['profiles'] = $slice;
+      $queue->createItem($item);
+    }
 
   }
 

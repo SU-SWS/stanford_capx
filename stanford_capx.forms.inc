@@ -867,7 +867,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
   );
   $question = "Are you sure you want to delete " . $mapper->title . "?";
   $path = "admin/config/capx/mapper";
-  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
+  $description = t('This action cannot be undone.');
   $name = 'confirm_mapper_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
 
@@ -1172,7 +1172,7 @@ function stanford_capx_admin_config_importer_delete($form, $form_state, $machine
 
   $question = "Are you sure you want to delete " . $importer->title . "?";
   $path = "admin/config/capx/importer";
-  $description = t('Like seeing your parents get intimate, this action cannot be undone.');
+  $description = t('This action cannot be undone.');
   $name = 'confirm_importer_delete';
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
   return $form;
@@ -1374,4 +1374,32 @@ function stanford_capx_schema_format_validation($schema = NULL) {
   }
 
   return $formatted_schema;
+}
+
+
+/**
+ * The global configuration settings form for CAPx.
+ *
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_forms_config_settings($form, &$form_state) {
+
+  $form['#tree'] = TRUE;
+  $form['variables']['stanford_capx_batch_limit'] = array(
+    '#title' => t('Batch, or cron, processing limit'),
+    '#description' => t('The number of profiles to process on one sync operation.'),
+    '#type' => 'textfield',
+    '#required' => TRUE,
+    '#default_value' => variable_get("stanford_capx_batch_limit", 100),
+  );
+
+  $form['submit'] = array(
+    "#type" => 'submit',
+    "#name" => 'submit',
+    "#value" => "Submit",
+  );
+
+  return $form;
 }
