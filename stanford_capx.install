@@ -37,6 +37,7 @@ function stanford_capx_uninstall() {
 
   // @todo: Delete all the configuration entities and vars
   variable_del('stanford_capx_batch_limit');
+  variable_del('stanford_capx_orphan_action');
 
 }
 

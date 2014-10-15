@@ -1395,6 +1395,17 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
     '#default_value' => variable_get("stanford_capx_batch_limit", 100),
   );
 
+  $form['variables']['stanford_capx_orphan_action'] = array(
+    '#title' => t('Action to perform on orphaned profiles'),
+    '#description' => t('What should happen to a profile that is marked as orphaned?'),
+    '#type' => "select",
+    '#options' => array(
+      'unpublish' => t('Unpublish'),
+      'delete' => t('Delete'),
+    ),
+    '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
+  );
+
   $form['submit'] = array(
     "#type" => 'submit',
     "#name" => 'submit',
@@ -1402,4 +1413,19 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
   );
 
   return $form;
+}
+
+/**
+ * [stanford_capx_forms_config_settings_form_submit description]
+ * @param  [type] $form        [description]
+ * @param  [type] $form_values [description]
+ * @return [type]              [description]
+ */
+function stanford_capx_forms_config_settings_submit($form, $form_values) {
+  $values = $form_values['values'];
+
+  // Loop through the variables tree and set em.
+  foreach ($values['variables'] as $var_name => $var_value) {
+    variable_set($var_name, $var_value);
+  }
 }

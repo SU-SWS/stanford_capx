@@ -6,6 +6,7 @@
 
 namespace CAPx\Drupal\Importer;
 use CAPx\Drupal\Organizations\Orgs;
+use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxImporter;
 
 class EntityImporterOrphans {
@@ -58,25 +59,18 @@ class EntityImporterOrphans {
     // We need to adjust the search to grab all the results.
     $client->setLimit($limit);
 
-    // Make one request to the server for the profile information if the type
-    // is not just workgroups as they need their own request. Orgs and sunet ids
-    // can use the same result set.
-    if (!in_array("privGroups", $options['types']) || count($options['types']) > 1) {
-      $response = $client->api('profile')->search("ids", $profiles);
-      $results = $response['values'];
+    // Make one request to the server for the profile information to check for
+    // profiles that no longer exist on the API.
+    $response = $client->api('profile')->search("ids", $profiles);
+    $results = $response['values'];
+    // Allow those to alter this set.
+    drupal_alter('capx_orphan_profile_results', $results);
 
-      // Allow those to alter this set.
-      drupal_alter('capx_orphan_profile_results', $results);
-    }
 
-    // If SuNet IDs is an option we want to run that first as it is the least
-    // processor intensive and we can immediately call out the profile as an
-    // orphan if the API does not return a value.
-    if (in_array('uids', $options['types'])) {
-      $found = EntityImporterOrphans::findSuNetOrphansByServer($results, $profiles);
-      if (!empty($found)) {
-        $orphans["missing"] = $found;
-      }
+    // Always check to see if a profile is plain jane just missing.
+    $found = EntityImporterOrphans::findSuNetOrphansByServer($results, $profiles);
+    if (!empty($found)) {
+      $orphans["missing"] = $found;
     }
 
     // Check to see if we have some saved profiles that are now no longer in the
@@ -111,11 +105,7 @@ class EntityImporterOrphans {
     // Start by going through the sunet ids. If there are any ids that have been
     // marked as orphan we can safely call it an orphan.
     if (!empty($orphans['missing'])) {
-      EntityImporterOrphans::ProcessOrphans($orphans['uids'], $importer);
-    }
-
-    // Unset the missing key and start checking the logic on the others.
-    if (isset($orphans['missing'])) {
+      EntityImporterOrphans::ProcessOrphans($orphans['missing'], $importer);
       unset($orphans['missing']);
     }
 
@@ -131,14 +121,14 @@ class EntityImporterOrphans {
     // than one option enabled and the logic says to set $results if there is
     // two or more ways of importing profiles.
 
-    foreach ($options['types'] as $index => $type) {
-      EntityImporterOrphans::CompareOrphansSunetOrgCodes($orphans, $results, $options);
-      EntityImporterOrphans::CompareOrphansSunetWorkgroups($orphans, $results, $options);
-      EntityImporterOrphans::CompareOrphansOrgCodesWorkgroups($orphans, $results, $options);
-      EntityImporterOrphans::CompareOrphansOrgCodesSunet($orphans, $results, $options);
-      EntityImporterOrphans::CompareOrphansWorkgroupsOrgCodes($orphans, $results, $options);
-      EntityImporterOrphans::CompareOrphansWorkgroupsSunet($orphans, $results, $options);
-    }
+    // Comparison scenarions. If there are orphans in some they must be checked
+    // against the others.
+    EntityImporterOrphans::CompareOrphansSunetOrgCodes($orphans, $results, $options);
+    EntityImporterOrphans::CompareOrphansSunetWorkgroups($orphans, $results, $options);
+    EntityImporterOrphans::CompareOrphansOrgCodesWorkgroups($orphans, $results, $options);
+    EntityImporterOrphans::CompareOrphansOrgCodesSunet($orphans, $results, $profiles, $options);
+    EntityImporterOrphans::CompareOrphansWorkgroupsOrgCodes($orphans, $results, $options);
+    EntityImporterOrphans::CompareOrphansWorkgroupsSunet($orphans, $results, $profiles, $options);
 
     // If we have no orphans after all of that just end.
     if (empty($orphans)) {
@@ -146,9 +136,11 @@ class EntityImporterOrphans {
     }
 
     // We have looked at everything and now it is time to process the orphans.
-    foreach ($orphans as $type => $values) {
-      EntityImporterOrphans::ProcessOrphans($values, $importer);
-    }
+    // In order to be an orphan the orphan id has to appear in all importer
+    // Options. So we can just take one and run the process on that.
+
+    $orphaned = array_pop($orphans);
+    EntityImporterOrphans::ProcessOrphans($orphaned, $importer);
 
   }
 
@@ -326,6 +318,8 @@ class EntityImporterOrphans {
   }
 
   /**
+   * Compare sunet orphans with orgcode orphans.
+   *
    * Check to see if our missing sunet options are in an org group by checking
    * to see if the org group has the same missing profile id.
    * @param [type] $orphans [description]
@@ -424,7 +418,22 @@ class EntityImporterOrphans {
    * @param [type] $results [description]
    * @param [type] $options [description]
    */
-  protected function CompareOrphansOrgCodesSunet(&$orphans, $results, $options) {
+  protected function CompareOrphansOrgCodesSunet(&$orphans, $results, $profiles, $options) {
+
+    $sunetIds = array();
+    foreach ($results as $index => $profile) {
+      $sunetIds[$profile['profileId']] = $profile['uid'];
+    }
+
+    $sunetOptions = explode(",", $options['sunet_id']);
+
+    foreach ($orphans['orgCodes'] as $index => $profileId) {
+      if (in_array($sunetIds[$profileId], $sunetOptions)) {
+        // If the sunet code is found in the sunet id list option then the
+        // profile is not an orphan and we need to unset it from the orphans.
+        unset($orphans["orgCodes"][$index]);
+      }
+    }
 
   }
 
@@ -436,7 +445,21 @@ class EntityImporterOrphans {
    * @param [type] $results [description]
    * @param [type] $options [description]
    */
-  protected function CompareOrphansWorkgroupsSunet(&$orphans, $results, $options) {
+  protected function CompareOrphansWorkgroupsSunet(&$orphans, $results, $profiles, $options) {
+    $sunetIds = array();
+    foreach ($results as $index => $profile) {
+      $sunetIds[$profile['profileId']] = $profile['uid'];
+    }
+
+    $sunetOptions = explode(",", $options['sunet_id']);
+
+    foreach ($orphans['privGroups'] as $index => $profileId) {
+      if (in_array($sunetIds[$profileId], $sunetOptions)) {
+        // If the sunet code is found in the sunet id list option then the
+        // profile is not an orphan and we need to unset it from the orphans.
+        unset($orphans["orgCodes"][$index]);
+      }
+    }
 
   }
 
@@ -448,12 +471,26 @@ class EntityImporterOrphans {
    */
   public static function ProcessOrphans($profileIds, $importer) {
 
-    // @todo: yes, this.
-    var_dump($profileIds);
+    $entityType = $importer->getEntityType();
+    $bundleType = $importer->getBundleType();
+    $action = variable_get("stanford_capx_orphan_action", "unpublish");
 
     foreach ($profileIds as $id) {
-      drush_log("Orphaned: " . $id, "ok" );
-      watchdog('EntityImporterOrphans', 'Orphaned: ' . $id, array(), WATCHDOG_NOTICE, 'link');
+      $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+      $profile = entity_metadata_wrapper($entityType, $profile);
+
+      switch ($action) {
+        case "delete":
+          drush_log("Deleted orphaned profile: " . $profile->label(), "status");
+          $profile->delete();
+          break;
+
+        case "unpublish":
+          $profile->status->value(0);
+          $profile->save();
+          drush_log("Unpublished orphaned profile: " . $profile->label(), "status");
+          break;
+      }
     }
 
   }

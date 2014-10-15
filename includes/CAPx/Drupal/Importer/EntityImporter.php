@@ -69,7 +69,7 @@ class EntityImporter implements ImporterInterface {
     }
 
     // Create the import/sync queue items.
-    // $this->createQueue();
+    $this->createQueue();
     // Create the orphan queue items.
     $this->findOrphans();
 
@@ -537,6 +537,24 @@ class EntityImporter implements ImporterInterface {
    */
   public function getImporter() {
     return $this->importer;
+  }
+
+  /**
+   * [getEntityType description]
+   * @return [type] [description]
+   */
+  public function getEntityType() {
+    $mapper = $this->getMapper();
+    return $mapper->getEntityType();
+  }
+
+  /**
+   * [getEntityType description]
+   * @return [type] [description]
+   */
+  public function getBundleType() {
+    $mapper = $this->getMapper();
+    return $mapper->getBundleType();
   }
 
 }
