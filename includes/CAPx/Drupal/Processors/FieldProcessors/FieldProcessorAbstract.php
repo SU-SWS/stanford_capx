@@ -22,11 +22,11 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
    * @param [type] $entity    [description]
    * @param [type] $fieldName [description]
    */
-  public function __construct($entity, $fieldName, $type = null) {
+  public function __construct($entity, $fieldName, $type = NULL) {
     $this->setEntity($entity);
     $this->setFieldName($fieldName);
 
-    if(!is_null($type)) {
+    if (!is_null($type)) {
       $this->setType($type);
     }
 
@@ -50,8 +50,8 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     $key = $keys[0];
 
     // No need for anything fancy when there is nothing to parse :)
-    if (count($data) == 1 && empty($data[0])) {
-      $field->set(null);
+    if (count($data) === 1 && empty($data[0])) {
+      $field->set(NULL);
       return;
     }
 
@@ -61,20 +61,37 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     // No valid colums were found. Truncate field.
     if (empty($data)) {
       drupal_set_message('No valid columns found for ' . $fieldName, 'error');
-      $field->set(null);
+      $field->set(NULL);
       return;
     }
 
     // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
-    // Only want the first value for one cardinality field
-    if ($fieldInfo['cardinality'] == "1") {
-      $field->set($data[0][$key]);
+    try {
+      // Only want the first value for one cardinality field
+      if ($fieldInfo['cardinality'] === "1") {
+        $field->set($data[0][$key]);
+      }
+      else {
+        // For everything else give it all.
+        $field->set($data);
+      }
     }
-    else {
-      // For everything else give it all.
-      $field->set($data);
+    catch (EntityMetadataWrapperException $e) {
+      // Log the problem.
+      watchdog('stanford_capx',
+        'EntityMetadataWrapperException: Could not save the field data for %field on %type id: %profileId',
+        array(
+          '%field' => $fieldName,
+          '%type' => $entity->type,
+          '%profileId' => $entity->{$entity->getIdentifier()},
+        ),
+        WATCHDOG_ERROR
+      );
+
+      // Set the value to NULL.
+      $field->set(NULL);
     }
 
   }
