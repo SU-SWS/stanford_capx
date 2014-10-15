@@ -174,10 +174,50 @@ function hook_capx_preprocess_results_alter(&$results, $importer) {
 
 }
 
+/**
+ * [hook_capx_find_org_orphans_codes_alter description]
+ * @param  [type] $codes [description]
+ * @return [type]        [description]
+ */
+function hook_capx_find_org_orphans_codes_alter($codes) {
 
+}
 
+/**
+ * [hook_capx_find_org_orphans description]
+ * @param  [type] $orphans [description]
+ * @return [type]          [description]
+ */
+function hook_capx_find_org_orphans_alter($orphans) {
 
+}
 
+/**
+ * [hook_capx_find_workgroup_orphans_groups_alter description]
+ * @param  [type] $groups [description]
+ * @return [type]         [description]
+ */
+function hook_capx_find_workgroup_orphans_groups_alter($groups) {
+
+}
+
+/**
+ * [hook_capx_find_workgroup_orphans_alter description]
+ * @param  [type] $orphans [description]
+ * @return [type]          [description]
+ */
+function hook_capx_find_workgroup_orphans_alter($orphans) {
+
+}
+
+/**
+ * [hook_capx_find_sunet_orphans_alter description]
+ * @param  [type] $orphans [description]
+ * @return [type]          [description]
+ */
+function hook_capx_find_sunet_orphans_alter($orphans) {
+
+}
 
 
 

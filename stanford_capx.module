@@ -17,6 +17,7 @@ require_once "stanford_capx.views.inc";
 use CAPx\APILib\HTTPClient;
 use CAPx\Drupal\Importer\EntityImporter;
 use CAPx\Drupal\Importer\EntityImporterBatch;
+use CAPx\Drupal\Importer\EntityImporterOrphans;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use CAPx\Drupal\Util\CAPx;
@@ -312,7 +313,7 @@ function stanford_capx_cron_queue_callback($item) {
  *   An array of item information to process.
  */
 function stanford_capx_cron_orphan_queue_callback($item) {
-  EntityImporterBatch::orphans($item);
+  EntityImporterOrphans::orphans($item);
 }
 
 

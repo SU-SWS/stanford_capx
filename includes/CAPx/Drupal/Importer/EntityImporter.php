@@ -128,10 +128,7 @@ class EntityImporter implements ImporterInterface {
 
           // Set the results to a huge number so we get all results in one
           // request.
-          $httpOptions = $client->getHttpOptions();
-          $httpOptions['query']['ps'] = 99999;
-          $client->setHttpOptions($httpOptions);
-
+          $client->setLimit(99999);
           $new = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
 
           if (!empty($new['values'])) {
@@ -186,9 +183,7 @@ class EntityImporter implements ImporterInterface {
         case "uids":
 
           // Set the results to one per page.
-          $httpOptions = $client->getHttpOptions();
-          $httpOptions['query']['ps'] = 1;
-          $client->setHttpOptions($httpOptions);
+          $httpOptions = $client->setLimit(1);
 
           // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
@@ -264,10 +259,7 @@ class EntityImporter implements ImporterInterface {
         case "uids":
 
           // Set the results to one per page.
-          $httpOptions = $client->getHttpOptions();
-          $httpOptions['query']['ps'] = 1;
-          $client->setHttpOptions($httpOptions);
-
+          $httpOptions = $client->setLimit(1);
           // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
           break;
