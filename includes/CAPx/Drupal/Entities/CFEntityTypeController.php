@@ -8,9 +8,13 @@ namespace CAPx\Drupal\Entities;
 class CFEntityTypeController extends \EntityAPIControllerExportable {
 
   /**
-   * [create description]
-   * @param  array  $values [description]
-   * @return [type]         [description]
+   * Create method for the TypeController.
+   *
+   * @param array $values
+   *   A set of values to pass into the default set.
+   *
+   * @return CFEntityTypeController
+   *   This thing with populated values.
    */
   public function create(array $values = array()) {
     $values += array(

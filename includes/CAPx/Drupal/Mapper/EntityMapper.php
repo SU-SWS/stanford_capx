@@ -13,9 +13,14 @@ class EntityMapper extends MapperAbstract {
 
   /**
    * Execute starts the mapping process.
-   * @param  Entity $entity Expects the entity to be wrapped in entity_metadata_wrapper
-   * @param  Array $data   An array of json data. The response from the API.
-   * @return Entity a fully saved or updated entity.
+   *
+   * @param Entity $entity
+   *   Expects the entity to be wrapped in entity_metadata_wrapper
+   * @param array $data
+   *   An array of json data. The response from the API.
+   *
+   * @return Entity
+   *   A fully saved or updated entity.
    */
   public function execute($entity, $data) {
 
@@ -33,10 +38,14 @@ class EntityMapper extends MapperAbstract {
   }
 
   /**
+   * Map all of the fields.
+   *
    * Map all of the fields that have settings in the mapper to their field on
    * the entity. Loop through each setting and get the data out of the response
    * array.
-   * @param  array $data   An array of data from the API.
+   *
+   * @param array $data
+   *   An array of data from the API.
    */
   public function mapFields($data) {
 
@@ -49,7 +58,7 @@ class EntityMapper extends MapperAbstract {
 
       drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
 
-      // Allow just one path as a string
+      // Allow just one path as a string.
       if (!is_array($remoteDataPaths)) {
         $remoteDataPaths = array($remoteDataPaths);
       }
@@ -80,7 +89,7 @@ class EntityMapper extends MapperAbstract {
         continue;
       }
 
-      // Get some information about the field we are going to process
+      // Get some information about the field we are going to process.
       $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
       $fieldInfoField = field_info_field($fieldName);
 
@@ -104,10 +113,14 @@ class EntityMapper extends MapperAbstract {
   }
 
   /**
+   * Map properties to the entity.
+   *
    * Take the data out of the JSON array and put it into a property on the
    * entity. Properties are much simplier than fields as they do not have a
    * number of columns and/or other special properties to worry about.
-   * @param  array $data       The response data from the API
+   *
+   * @param array $data
+   *   The response data from the API
    */
   public function mapProperties($data) {
 
@@ -118,7 +131,8 @@ class EntityMapper extends MapperAbstract {
     foreach ($config['properties'] as $propertyName => $remoteDataPath) {
       try {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
-      } catch(\Exception $e) {
+      }
+      catch(\Exception $e) {
         // ... silently continue. Please dont shoot me.
         // @todo: log this for debugging.
         continue;
@@ -134,11 +148,14 @@ class EntityMapper extends MapperAbstract {
   }
 
   /**
+   * Process field collection fields uniquely.
+   *
    * Field Collection fields are a special field and need to be handled
    * differently. The field collection data needs to be saved as its own enitty
    * and then attached to the parent entity. Allow for this.
-   * @param  [type] $data [description]
-   * @return [type]       [description]
+   *
+   * @param array $data
+   *   An array of field collection data information
    */
   public function mapFieldCollections($data) {
 

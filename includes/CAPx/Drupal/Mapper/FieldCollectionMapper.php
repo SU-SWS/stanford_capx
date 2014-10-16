@@ -11,9 +11,11 @@ class FieldCollectionMapper extends EntityMapper {
   protected $bundle = null;
 
   /**
+   * Additionaly to the parent set the bundle "field_name".
    * @see parent::__construct()
-   * Additionaly to the parent set the bundle "field_name"
-   * @param array $config additional configuration.
+   *
+   * @param array $config
+   *   Additional configuration.
    */
   public function __construct($config) {
     parent::__construct($config);
@@ -22,7 +24,8 @@ class FieldCollectionMapper extends EntityMapper {
 
   /**
    * Parent override...
-   * @return [type] [description]
+   * @return string
+   *   This type is always field_collection_item
    */
   public function getEntityType() {
     return 'field_collection_item';
@@ -30,7 +33,8 @@ class FieldCollectionMapper extends EntityMapper {
 
   /**
    * Parent override.
-   * @return [type] [description]
+   * @return string
+   *   The machine name of the bundle.
    */
   public function getBundleType() {
     return $this->bundle;
@@ -38,7 +42,9 @@ class FieldCollectionMapper extends EntityMapper {
 
   /**
    * Set the bundle type of this FieldCollectionMapper.
-   * @param [type] $name [description]
+   *
+   * @param string $name
+   *   The name of the bundle
    */
   public function setBundle($name) {
     $this->bundle = $name;

@@ -206,8 +206,9 @@ function stanford_capx_mapper_form($form, &$form_state) {
  */
 function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
 
-  // Globally loaded mapper
-  global $mapper;
+  // Globally loaded mapper.
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
 
   $form['naming'] = array(
     '#title' => t('Mapper title'),
@@ -252,7 +253,8 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
   $entity_types = capx_entity_get_info();
   $entity_options = array();
   $bundle_options = array();
-  global $mapper;
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
 
   foreach ($entity_types as $entity_name => $values) {
     $entity_options[$entity_name] = $values['label'];
@@ -310,7 +312,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
 
   $entity_types = capx_entity_get_info();
   $field_collections = array();
-  global $mapper;
+  global $_capx_mapper;
+  $mapper = $_capx_mapper;
   global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
   $form['field-mapping'] = array(
@@ -902,7 +905,8 @@ function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
  */
 function stanford_capx_importer_form($form, &$form_state) {
 
-  global $importer;
+  global $_capx_importer;
+  $importer = $_capx_importer;
 
   // Do a check to see if the organization codes are available. If not, prompt
   // the user to update them.
@@ -917,8 +921,8 @@ function stanford_capx_importer_form($form, &$form_state) {
   $form['naming'] = array(
     '#title' => t('Configuration'),
     '#type' => 'fieldset',
-    '#collapsed' => FALSE,
-    '#collapsible' => FALSE,
+    '#collapsed' => isset($importer),
+    '#collapsible' => isset($importer),
     '#description' => t('Provide a human-readable name and machine name for this selection of profiles.'),
   );
 
@@ -958,6 +962,24 @@ function stanford_capx_importer_form($form, &$form_state) {
     '#options' => $mapping_options,
     '#default_value' => isset($importer->mapper) ? $importer->mapper : '',
     // '#disabled' => isset($importer->mapper),
+  );
+
+  // Cron Settings
+  // -–-–-–-–-–-–-–-–-–-–-
+
+  $form['cron'] = array(
+    '#title' => t('Sync options'),
+    '#type' => 'fieldset',
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+  );
+
+  $form['cron']['cron_option'] = array(
+    '#title' => t('Sync'),
+    '#description' => t('Select an interval on how often this importer should syncronize with the CAP server. This setting is dependant on !cron.', array('!cron' => l('cron configuration', 'admin/config/system/cron'))),
+    '#type' => 'select',
+    '#options' => CAPxImporter::getCronOptions(),
+    '#default_value' => isset($importer->cron_option) ? $importer->cron_option : 'daily',
   );
 
   // Profile group
@@ -1018,9 +1040,17 @@ function stanford_capx_importer_form($form, &$form_state) {
   );
 
   $form['actions']['saveandimport'] = array(
-    '#type' => 'submit',
+    '#type' => 'button',
+    '#name' => 'saveandimport',
+    '#submit' => array(
+      'stanford_capx_importer_form_submit',
+      'stanford_capx_importer_form_submit_run_import',
+    ),
+    '#executes_submit_callback' => TRUE,
     '#value' => t('Save & Import Now'),
   );
+
+  $form['#redirect'] = "admin/config/capx/importer";
 
   return $form;
 }
@@ -1056,7 +1086,7 @@ function stanford_capx_importer_machine_name_exits($name) {
  * @return [type]             [description]
  */
 function stanford_capx_importer_form_validate($form, &$form_state) {
-  // Todo: validate options
+  // @todo: validate options
 }
 
 /**
@@ -1075,7 +1105,8 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   $importer->title = $values['title'];
   $importer->machine_name = $values['machine-name'];
-  $importer->meta = array('count' => 0, 'lastUpdated' => 0);
+  $meta = $importer->getMeta();
+  $importer->setMeta($meta);
   $settings = array();
 
   // Put settings in here!
@@ -1084,6 +1115,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   $settings['child_orgs'] = $values['child_orgs'];
   $settings['workgroup'] = $values['workgroup'];
   $settings['sunet_id'] = $values['sunet_id'];
+  $settings['cron_option'] = $values['cron_option'];
 
   $importer->settings = $settings;
 
@@ -1098,7 +1130,25 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   // Do the save
   capx_importer_save($importer);
 
-  drupal_goto('admin/config/capx/importer');
+}
+
+/**
+ * Submit callback function that runs the batch api import for this importer
+ * @return [type] [description]
+ */
+function stanford_capx_importer_form_submit_run_import($form, $form_state) {
+  $values = $form_state['values'];
+  $importer = CAPxImporter::loadEntityImporter($values['machine-name']);
+
+  if (!$importer) {
+    throw new \Exception("Could not load importer by machine name");
+  }
+
+  $importer->createBatch();
+
+  drupal_set_message('Profiles successfully imported', 'status');
+  batch_process($form['#redirect']);
+
 }
 
 /**

@@ -10,17 +10,24 @@ use CAPx\Drupal\Mapper\EntityMapper;
 class CAPxMapper {
 
   /**
-   * Wrapper for capx_cfe_load_multiple(mappers)
-   * @return [type] [description]
+   * Wrapper for capx_cfe_load_multiple(mappers).
+   *
+   * @return array
+   *   An array mapper objects
    */
   public static function loadAllMappers() {
     return capx_cfe_load_multiple(FALSE, array('type' => 'mapper'));
   }
 
   /**
-   * Wrapper for capx_cfe_load_by_machine_name & capx_cfe_load
-   * @param  [type] $key [description]
-   * @return [type]      [description]
+   * Wrapper for capx_cfe_load_by_machine_name & capx_cfe_load.
+   *
+   * @param mixed $key
+   * int - cfid
+   * string - machine_name
+   *
+   * @return array
+   *   A single mapper object in an array.
    */
   public static function loadMapper($key) {
 
@@ -34,15 +41,18 @@ class CAPxMapper {
   }
 
   /**
-   * Loads an EntityMapper instance by id or machine name
-   * @param  mixed $key machine name or id.
-   * @return EntityMapper      a fully loaded entity Mapper instance.
+   * Loads an EntityMapper instance by id or machine name.
+   *
+   * @param mixed $key
+   *   machine name or id.
+   *
+   * @return EntityMapper
+   *   A fully loaded entity Mapper instance.
    */
   public static function loadEntityMapper($key) {
 
     $mapperConfig = self::loadMapper($key);
-    $config = $mapperConfig->getEntityMapperConfig();
-    $mapper = new EntityMapper($config);
+    $mapper = new EntityMapper($mapperConfig);
 
     return $mapper;
   }

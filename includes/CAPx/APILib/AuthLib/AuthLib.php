@@ -18,7 +18,6 @@
  * $client = new HTTPClient();
  * $response = $client->api('auth')->authenticate('xxx', 'xxx');
  * $raw = $response->getLastResponse();
- *
  */
 
 namespace CAPx\APILib\AuthLib;
@@ -28,30 +27,34 @@ use \Guzzle\Http\Client as GuzzleClient;
 
 class AuthLib extends APILib {
 
-  // API OAuth Token (string)
+  // API OAuth Token (string).
   protected $authApiToken;
-  // API Token Expires Epoc timestampe (int)
+  // API Token Expires Epoc timestampe (int).
   protected $authApiTokenExpires;
   // Authentication endpoint default.
   // Can be set with $object->setEndpoint($endpoint);
   protected $endpoint = "https://authz.stanford.edu/oauth/token";
-  // Authentication Parameters
+  // Authentication Parameters.
   protected $authParams = array('grant_type' => 'client_credentials');
 
   /**
-   * Getter for authApiToken
-   * @return mixed Returns either false or a string after authenticate has been called.
+   * Getter for authApiToken.
+   * @return mixed
+   *   Returns either false or a string after authenticate has been called.
    */
   public function getAuthApiToken() {
     return $this->authApiToken;
   }
 
   /**
-   * Setter for authApiToken
+   * Setter for authApiToken.
+   *
    * This is really an internal function that gets called when the authenticate
    * method has been called. Could be used to update the token.
-   * @param string $token A very long string for use in making calls to parts of
-   * the api that are protected. False if authenticate fails.
+   *
+   * @param string $token
+   *   A very long string for use in making calls to parts of the api that are
+   *   protected. False if authenticate fails.
    */
   public function setAuthApiToken($token) {
     $this->authApiToken = $token;
@@ -59,19 +62,25 @@ class AuthLib extends APILib {
 
   /**
    * Getter for authApiTokenExpires.
+   *
    * Token expires is set after the authenticate method has been called.
    * Contains an integer on when the token that was received expires next and
    * will have to be re-authenticated.
-   * @return int epoc time for when the token expires.
+   *
+   * @return int
+   *   epoc time for when the token expires.
    */
   public function getAuthApiTokenExpires() {
     return $this->authApiTokenExpires;
   }
 
   /**
-   * Setter for authApiTokenExpires. This is mostly an internal function that is
-   * called after the authenticate method.
-   * @param int $time an integer for the epoc time when the last auth token
+   * Setter for authApiTokenExpires.
+   *
+   * This is mostly an internal function that is called after the authenticate method.
+   *
+   * @param int $time
+   *   an integer for the epoc time when the last auth token
    * expires.
    */
   public function setAuthApiTokenExpires($time) {
@@ -79,28 +88,35 @@ class AuthLib extends APILib {
   }
 
   /**
-   * Setter for authParams
-   * @param array $params an array of authentication params to set as a query
-   * parameters for the authenticate http request.
+   * Setter for authParams.
+   *
+   * @param array $params
+   *   an array of authentication params to set as a query parameters for the
+   *   authenticate http request.
    */
   protected function setAuthParams($params) {
     $this->authParams = $params;
   }
 
   /**
-   * Getter for authParams
-   * @return Array returns an array of authentication parameters for use in the
-   * authenticate method
+   * Getter for authParams.
+   *
+   * @return array
+   *   returns an array of authentication parameters for use in the authenticate
+   *   method
    */
   protected function getAuthParams() {
     return $this->authParams;
   }
 
   /**
-   * Authenticates a username and password with the CAP API. Response returns
-   * an API token and expires integer. The API token can then be used in future
-   * API calls to protected parts of the API.
-   * @return boolean. True for success and false for some issue.
+   * Authenticates a username and password with the CAP API.
+   *
+   * Response returns an API token and expires integer. The API token can then
+   * be used in future API calls to protected parts of the API.
+   *
+   * @return bool
+   *   True for success and false for some issue.
    */
   public function authenticate($username, $password) {
 
@@ -142,7 +158,7 @@ class AuthLib extends APILib {
 
       default:
         return $this;
-        break;
+      break;
     }
 
     return $this;

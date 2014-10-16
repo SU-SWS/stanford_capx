@@ -11,6 +11,8 @@ use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Entities\CFEntity;
 use CAPx\Drupal\Entities\CFEControllerExportable;
 
+
+
 /**
  * Implements hook_entity_info().
  */
@@ -167,7 +169,6 @@ function capx_cfe_save($cfe) {
  * @return [type]         [description]
  */
 function capx_mapper_save($mapper) {
-  //  $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
   capx_cfe_save($mapper);
 }
 
@@ -177,16 +178,6 @@ function capx_mapper_save($mapper) {
  * @return [type]         [description]
  */
 function capx_importer_save($importer) {
-  //  $mapper = entity_metadata_wrapper('capx_cfe', $mapper);
-
-  if (empty($importer->meta['count'])) {
-    $importer->meta['count'] = 0;
-  }
-
-  if (empty($importer->meta['lastUpdate'])) {
-    $importer->meta['lastUpdate'] = 0;
-  }
-
   capx_cfe_save($importer);
 }
 

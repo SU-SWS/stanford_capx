@@ -15,6 +15,8 @@ use CAPx\Drupal\Importer\EntityImporter;
 class CFEntity extends \Entity {
 
   /**
+   * Constructor of the class.
+   *
    * This constructor takes the top level items in the settings property array
    * and exposes them as properties of the instance. This is just a syntax
    * reducing bit of fun.
@@ -22,18 +24,12 @@ class CFEntity extends \Entity {
   public function __construct(array $values = array(), $entityType = NULL) {
     parent::__construct($values, $entityType);
 
-    /**
-     * Expose settings for easier get access.
-     */
-
+    // Expose settings for easier get access.
     if (isset($this->settings)) {
-
       $ar = $this->settings;
-
       if (!is_array($this->settings)) {
         $ar = unserialize($this->settings);
       }
-
       foreach ($ar as $key => $value) {
         if (!isset($this->{$key})) {
           $this->{$key} = $value;
@@ -44,114 +40,61 @@ class CFEntity extends \Entity {
   }
 
   /**
-   * Implements defaultLable()
-   * @return [type] [description]
+   * Implements defaultLabel().
+   * @return string
+   *   What to call this thing.
    */
   protected function defaultLabel() {
     return $this->title;
   }
 
   /**
-   * Implements defaultUIR
-   * @return [type] [description]
+   * Implements defaultUIR.
+   * @return array
+   *   Path settings
    */
   protected function defaultUri() {
     return array('path' => 'cfe/' . $this->identifier());
   }
 
   /**
-   * Returns the entity Mapper for this CFE. The entity mapper is different from
-   * the mapper configuration entity.
-   * @return [type] [description]
+   * Returns the metadata information that is stored in the DB.
+   * @return array
+   *   An array of arbitrary information
    */
-  public function getEntityMapper() {
-
-    if ($this->type !== "mapper") {
-      throw new \Exception("Cannot call getEntityMapper on non mapper type.");
-    }
-
-    $mapperConfig = $this->getEntityMapperConfig();
-    $mapper = new EntityMapper($mapperConfig);
-    return $mapper;
+  public function getMeta() {
+    return $this->meta;
   }
 
   /**
-   * This function takes the saved settings and retuns an array that
-   * matches the API importer library settings.
-   * @return [type] [description]
+   * Sets the metadata array.
+   *
+   * @param array $meta
+   *   Set or create the default metadata.
    */
-  public function getEntityMapperConfig() {
+  public function setMeta($meta = null) {
 
-    if ($this->type !== "mapper") {
-      throw new \Exception("Cannot call getEntityMapperConfig on non mapper type.");
+    // Populate some defaults if empty.
+    if (empty($meta)) {
+      $meta = array(
+        'lastUpdate' => 0,
+        'lastUpdateHuman' => t('Never'),
+        'count' => 0,
+      );
     }
 
-    $settings = $this->settings;
-    $settings['fieldCollections'] = array();
-
-    if (isset($settings['collections'])) {
-      foreach ($settings['collections'] as $fieldName => $fields) {
-        $collectionConfig = array();
-        $collectionConfig['bundle_type'] = $fieldName;
-        $collectionConfig['fields'] = $fields;
-        $collectionConfig['properties'] = array();
-        $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($collectionConfig);
-      }
-    }
-
-    unset($settings['collections']);
-
-    return $settings;
+    // Set the stuff.
+    $this->meta = $meta;
   }
 
   /**
-   * This function takes the saved settings and retuns an array that
-   * matches the API importer library settings.
-   * @return [type] [description]
+   * Returns the machine name of this entity.
+   *
+   * @return string
+   *   The machine name
    */
-  public function getEntityImporterConfig() {
-
-    if ($this->type !== "importer") {
-      throw new \Exception("Cannot call getEntityImporterConfig on non importer type.");
-    }
-
-    $settings = $this->settings;
-    $settings['machine_name'] = $this->machine_name;
-
-    if (!empty($settings['organization'])) {
-      $settings['types'][] = 'orgCodes';
-      $settings['values'][] = explode(",", $settings['organization']);
-    }
-
-    if (!empty($settings['workgroup'])) {
-      $settings['types'][] = 'privGroups';
-      $settings['values'][] = explode(",", $settings['workgroup']);
-    }
-
-    if (!empty($settings['sunet_id'])) {
-      $settings['types'][] = 'uids';
-      $settings['values'][] = explode(",", $settings['sunet_id']);
-    }
-
-    return $settings;
-  }
-
-  /**
-   * Returns a ready to use entity importer
-   * @return EntityImporter - Ready to use entity importer.
-   */
-  public function getEntityImporter() {
-
-    if ($this->type !== "importer") {
-      throw new \Exception("Cannot call getEntityImporter on non importer type.");
-    }
-
-    $config = self::getEntityImporterConfig();
-    $mapper = CAPxMapper::loadEntityMapper($this->mapper);
-    $client = CAPxConnection::getAuthenticatedHTTPClient();
-
-    $importer = new EntityImporter($config, $mapper, $client);
-    return $importer;
+  public function getMachineName() {
+    return $this->machine_name;
   }
 
 }

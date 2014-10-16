@@ -6,26 +6,30 @@
 
 namespace CAPx\Drupal\Mapper;
 
+use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
 
 abstract class MapperAbstract implements MapperInterface {
 
-
-  // Default and stored configuration
+  // Configuration settings.
   protected $config = array();
 
-  // The entity.
-  protected $entity = null;
+  // The entity that is being mapped.
+  protected $entity;
+
+  // The mapper configuration entity (CFEntity).
+  protected $mapper;
 
 
   /**
    * Merges default configuration options with the passed in set.
-   * @param [type] $config [description]
+   *
+   * @param CFEntity $mapper
+   *   [description]
    */
-  public function __construct($config) {
-    $myConfig = $this->getConfig();
-    $myConfig = array_merge($myConfig, $config);
-    $this->setConfig($myConfig);
+  public function __construct($mapper) {
+    $this->setMapper($mapper);
+    $this->addConfig($mapper->settings);
   }
 
   /**
@@ -68,8 +72,41 @@ abstract class MapperAbstract implements MapperInterface {
    * Getter function
    * @return array the configuration array
    */
+  protected function setConfig($config) {
+    $this->config = $config;
+  }
+
+  /**
+   * Getter function
+   * @return array the configuration array
+   */
   public function getConfig() {
     return $this->config;
+  }
+
+  /**
+   * [addConfig description]
+   * @param [type] $settings [description]
+   */
+  public function addConfig($settings) {
+
+    $config = $this->getConfig();
+    $settings['fieldCollections'] = array();
+
+    if (isset($settings['collections'])) {
+      foreach ($settings['collections'] as $fieldName => $fields) {
+        $collectionConfig = array();
+        $collectionConfig['bundle_type'] = $fieldName;
+        $collectionConfig['fields'] = $fields;
+        $collectionConfig['properties'] = array();
+        $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($collectionConfig);
+      }
+    }
+
+    unset($settings['collections']);
+
+    $config = array_merge($config, $settings);
+    $this->setConfig($config);
   }
 
   /**
@@ -88,14 +125,6 @@ abstract class MapperAbstract implements MapperInterface {
 
   /**
    * Setter function
-   * @param array $config An array of configuration options.
-   */
-  public function setConfig($config) {
-    $this->config = $config;
-  }
-
-  /**
-   * Setter function
    * @param Entity $entity The entity to be worked on.
    */
   public function setEntity($entity) {
@@ -110,5 +139,20 @@ abstract class MapperAbstract implements MapperInterface {
     return $this->entity;
   }
 
+  /**
+   * [setMapper description]
+   * @param [type] $mapper [description]
+   */
+  public function setMapper($mapper) {
+    $this->mapper = $mapper;
+  }
+
+  /**
+   * [getMapper description]
+   * @return [type] [description]
+   */
+  public function getMapper() {
+    return $this->mapper;
+  }
 
 }
