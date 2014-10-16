@@ -15,6 +15,12 @@ use \Guzzle\Http\Client as GuzzleClient;
  */
 interface AbstractAPILibInterface {
 
+  /**
+   * Construct function.
+   *
+   * @param GuzzleClient $client
+   *   A GuzzleClient object
+   */
   public function __construct(GuzzleClient $client);
 
 }

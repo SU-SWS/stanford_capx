@@ -28,7 +28,7 @@ use \Guzzle\Http\Client as GuzzleClient;
 class HTTPClient {
 
   // Storage for the Guzzle http client object.
-  protected $httpClient = null;
+  protected $httpClient = NULL;
   // Default CAP Endpoint url.
   protected $httpEndpoint = 'https://api.stanford.edu';
   // Auth Token is a very long string that is obtained from the CAP API after
@@ -38,7 +38,9 @@ class HTTPClient {
   protected $httpOptions;
 
   /**
-   * Build with a Guzzle Client. Live... live!
+   * Build with a Guzzle Client.
+   *
+   * Live... live!
    */
   public function __construct() {
     $client = new GuzzleClient();
@@ -47,7 +49,9 @@ class HTTPClient {
 
   /**
    * Getter for $httpEndpoint.
-   * @return string A fully qualified url without the last slash.
+   *
+   * @return string
+   *   A fully qualified url without the last slash.
    */
   public function getEndpoint() {
     return $this->httpEndpoint;
@@ -55,15 +59,19 @@ class HTTPClient {
 
   /**
    * Setter for $httpEndpoint.
-   * @param string $end A fully qualified URL without the last slash
+   *
+   * @param string $end
+   *   A fully qualified URL without the last slash
    */
   public function setEndpoint($end) {
     $this->httpEndpoint = $end;
   }
 
   /**
-   * Getter for $httpClient
-   * @return GuzzleClient a Guzzle HTTP client.
+   * Getter for $httpClient.
+   *
+   * @return GuzzleClient
+   *   A Guzzle HTTP client.
    */
   public function getHttpClient() {
 
@@ -80,45 +88,55 @@ class HTTPClient {
   }
 
   /**
-   * Setter for $httpClient
-   * @param GuzzleClient $client a Guzzle client object.
+   * Setter for $httpClient.
+   *
+   * @param GuzzleClient $client
+   *   A Guzzle client object.
    */
   public function setHttpClient($client) {
     $this->httpClient = $client;
   }
 
   /**
-   * Setter for $httpAuthToken
-   * @param string $token a very long string to use with authenticated requests.
+   * Setter for $httpAuthToken.
+   *
+   * @param string $token
+   *   A very long string to use with authenticated requests.
    */
   public function setApiToken($token) {
     $this->httpAuthToken = $token;
   }
 
   /**
-   * Getter for $httpAuthToken
-   * @return string the authenticated token or null.
+   * Getter for $httpAuthToken.
+   *
+   * @return string
+   *   The authenticated token or null.
    */
   protected function getApiToken() {
     if (empty($this->httpAuthToken)) {
-      return null;
+      return NULL;
     }
     return $this->httpAuthToken;
   }
 
   /**
-   * Getter for $httpOptions
-   * @return array An associative array of options to pass to the HTTP client.
+   * Getter for $httpOptions.
+   *
+   * @return array
+   *   An associative array of options to pass to the HTTP client.
    */
-  public function gethttpOptions() {
+  public function getHttpOptions() {
     return $this->httpOptions;
   }
 
   /**
-   * Setter for $httpOptions
-   * @param array An associative array of options to pass to the HTTP client.
+   * Setter for $httpOptions.
+   *
+   * @param array $opts
+   *   An associative array of options to pass to the HTTP client.
    */
-  public function sethttpOptions($opts) {
+  public function setHttpOptions($opts) {
     $this->httpOptions = $opts;
   }
 
@@ -128,16 +146,21 @@ class HTTPClient {
 
   /**
    * This API function acts as a gateway for the various parts of this Library.
+   *
    * By default it handles the passing of the http client and httpAuth token
    * into the HTTP client.
-   * @param  string $name the name of the library part to use. eg: auth, org,
-   *                      profile, schema, layout, or search.
-   * @return object       An API Lib object for a specific part of the CAP API.
+   *
+   * @param string $name
+   *   The name of the library part to use. eg: auth, org, profile, schema,
+   *   layout, or search.
+   *
+   * @return object
+   *   An API Lib object for a specific part of the CAP API.
    */
   public function api($name) {
 
     $client = $this->getHttpClient();
-    $options = $this->gethttpOptions();
+    $options = $this->getHttpOptions();
 
     // Add access token or we wont be able to communicate.
     $options['query']['access_token'] = $this->getApiToken();
@@ -146,24 +169,30 @@ class HTTPClient {
       case "auth":
         $api = new \CAPx\APILib\AuthLib\AuthLib($client);
         break;
+
       case "org":
       case "orgs":
         $api = new \CAPx\APILib\OrgLib\OrgLib($client, $options);
         break;
+
       case "profile":
       case "profiles":
         $api = new \CAPx\APILib\ProfileLib\ProfileLib($client, $options);
         break;
+
       case "schema":
         $api = new \CAPx\APILib\SchemaLib\SchemaLib($client, $options);
         break;
+
       case "search":
         $api = new \CAPx\APILib\SearchLib\SearchLib($client, $options);
         break;
+
       case "layout":
       case "layouts":
         $api = new \CAPx\APILib\LayoutsLib\LayoutsLib($client, $options);
         break;
+
       default:
         throw new \Exception(sprintf('Undefined api instance called: "%s"', $name));
     }

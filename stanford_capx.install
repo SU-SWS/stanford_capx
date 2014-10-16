@@ -7,7 +7,7 @@
  * Implements hook_install().
  */
 function stanford_capx_install() {
-
+  variable_set('stanford_capx_batch_limit', 100);
 }
 
 /**
@@ -34,9 +34,10 @@ function stanford_capx_disable() {
  * Implements hook_uninstall().
  */
 function stanford_capx_uninstall() {
-  /*
-   *variable_del('upload_file_types');
-   */
+
+  // @todo: Delete all the configuration entities and vars
+  variable_del('stanford_capx_batch_limit');
+
 }
 
 /**

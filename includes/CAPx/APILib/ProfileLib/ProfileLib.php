@@ -21,26 +21,33 @@ class ProfileLib extends APILib {
 
   /**
    * Queries the CAP API for profiles that match a set of search parameters.
+   *
    * Search response contains a bunch of profile information but not the whole
    * profile. For that you will need to use the ->get(profileID) method.
-   * @param  string  $type     The type of search being performed. Options are:
-   *                           ids, uids (sunet), university ids, orgCodes,
-   *                           privGroups, name, orgAlias
-   * @param  array|string  $args     The search arguments. Either an array or a
-   *                                 string.
-   * @param  boolean $exact    Wether or not to 'fuzzy' search. False is fuzzy.
-   * @param  boolean $children Wether or not to include children orgs in an
-   *                           orgCodes search.
-   * @param  string  $order    The field to sort on. Options are name or id.
-   * @return mixed            An array profiles that matched the search or false
-   *                          if something went wrong.
+   *
+   * @param string $type
+   *   The type of search being performed. Options are:
+   *   ids, uids (sunet), university ids, orgCodes,
+   *   privGroups, name, orgAlias
+   * @param mixed $args
+   *   array or string input. The search arguments.
+   * @param bool $exact
+   *   Wether or not to 'fuzzy' search. False is fuzzy.
+   * @param bool $children
+   *   Wether or not to include children orgs in an orgCodes search.
+   * @param string $order
+   *   The field to sort on. Options are name or id.
+   *
+   * @return mixed
+   *   An array profiles that matched the search or false if something went
+   *   wrong.
    */
   public function search($type, $args, $exact = FALSE, $children = FALSE, $order = '') {
 
     $endpoint = $this->getEndpoint() . "/profiles/v1";
     $options = $this->getOptions();
 
-    switch($type) {
+    switch ($type) {
       case "ids":
       case "uids":
       case "universityIds":
@@ -48,10 +55,12 @@ class ProfileLib extends APILib {
       case "privGroups":
         $options['query'][$type] = implode(",", $args);
         break;
+
       case "name":
       case "orgAlias":
         $options['query'][$type] = $args;
         break;
+
       default:
         throw new \Exception("Missing list type.");
     }
@@ -67,11 +76,16 @@ class ProfileLib extends APILib {
   }
 
   /**
-   * Get all the information about one specific profile. Fetch and return an
-   * array of profile information based on CAP's profile id. You can find the
-   * profile id for a profile by using the search method.
-   * @param  integer  $profileId  the CAP API profile id.
-   * @return mixed    An array of profile information or false if none.
+   * Get all the information about one specific profile.
+   *
+   * Fetch and return an array of profile information based on CAP's profile id.
+   * You can find the profile id for a profile by using the search method.
+   *
+   * @param int $profileId
+   *   The CAP API profile id.
+   *
+   * @return mixed
+   *   An array of profile information or false if none.
    */
   public function get($profileId) {
     $endpoint = $this->getEndpoint() . "/profiles/v1/" . $profileId;
@@ -79,10 +93,16 @@ class ProfileLib extends APILib {
   }
 
   /**
-   * Get all the information about one specific profile. Fetch and return a
-   * JSON string of profile information based on CAP's profile id.
-   * @param  string  $profileId  the CAP API profile id.
-   * @return mixed    An JSON string of profile information or false if none.
+   * Get all the information about one specific profile.
+   *
+   * Fetch and return a JSON string of profile information based on CAP's
+   * profile id.
+   *
+   * @param string $profileId
+   *   The CAP API profile id.
+   *
+   * @return mixed
+   *   An JSON string of profile information or false if none.
    */
   public function getRaw($profileId) {
     $endpoint = $this->getEndpoint() . "/profiles/v1/" . $profileId;

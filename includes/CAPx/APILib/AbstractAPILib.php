@@ -18,13 +18,16 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   protected $endpoint = 'https://api.stanford.edu';
   // Request Options. Used for storing things like the authentication token.
   protected $options = array();
-  // The last response object. Good for debugging
+  // The last response object. Good for debugging.
   protected $lastResponse;
 
   /**
    * Construction requires a Guzzle http client.
-   * @param GuzzleClient $client A Guzzle HTTP Client
-   * @param array $options an array of HTTP options to use with the HTTP client.
+   *
+   * @param GuzzleClient $client
+   *   A Guzzle HTTP Client
+   * @param array $options
+   *   An array of HTTP options to use with the HTTP client.
    */
   public function __construct(GuzzleClient $client, $options = null) {
 
@@ -41,8 +44,10 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   }
 
   /**
-   * Setter for $client
-   * @param GuzzleClient $client a Guzzle HTTP Client.
+   * Setter for $client.
+   *
+   * @param GuzzleClient $client
+   *   A Guzzle HTTP Client.
    */
   public function setClient($client) {
     $this->client = $client;
@@ -50,7 +55,9 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
   /**
    * Getter for client.
-   * @return GuzzleClient a guzzle http client.
+   *
+   * @return GuzzleClient
+   *   A guzzle http client.
    */
   public function getClient() {
     return $this->client;
@@ -58,16 +65,19 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
   /**
    * Setter for $endpoint.
-   * @param  string $endpoint a fully qualified url.
-   * eg: http://client.somewhere.com/api/vi2/query
+   *
+   * @param string $endpoint
+   *   A fully qualified url. eg: http://client.somewhere.com/api/vi2/query
    */
   public function setEndpoint($endpoint) {
     $this->endpoint = $endpoint;
   }
 
   /**
-   * Getter for endpoint url
-   * @return string a fully qualified url without the last slash.
+   * Getter for endpoint url.
+   *
+   * @return string
+   *   A fully qualified url without the last slash.
    */
   public function getEndpoint() {
     return $this->endpoint;
@@ -75,8 +85,11 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
   /**
    * Setter for options.
+   *
    * Options are an array of HTTP options to pass through to the HTTP Client.
-   * @param  array $options an assosiated array of options.
+   *
+   * @param array $options
+   *   An assosiated array of options.
    */
   public function setOptions($options) {
     $this->options = $options;
@@ -84,7 +97,9 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
   /**
    * Getter for $options.
-   * @return array an array of HTTP Client options.
+   *
+   * @return array
+   *   An array of HTTP Client options.
    */
   public function getOptions() {
     return $this->options;
@@ -92,35 +107,45 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
   /**
    * Getter for lastResponse.
-   * @return object The last response object from request->send();
+   * @return object
+   *   The last response object from request->send();
    */
   public function getLastResponse() {
     return $this->lastResponse;
   }
 
   /**
-   * Setter for the lastResponse variable. Last response should be the response
-   * from a request object. $request->send();
-   * @param object Response object from a request object.
+   * Setter for the lastResponse variable.
+   *
+   * Last response should be the response from a request object.
+   * $request->send();
+   *
+   * @param object
+   *   Response object from a request object.
    */
   protected function setLastResponse($response) {
     $this->lastResponse = $response;
   }
 
   /**
-   * The default request function for all libraries. This function is passed a
-   * number of parameters and requests data from the CAP API. If no usable data
-   * is returned or something went wrong it returns false. This function will
-   * return an array.
-   * @param  string $endpoint The fully qualified url endpoint
-   * @param  array $params   Additional query string parameters stored in an
-   *                         associative. eg: q=something.
-   * @param  array $options  Additional options to pass through to the
-   *                         http client.
-   * @return mixed           Returns either an array of data or false if
-   *                         something went wrong.
+   * The default request function for all libraries.
+   *
+   * This function is passed a number of parameters and requests data from the
+   * CAP API. If no usable data is returned or something went wrong it returns
+   * false. This function will return an array.
+   *
+   * @param string $endpoint
+   *   The fully qualified url endpoint
+   * @param array $params
+   *   Additional query string parameters stored in an associative.
+   *   eg: q=something.
+   * @param array $extraOptions
+   *   Additional options to pass through to the http client.
+   *
+   * @return mixed
+   *   Returns either an array of data or false if something went wrong.
    */
-  protected function makeRequest($endpoint, $params = array(), $extraOptions = null) {
+  protected function makeRequest($endpoint, $params = array(), $extraOptions = NULL) {
     $response = $this->makeRawRequest($endpoint, $params, $extraOptions);
 
     // JSON decode a valid response.
@@ -128,19 +153,24 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   }
 
   /**
-   * This function is passed a number of parameters and requests data from the
-   * CAP API. If no usable data is returned or something went wrong it returns
+   * Passed a number of parameters and requests data from the CAP API.
+   *
+   * If no usable data is returned or something went wrong it returns
    * false. This function will return JSON. The raw response is also stored and
    * can be retrieved using the getLastResponse() method.
-   * @param  string $endpoint The fully qualified url endpoint
-   * @param  array $params   Additional query string parameters stored in an
-   *                         associative. eg: q=something.
-   * @param  array $options  Additional options to pass through to the
-   *                         http client.
-   * @return mixed           Returns either a JSON string or false if
-   *                         something went wrong.
+   *
+   * @param string $endpoint
+   *   The fully qualified url endpoint
+   * @param array $params
+   *   Additional query string parameters stored in an associative.
+   *   eg: q=something.
+   * @param array $extraOptions
+   *   Additional options to pass through to the http client.
+   *
+   * @return mixed
+   *   Returns either a JSON string or false if something went wrong.
    */
-  protected function makeRawRequest($endpoint, $params = array(), $extraOptions = null) {
+  protected function makeRawRequest($endpoint, $params = array(), $extraOptions = NULL) {
     // Get the guzzle client.
     $client = $this->getClient();
 
@@ -167,7 +197,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
       default:
         return FALSE;
-        break;
+      break;
     }
 
   }
