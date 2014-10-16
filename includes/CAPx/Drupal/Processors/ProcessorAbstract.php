@@ -12,6 +12,8 @@ abstract class ProcessorAbstract implements ProcessorInterface {
   protected $mapper;
   protected $data;
   protected $entityImporter;
+  protected $status = 0;
+  protected $statusMessage = "";
 
   /**
    * construction method
@@ -73,6 +75,40 @@ abstract class ProcessorAbstract implements ProcessorInterface {
    */
   public function getEntityImporter() {
     return $this->entityImporter;
+  }
+
+    /**
+   * [setStatus description]
+   * @param [type] $int     [description]
+   * @param [type] $message [description]
+   */
+  protected function setStatus($int, $message) {
+    $this->status = $int;
+    $this->setStatusMessage($message);
+  }
+
+  /**
+   * [getStatus description]
+   * @return [type] [description]
+   */
+  public function getStatus() {
+    return $this->status;
+  }
+
+  /**
+   * [setStatusMessage description]
+   * @param [type] $message [description]
+   */
+  protected function setStatusMessage($message) {
+    $this->statusMessage = $message;
+  }
+
+  /**
+   * [getStatusMessage description]
+   * @return [type] [description]
+   */
+  public function getStatusMessage() {
+    return $this->statusMessage;
   }
 
 }

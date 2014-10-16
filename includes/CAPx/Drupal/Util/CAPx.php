@@ -156,6 +156,28 @@ class CAPx {
   }
 
   /**
+   * Get the etag for an entity.
+   * @param  [type] $importer  [description]
+   * @param  [type] $profileId [description]
+   * @return [type]            [description]
+   */
+  public static function getEntityETag($importer, $profileId) {
+
+    $result = db_select('capx_profiles', 'capxp')
+      ->fields('capxp', array('etag'))
+      ->condition('importer', $importer)
+      ->condition("profile_id", $profileId)
+      ->execute();
+
+    $etag = $result->fetchField();
+    if (!is_numeric($etag)) {
+      return FALSE;
+    }
+
+    return $etag;
+  }
+
+  /**
    * Remove a profile record.
    *
    * Removes a profile record from the capx_profiles table when an entity is

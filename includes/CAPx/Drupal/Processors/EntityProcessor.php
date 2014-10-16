@@ -10,6 +10,8 @@ use CAPx\Drupal\Util\CAPx;
 
 class EntityProcessor extends ProcessorAbstract {
 
+  protected $entity;
+
   /**
    * The starting point for processing any entity. This function executes and
    * handles the saving and/or updating of an entity with the data that is
@@ -34,11 +36,24 @@ class EntityProcessor extends ProcessorAbstract {
 
     // If we have an entity we need to update it.
     if (!empty($entity)) {
-      $entity = entity_metadata_wrapper($entityType, $entity);
-      $entity = $this->updateEntity($entity, $data, $mapper);
+      $this->setEntity($entity);
+
+      // Check to see if the etag has changed. We can avoid processing a profile
+      // if the etag is unchanged.
+
+      if ($this->isETagDifferent()) {
+        $entity = entity_metadata_wrapper($entityType, $entity);
+        $entity = $this->updateEntity($entity, $data, $mapper);
+        $this->setStatus(3, 'Etag expired. Profile was updated.');
+      }
+      else {
+        $this->setStatus(2, 'Etag matched. No processing happened.');
+      }
+
     }
     else {
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
+      $this->setStatus(1, 'Created new entity.');
     }
 
     return $entity;
@@ -89,7 +104,7 @@ class EntityProcessor extends ProcessorAbstract {
 
     drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
 
-    // Create an empty entity
+    // Create an empty entity.
     $entity = entity_create($entityType, $properties);
 
     // Wrap it up baby!
@@ -99,12 +114,44 @@ class EntityProcessor extends ProcessorAbstract {
 
     drupal_alter('capx_post_entity_create', $entity);
 
-    // Write a new record
+    // Write a new record.
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
     CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
 
     return $entity;
+  }
+
+  /**
+   * Check to see if the etag changed since last update.
+   *
+   * Validates the etag difference in the saved version to the api version. If
+   * they are the same then the profile has not changed and we can carry on. If
+   * the etag is different we need to run the update.
+   * @return boolean [description]
+   */
+  protected function isETagDifferent() {
+    $importer = $this->getEntityImporter()->getMachineName();
+    $data = $this->getData();
+    $etag = CAPx::getEntityETag($importer, $data['profileId']);
+
+    return !($etag == $data['meta']['etag']);
+  }
+
+  /**
+   * [setEntity description]
+   * @param [type] $entity [description]
+   */
+  protected function setEntity($entity) {
+    $this->entity = $entity;
+  }
+
+  /**
+   * [getEntity description]
+   * @return [type] [description]
+   */
+  protected function getEntity() {
+    return $this->entity;
   }
 
 

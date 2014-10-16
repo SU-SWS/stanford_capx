@@ -22,4 +22,21 @@ interface ProcessorInterface {
    */
   public function execute();
 
+   /**
+   * Returns an integer of status meaning.
+   *
+   * @return int
+   *   An integer from 1 -> N
+   */
+  public function getStatus();
+
+  /**
+   * Returns a message about the execution.
+   *
+   * Returns a string in plain english what happened with the execution.
+   * @return string
+   *   A message in plain english.
+   */
+  public function getStatusMessage();
+
 }

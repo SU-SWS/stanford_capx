@@ -139,10 +139,13 @@ class EntityImporterBatch {
       $processor->setEntityImporter($importer);
       $processor->execute();
 
-      // Log some information. This needs to be better.
-      watchdog('stanford_capx', 'Synced: ' . $info['displayName'], array(), WATCHDOG_DEBUG);
+      $message = $processor->getStatusMessage();
+
+      // Log some information.
+      // @todo This needs to be better.
+      watchdog('stanford_capx', $message . " | " . $info['displayName'], array(), WATCHDOG_DEBUG);
       if (function_exists('drush_log')) {
-        drush_log('Synced: ' . $info['displayName'], 'ok');
+        drush_log($message . ' | ' . $info['displayName'], 'ok');
       }
 
     }

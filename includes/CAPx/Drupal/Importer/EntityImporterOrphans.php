@@ -420,6 +420,11 @@ class EntityImporterOrphans {
    */
   protected function CompareOrphansOrgCodesSunet(&$orphans, $results, $profiles, $options) {
 
+    // If we are missing one of these we cannot run.
+    if (empty($orphans['orgCodes']) || empty($options['sunet_id'])) {
+      return;
+    }
+
     $sunetIds = array();
     foreach ($results as $index => $profile) {
       $sunetIds[$profile['profileId']] = $profile['uid'];
@@ -446,6 +451,12 @@ class EntityImporterOrphans {
    * @param [type] $options [description]
    */
   protected function CompareOrphansWorkgroupsSunet(&$orphans, $results, $profiles, $options) {
+
+    // If we are missing one of these we cannot run.
+    if (empty($orphans['privGroups']) || empty($options['sunet_id'])) {
+      return;
+    }
+
     $sunetIds = array();
     foreach ($results as $index => $profile) {
       $sunetIds[$profile['profileId']] = $profile['uid'];
