@@ -10,6 +10,9 @@ use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class CAPx {
 
+  // A static variable that is used to store profile ids during a sync.
+  public static $processCache = array();
+
   /**
    * Returns an array of loaded profile entities.
    *
@@ -221,6 +224,25 @@ class CAPx {
    */
   public static function getAuthPassword() {
     return decrypt(variable_get('stanford_capx_password', ''));
+  }
+
+  /**
+   * Returns the static profile cache variable.
+   * @return array
+   *   An array of profile ids that have been processed during a sync.
+   */
+  public static function getProcessCache() {
+    return CAPx::$processCache;
+  }
+
+  /**
+   * Set the profile cache variable.
+   *
+   * @param array $cache
+   *   An array of profile ids that have been processed during a sync.
+   */
+  public static function setProcessCache($cache) {
+    CAPx::$processCache = $cache;
   }
 
 
