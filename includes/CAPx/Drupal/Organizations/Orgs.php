@@ -107,10 +107,25 @@ class Orgs {
       'init_message' => t('Organization codes sync is starting.'),
       'progress_message' => t('Syncing organization codes in progress.'),
       'error_message' => t('Organization codes could not be imported. Please try again.'),
+      'finished' => 'stanford_capx_orgs_batch_finished',
     );
 
     batch_set($batch);
     batch_process(drupal_get_destination());
+  }
+
+  /**
+   * Callback for when organization batch has finished.
+   * @param  [type] $context [description]
+   * @return [type]          [description]
+   */
+  public static function syncOrganizationsBatchFinished($success, $results, $operations) {
+    if ($success) {
+      drupal_set_message(t("Organization codes have been updated."), 'status');
+    }
+    else {
+      drupal_set_message(t("Organization codes update failed! Try again."), 'error');
+    }
   }
 
   /**
