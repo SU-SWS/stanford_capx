@@ -44,6 +44,66 @@ class CAPx {
   }
 
   /**
+   * Returns an array of loaded enties by the importer machine name.
+   *
+   * @param string $machine_name
+   *   The importer machine name
+   *
+   * @return array
+   *   An arry of entity objects
+   */
+  public static function getProfilesByImporter($machine_name) {
+
+    $importer = CAPxImporter::loadEntityImporter($machine_name);
+    $type = $importer->getEntityType();
+    $bundle = $importer->getBundleType();
+
+    $conditions = array(
+      'importer' => $machine_name,
+    );
+
+    $profiles = CAPx::getProfiles($type, $conditions);
+
+    return $profiles;
+  }
+
+  /**
+   * Returns an array of profileIds that match the argument conditions.
+   *
+   * @param string $type
+   *   The type of entity.
+   *
+   * @param array $conditions
+   *   An array of key => value arguments to use in a select query.
+   *
+   * @param string $operator
+   *   A comparison operator to use with all the $conditions that are passed in.
+   *
+   * @return array
+   *   An array of entity id integers.
+   */
+  public static function getProfileIds($type, $conditions = array(), $operator = "=") {
+
+    if (!$type) {
+      throw new \Exception("Type required for getProfiles", 1);
+    }
+
+    $query = db_select("capx_profiles", 'capx')
+      ->fields('capx', array('entity_id'))
+      ->condition('entity_type', $type, $operator)
+      ->orderBy('id', 'DESC');
+
+    foreach ($conditions as $key => $value) {
+      $query->condition($key, $value);
+    }
+
+    $result = $query->execute();
+    $ids = $result->fetchCol();
+
+    return $ids;
+  }
+
+  /**
    * Returns a fully loaded entity from the DB.
    *
    * @param string $entityType
