@@ -221,6 +221,12 @@ class Orgs {
       $orgTerm->parent = $parents;
       $orgTerm->vid = $vocab->vid;
 
+      // Capture the aliases for a term.
+      $aliases = array_flip($org['orgCodes']);
+      unset($aliases[$code]);
+      $aliases = array_flip($aliases);
+      $orgTerm->capx['aliases'] = $aliases;
+
       // Check to see if already exists...
       $originalTerms = taxonomy_get_term_by_name($code, Orgs::getVocabularyMachineName());
       if (!empty($originalTerms)) {
@@ -271,6 +277,48 @@ class Orgs {
    */
   public static function getVocabularyMachineName() {
     return Orgs::$vocabularyMachineName;
+  }
+
+  /**
+   * Returns an array aliases for an array of org code tids.
+   *
+   * @param  [type] $tids [description]
+   * @return [type]       [description]
+   */
+  public static function getAliasesByTid($tids) {
+    $aliases = array();
+
+    $query = db_select('capx_org_aliases', 'coa')
+              ->fields('coa', array('id', 'tid', 'code', 'alias'))
+              ->condition('tid', $tids)
+              ->execute();
+
+    while ($obj = $query->fetchObject()) {
+      $aliases[$obj->tid][] = $obj->alias;
+    }
+
+    return $aliases;
+  }
+
+  /**
+   * Returns an array aliases for an array of org code codes.
+   *
+   * @param  [type] $codes [description]
+   * @return [type]       [description]
+   */
+  public static function getAliasesByCode($codes) {
+    $aliases = array();
+
+    $query = db_select('capx_org_aliases', 'coa')
+              ->fields('coa', array('id', 'tid', 'code', 'alias'))
+              ->condition('code', $codes)
+              ->execute();
+
+    while ($obj = $query->fetchObject()) {
+      $aliases[] = $obj->alias;
+    }
+
+    return $aliases;
   }
 
 }

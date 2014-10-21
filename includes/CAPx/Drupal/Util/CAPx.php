@@ -24,7 +24,7 @@ class CAPx {
   public static function getProfiles($type, $conditions = array()) {
 
     if (!$type) {
-      throw new Exception("Type required for getProfiles", 1);
+      throw new \Exception("Type required for getProfiles", 1);
     }
 
     $query = db_select("capx_profiles", 'capx')
@@ -137,6 +137,7 @@ class CAPx {
     $id = $entity->getIdentifier();
     $entityType = $entity->type();
     $bundleType = $entity->getBundle();
+    $time = time();
 
     $record = array(
       'entity_type' => $entityType,
@@ -146,6 +147,7 @@ class CAPx {
       'etag' => $etag,
       'bundle_type' => $bundleType,
       'sync' => 1,
+      'last_sync' => $time,
     );
 
     $yes = drupal_write_record('capx_profiles', $record);
@@ -153,6 +155,64 @@ class CAPx {
     if (!$yes) {
       watchdog('CAPx', 'Could not insert record for capx_profiles on profile id: ' . $profileId, array(), WATCHDOG_ERROR);
     }
+  }
+
+  /**
+   * Updates a profile recored data.
+   *
+   * @param  [type] $entity    [description]
+   * @param  [type] $profileId [description]
+   * @param  [type] $etag      [description]
+   * @param  [type] $importer  [description]
+   * @return [type]            [description]
+   */
+  public static function updateProfileRecord($entity, $profileId, $etag, $importer) {
+
+    $time = time();
+    $id = $entity->getIdentifier();
+    $entityType = $entity->type();
+    $bundleType = $entity->getBundle();
+
+    $record = array(
+      'entity_type' => $entityType,
+      'entity_id' => $id,
+      'importer' => $importer,
+      'profile_id' => $profileId,
+      'etag' => $etag,
+      'last_sync' => $time,
+    );
+
+    $keys = array(
+      'entity_type',
+      'entity_id',
+      'importer',
+      'profile_id',
+    );
+
+    $yes = drupal_write_record('capx_profiles', $record, $keys);
+
+  }
+
+  /**
+   * Get the etag for an entity.
+   * @param  [type] $importer  [description]
+   * @param  [type] $profileId [description]
+   * @return [type]            [description]
+   */
+  public static function getEntityETag($importer, $profileId) {
+
+    $result = db_select('capx_profiles', 'capxp')
+      ->fields('capxp', array('etag'))
+      ->condition('importer', $importer)
+      ->condition("profile_id", $profileId)
+      ->execute();
+
+    $etag = $result->fetchField();
+    if (!is_numeric($etag)) {
+      return FALSE;
+    }
+
+    return $etag;
   }
 
   /**

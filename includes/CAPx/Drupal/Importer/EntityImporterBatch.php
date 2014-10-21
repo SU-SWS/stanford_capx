@@ -5,9 +5,9 @@
  */
 
 namespace CAPx\Drupal\Importer;
+use CAPx\Drupal\Organizations\Orgs;
 use CAPx\Drupal\Processors\EntityProcessor;
 use CAPx\Drupal\Util\CAPxImporter;
-
 /**
  * A static class for handling Batch/Queue API callbacks.
  */
@@ -38,10 +38,8 @@ class EntityImporterBatch {
     $types = $options['types'];
 
     // We need to adjust the search to grab results from the correct page.
-    $httpOpts = $client->getHttpOptions();
-    $httpOpts['query']['p'] = $page;
-    $httpOpts['query']['ps'] = $limit;
-    $client->setHttpOptions($httpOpts);
+    $client->setLimit($limit);
+    $client->setPage($page);
 
     // In order to get the values to search for we need to find out what index
     // the type is as the values are in the corresponding index.
@@ -85,10 +83,8 @@ class EntityImporterBatch {
     $types = $options['types'];
 
     // We need to adjust the search to grab results from the correct page.
-    $httpOpts = $client->getHttpOptions();
-    $httpOpts['query']['p'] = $page;
-    $httpOpts['query']['ps'] = $limit;
-    $client->setHttpOptions($httpOpts);
+    $client->setLimit($limit);
+    $client->setPage($page);
 
     // In order to get the values to search for we need to find out what index
     // the type is as the values are in the corresponding index.
@@ -131,7 +127,7 @@ class EntityImporterBatch {
     $mapper = $importer->getMapper();
 
     // Allow altering of the results.
-    drupal_alter('stanford_capx_preprocess_results', $results, $importer);
+    drupal_alter('capx_preprocess_results', $results, $importer);
 
     // Loop through each result (profile info) and send it to the processor for
     // mapping and saving.
@@ -143,15 +139,19 @@ class EntityImporterBatch {
       $processor->setEntityImporter($importer);
       $processor->execute();
 
-      // Log some information. This needs to be better.
-      watchdog('stanford_capx', 'Synced: ' . $info['displayName'], array(), WATCHDOG_DEBUG);
+      $message = $processor->getStatusMessage();
+
+      // Log some information.
+      // @todo This needs to be better.
+      watchdog('stanford_capx', $message . " | " . $info['displayName'], array(), WATCHDOG_DEBUG);
       if (function_exists('drush_log')) {
-        drush_log('Synced: ' . $info['displayName'], 'ok');
+        drush_log($message . ' | ' . $info['displayName'], 'ok');
       }
 
     }
 
     return TRUE;
   }
+
 
 }

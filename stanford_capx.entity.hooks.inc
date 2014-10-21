@@ -275,6 +275,73 @@ function stanford_capx_entity_view($entity, $type, $view_mode, $langcode) {
 
 }
 
+/**
+ * Add additional data to the organizations vocabulary terms.
+ *
+ * We need to track the organization aliases in order to find orphaned profiles.
+ * @param  [type] $terms [description]
+ * @return [type]        [description]
+ */
+function stanford_capx_taxonomy_term_load($terms) {
+
+  // The tids of all the terms being loaded.
+  $keys = array_keys($terms);
+  $aliases = \CAPx\Drupal\Organizations\Orgs::getAliasesByTid($keys);
+
+  // Just end if nothing to do.
+  if (empty($aliases)) {
+    return;
+  }
+
+  $vocab_name = \CAPx\Drupal\Organizations\Orgs::getVocabularyMachineName();
+  // For each term add the aliases to them if they are a part of the org vocab.
+  foreach($terms as &$term) {
+    if ($term->vocabulary_machine_name == $vocab_name) {
+      $term->capx = array("aliases" => $aliases[$term->tid]);
+    }
+  }
+
+  return $terms;
+}
+
+/**
+ * Implements hook_taxonomy_term_save().
+ *
+ * @param  [type] $terms [description]
+ * @return [type]        [description]
+ */
+function stanford_capx_taxonomy_term_insert($term) {
+  stanford_capx_taxonomy_term_update($term);
+}
+
+/**
+ * Implements hook_taxonomy_term_update.
+ * @param  [type] $term [description]
+ * @return [type]       [description]
+ */
+function stanford_capx_taxonomy_term_update($term) {
+  if (empty($term->capx['aliases'])) {
+    return;
+  }
+
+  db_delete('capx_org_aliases')
+    ->condition('tid', $term->tid)
+    ->execute();
+
+  $insert = db_insert('capx_org_alises');
+  foreach ($term->capx['aliases'] as $al) {
+    $insert->fields(array(
+      'tid' => $term->tid,
+      'code' => $term->name,
+      'alias' => $al,
+    ));
+  }
+
+  $insert->execute();
+
+}
+
+
 // Helper & Util
 // /////////////////////////////////////////////////////////////////////////////
 // /////////////////////////////////////////////////////////////////////////////
