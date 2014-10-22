@@ -975,7 +975,7 @@ function stanford_capx_importer_form($form, &$form_state) {
   $form['naming']['mapper'] = array(
     '#type' => 'select',
     '#title' => t('Mapping'),
-    '#description' => t('Choose the Mapper you would like to import these profiles with.'),
+    '#description' => t('Choose the Mapper you would like to import the items with.'),
     '#options' => $mapping_options,
     '#default_value' => isset($importer->mapper) ? $importer->mapper : '',
     // '#disabled' => isset($importer->mapper),
@@ -1163,47 +1163,116 @@ function stanford_capx_importer_form_submit_run_import($form, $form_state) {
 
   $importer->createBatch();
 
-  drupal_set_message('Profiles successfully imported', 'status');
+  drupal_set_message('Items successfully imported', 'status');
   batch_process($form['#redirect']);
 
 }
 
 /**
- * [stanford_capx_admin_config_importer_delete description]
+ * Form callback for confirmation step about deleting an importer.
+ *
+ * Form callback confirms the action of deleting and allows the user to choose
+ * what they want to do with the profiles that are associated with it.
+ *
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_admin_config_importer_delete($form, $form_state, $machine_name) {
-  $form = array();
-  $importer = CAPxImporter::loadImporter($machine_name);
+function stanford_capx_admin_config_importer_delete($form = array(), $form_state, $machine_name) {
 
+  // Get the importer.
+  $importer = CAPxImporter::loadEntityImporter($machine_name);
+
+
+  // No importer, no need to continue.
   if (!$importer) {
     throw new Exception("Could not load an importer with provided machine name. Please check url.");
   }
 
+  // Add the machine name so we can do stuff with the importer later.
   $form['machine-name'] = array(
-    '#type' => 'hidden',
-    '#value' => $importer->machine_name,
+    '#type' => 'value',
+    '#value' => $importer->getMachineName(),
   );
 
-  $question = "Are you sure you want to delete " . $importer->title . "?";
+  // Operations.
+  $form['profile_action'] = array(
+    '#type' => 'select',
+    '#title' => t('What would you like to do with the items that are associated with this importer?'),
+    '#description' => t('Perform an action on all of the items that have been imported by this importer.'),
+    '#options' => array(
+      'nothing' => t('Do nothing and leave the items as they are'),
+      'delete' => t('Delete all of the items'),
+    ),
+  );
+
+  // Provide the unpublish action for the node & user types only.
+  if ($importer->getEntityType() == "node" || $importer->getEntityType() == "user") {
+    $form['profile_action']['#options']['unpublish'] = t('Unpublish the items');
+  }
+
+  // Confirm form stuff.
+  $question = "Are you sure you want to delete " . $importer->getImporter()->title . "?";
   $path = "admin/config/capx/importer";
   $description = t('This action cannot be undone.');
   $name = 'confirm_importer_delete';
-  $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
+
+  $form = confirm_form($form, $question, $path, $description, t('Yes, please delete the importer'), t('Cancel'), $name);
   return $form;
 }
 
 /**
- * Delete the importer.
+ * Delete the importer callback.
+ *
+ * If the importer was confirmed to be deleted we need to take action on the
+ * profiles.
+ *
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
 function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
-  $importer = CAPxImporter::loadImporter($form_state['values']['machine-name']);
+
+  $machine_name = $form_state['values']['machine-name'];
+  $entity_importer = CAPxImporter::loadEntityImporter($machine_name);
+  $type = $entity_importer->getEntityType();
+
+  $importer = $entity_importer->getImporter();
+  $profile_op = check_plain($form_state['values']['profile_action']);
+
+  switch ($profile_op) {
+
+    case 'unpublish':
+      $profiles = CAPx::getProfilesByImporter($machine_name);
+      $count = count($profiles);
+      foreach ($profiles as $profile) {
+        // Set the status of the node/user to 0. A check to ensure that this
+        // option is only available for nodes and users is in the form itself.
+        $profile->status = 0;
+
+        // Wrap it.
+        $wrapper = entity_metadata_wrapper($type, $profile);
+        $wrapper->save();
+      }
+      drupal_set_message($count . ' ' . $type . 's were set to unpublished.', 'status');
+
+      break;
+
+    case "delete":
+      $ids = CAPx::getProfileIds($type, array('importer' => $machine_name));
+      $count = count($ids);
+      entity_delete_multiple($type, $ids);
+      drupal_set_message($count . ' ' . $type . 's were deleted.', 'status');
+      break;
+
+    case "nothing":
+    default:
+      drupal_set_message("All " . $type . "s were left unchanged.", "status");
+      break;
+  }
+
   capx_cfe_delete($importer);
+
   drupal_set_message('Importer was deleted.', 'status');
   drupal_goto('admin/config/capx/importer');
 }
@@ -1406,7 +1475,7 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
   $form['#tree'] = TRUE;
   $form['variables']['stanford_capx_batch_limit'] = array(
     '#title' => t('Batch, or cron, processing limit'),
-    '#description' => t('The number of profiles to process on one sync operation.'),
+    '#description' => t('The number of items to process on one sync operation.'),
     '#type' => 'textfield',
     '#required' => TRUE,
     '#default_value' => variable_get("stanford_capx_batch_limit", 100),
