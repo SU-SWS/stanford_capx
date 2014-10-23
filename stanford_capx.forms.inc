@@ -19,15 +19,21 @@ use \Peekmo\JsonPath\JsonStore as JsonParser;
 
 
 /**
- * [stanford_capx_forms_connect_form description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Connection details form builder.
  */
 function stanford_capx_forms_connect_form($form, &$form_state) {
 
   $username = CAPx::getAuthUsername();
   $connection = CAPxConnection::testConnection();
+
+  $form['status'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Connection Status'),
+    '#collapsible' => TRUE,
+  );
+  $form['status']['status'] = array(
+    '#markup' => stanford_capx_connection_status_block(),
+  );
 
   $form['auth'] = array(
     '#type' => 'fieldset',
