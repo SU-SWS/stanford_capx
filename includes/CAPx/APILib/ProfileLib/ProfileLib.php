@@ -109,4 +109,21 @@ class ProfileLib extends APILib {
     return $this->makeRawRequest($endpoint);
   }
 
+  /**
+   * Checks if access token is valid and real data could be queried from CAP.
+   *
+   * @return array|FALSE
+   *   Returns array with single custom profile or FALSE in case of error.
+   *
+   * @see \CAPx\APILib\ProfileLib\ProfileLib::makeRequest()
+   */
+  public function testQuery() {
+    $options = $this->getOptions();
+    // Querying only one profile.
+    $options['query']['ps'] = 1;
+    $this->setOptions($options);
+    $endpoint = $this->getEndpoint() . "/profiles/v1";
+
+    return $this->makeRequest($endpoint, array(), $options);
+  }
 }
