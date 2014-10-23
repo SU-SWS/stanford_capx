@@ -33,43 +33,58 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   }
 
   /**
-   * Default implementation of put. Puts the information from the CAP API
+   * Default implementation of put.
+   *
+   * Puts the information from the CAP API
    * In to the field via entity_metadata_wrapper. Tries to handle information
    * being provided to it for most field types. Specific FieldProcessors may
    * override this function to provide their own custom procsessing.
-   * @param  array $data an array of data from the CAP API.
+   *
+   * @param array $data
+   *   An array of data from the CAP API.
    */
   public function put($data) {
 
+    $watchdog = function($fieldName, $entity) {
+      $entityId = $entity->getIdentifier();
+      watchdog('stanford_capx',
+        'EntityMetadataWrapperException: Could not save the field data for %field on %type id: %profileId',
+        array(
+          '%field' => $fieldName,
+          '%type' => $entity->getBundle(),
+          '%profileId' => $entityId ? $entityId : 'unknown',
+        ),
+        WATCHDOG_ERROR
+      );
+    };
+
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
-    $fieldInfo = field_info_field($fieldName);
-    $field = $entity->{$fieldName};
 
-    $keys = array_keys($fieldInfo['columns']);
-    $key = $keys[0];
-
-    // No need for anything fancy when there is nothing to parse :)
-    if (count($data) === 1 && empty($data[0])) {
-      $field->set(NULL);
+    // If there's no data, do nothing.
+    if (empty($data) || (count($data) === 1 && empty(current($data)))) {
+      $watchdog($fieldName, $entity);
       return;
     }
+
+    $fieldInfo = field_info_field($fieldName);
+    $field = $entity->{$fieldName};
+    $keys = array_keys($fieldInfo['columns']);
+    $key = $keys[0];
 
     // Reformat the jsonpath return data so it works with Durp.
     $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
 
-    // No valid colums were found. Truncate field.
-    if (empty($data)) {
-      drupal_set_message('No valid columns found for ' . $fieldName, 'error');
-      $field->set(NULL);
-      return;
-    }
-
     // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
+    if (empty($data)) {
+      $watchdog($fieldName, $entity);
+      return;
+    }
+
     try {
-      // Only want the first value for one cardinality field
+      // Only want the first value for one cardinality field.
       if ($fieldInfo['cardinality'] === "1") {
         $field->set($data[0][$key]);
       }
@@ -78,20 +93,9 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
         $field->set($data);
       }
     }
-    catch (EntityMetadataWrapperException $e) {
+    catch (\EntityMetadataWrapperException $e) {
       // Log the problem.
-      watchdog('stanford_capx',
-        'EntityMetadataWrapperException: Could not save the field data for %field on %type id: %profileId',
-        array(
-          '%field' => $fieldName,
-          '%type' => $entity->type,
-          '%profileId' => $entity->{$entity->getIdentifier()},
-        ),
-        WATCHDOG_ERROR
-      );
-
-      // Set the value to NULL.
-      $field->set(NULL);
+      $watchdog($fieldName, $entity);
     }
 
   }
