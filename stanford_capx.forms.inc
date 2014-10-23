@@ -112,7 +112,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   if ($authpoint !== "https://authz.stanford.edu/oauth/token") {
 
     if (!isset($auth_test)) {
-      $auth_test = CAPx::testAuthConnection($username, $password, $authpoint);
+      $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
     }
 
     if (!$auth_test->status) {
