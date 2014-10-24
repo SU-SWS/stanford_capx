@@ -111,7 +111,7 @@ class CAPxConnection {
     $client->setApiToken($token);
 
     try {
-      $results = $client->api('profiles')->testQuery();
+      $results = $client->api('orgs')->getOrg('BSWS');
     }
     catch(\Exception $e) {
       $return->message = $e->getMessage();
