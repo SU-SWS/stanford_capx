@@ -111,7 +111,7 @@ class CAPxConnection {
     $client->setApiToken($token);
 
     try {
-      $results = $client->api('search')->keyword('test');
+      $results = $client->api('orgs')->getOrg('BSWS');
     }
     catch(\Exception $e) {
       $return->message = $e->getMessage();
@@ -120,7 +120,7 @@ class CAPxConnection {
 
     if (is_array($results)) {
       $return->status = 1;
-      $return->message = t("connection successfull");
+      $return->message = t('Connection successful.');
       $return->code = 200;
     }
 
