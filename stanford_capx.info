@@ -21,3 +21,5 @@ files[] = stanford_capx.theme.inc
 files[] = stanford_capx.docs.inc
 
 files[] = includes/views/views_handler_filter_importer.inc
+files[] = includes/views/views_handler_field_configuration_settings.inc
+files[] = includes/views/views_handler_field_configuration_metadata.inc

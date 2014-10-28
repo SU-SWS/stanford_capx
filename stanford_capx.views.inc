@@ -33,23 +33,23 @@ function stanford_capx_views_data() {
 
   $data['capx_cfe']['table']['entity type'] = 'capx_cfe';
 
-  // settings table field.
+  // Settings table field.
   $data['capx_cfe']['settings'] = array(
     'title' => t('Configuration Settings'),
     'help' => t('Exposes the serialized array of settings.'),
     'field' => array(
-      'handler' => 'views_handler_field_serialized',
-      'click sortable' => FALSE, // This is use by the table display plugin.
+      'handler' => 'views_handler_field_configuration_settings',
+      'click sortable' => FALSE,
     ),
   );
 
-  // settings table field.
+  // Meta table field.
   $data['capx_cfe']['meta'] = array(
     'title' => t('Meta Data'),
     'help' => t('Exposes meta data.'),
     'field' => array(
-      'handler' => 'views_handler_field_serialized',
-      'click sortable' => FALSE, // This is use by the table display plugin.
+      'handler' => 'views_handler_field_configuration_metadata',
+      'click sortable' => FALSE,
     ),
   );
 
