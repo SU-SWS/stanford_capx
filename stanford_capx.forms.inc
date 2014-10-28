@@ -1417,17 +1417,19 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
   // mapped.
   if (!empty($form['#entity_type'])) {
 
-    if ($form['#entity_type'] == "user") {
+    if ($form['#entity_type'] == "user" && isset($form["#user"])) {
       $entity = $form["#user"];
     }
-    else {
+    elseif (isset($form['#entity'])) {
       $entity = $form["#entity"];
     }
 
+    // If we find an entity after all that.
     if (isset($entity->capx)) {
       stanford_capx_entity_form_add_vt($form, $form_state, $form_id, $entity);
       stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
     }
+
   }
 
 }
