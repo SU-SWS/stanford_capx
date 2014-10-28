@@ -65,7 +65,12 @@ class LookupOrgOrphans implements LookupInterface {
       foreach ($profile['titles'] as $title) {
 
         $orgCode = $title['organization']['orgCode'];
-        $org = array_pop(taxonomy_get_term_by_name($orgCode, Orgs::getVocabularyMachineName()));
+        $orgTerms = taxonomy_get_term_by_name($orgCode, Orgs::getVocabularyMachineName());
+        $org = array_pop($orgTerms);
+
+        if (!isset($org->tid)) {
+          continue;
+        }
 
         // If the org code itself is in the list.
         if (in_array($org->tid, $keyTids)) {
