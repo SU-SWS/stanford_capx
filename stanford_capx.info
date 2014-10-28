@@ -2,7 +2,7 @@ name = Stanford CAPx
 description = Provides the ability to import profiles into existing entity types
 core = 7.x
 package = Stanford CAPx
-project stanford_capx
+project = stanford_capx
 
 dependencies[] = entity
 dependencies[] = date
@@ -11,14 +11,6 @@ dependencies[] = encrypt (>= 2.0-beta3)
 dependencies[] = views
 dependencies[] = views_base_url
 dependencies[] = ctools
-
-files[] = includes/autoload.php
-files[] = includes/vendor/autoload.php
-files[] = stanford_capx.entity.hooks.inc
-files[] = stanford_capx.forms.inc
-files[] = stanford_capx.blocks.inc
-files[] = stanford_capx.theme.inc
-files[] = stanford_capx.docs.inc
 
 files[] = includes/views/views_handler_filter_importer.inc
 files[] = includes/views/views_handler_field_configuration_settings.inc

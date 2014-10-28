@@ -151,7 +151,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
  */
 function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
-  drupal_set_message('Configuration options were saved.');
+  drupal_set_message(t('Configuration options were saved.'));
 
   // Username and Pass
   if (!empty($form_state['values']['stanford_capx_username'])
@@ -185,12 +185,12 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_mapper_form($form, &$form_state) {
+function stanford_capx_mapper_form($form, &$form_state, $mapper = NULL) {
 
   $form = array();
-  $form += stanford_capx_mapper_form_get_machine_name_form($form, $form_state);
-  $form += stanford_capx_mapper_form_get_entity_mapping_form($form, $form_state);
-  $form += stanford_capx_mapper_form_get_field_mapping_form($form, $form_state);
+  $form += stanford_capx_mapper_form_get_machine_name_form($form, $form_state, $mapper);
+  $form += stanford_capx_mapper_form_get_entity_mapping_form($form, $form_state, $mapper);
+  $form += stanford_capx_mapper_form_get_field_mapping_form($form, $form_state, $mapper);
 
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -210,11 +210,7 @@ function stanford_capx_mapper_form($form, &$form_state) {
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
-
-  // Globally loaded mapper.
-  global $_capx_mapper;
-  $mapper = $_capx_mapper;
+function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state, $mapper = NULL) {
 
   $form['naming'] = array(
     '#title' => t('Mapper title'),
@@ -254,13 +250,11 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state) {
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) {
+function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, $mapper = NULL) {
 
   $entity_types = capx_entity_get_info();
   $entity_options = array();
   $bundle_options = array();
-  global $_capx_mapper;
-  $mapper = $_capx_mapper;
 
   foreach ($entity_types as $entity_name => $values) {
     $entity_options[$entity_name] = $values['label'];
@@ -314,12 +308,10 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state) 
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state) {
+function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $mapper = NULL) {
 
   $entity_types = capx_entity_get_info();
   $field_collections = array();
-  global $_capx_mapper;
-  $mapper = $_capx_mapper;
   global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
   $form['field-mapping'] = array(
@@ -840,10 +832,10 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   // New vs Edit
   if (!empty($mapper->is_new)) {
-    drupal_set_message('Congratulations, Your mapper has been created.', 'status', FALSE);
+    drupal_set_message(t('Congratulations, Your mapper has been created.'), 'status', FALSE);
   }
   else {
-    drupal_set_message("Your mapper has been updated.", 'status', FALSE);
+    drupal_set_message(t("Your mapper has been updated."), 'status', FALSE);
   }
 
   // Do the save.
@@ -910,7 +902,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
 function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   capx_cfe_delete($mapper);
-  drupal_set_message('Mapper was deleted.', 'status');
+  drupal_set_message(t('Mapper was deleted.'), 'status');
   drupal_goto('admin/config/capx/mapper');
 }
 
@@ -926,16 +918,14 @@ function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_importer_form($form, &$form_state) {
-
-  global $_capx_importer;
-  $importer = $_capx_importer;
+function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
 
   // Do a check to see if the organization codes are available. If not, prompt
   // the user to update them.
   $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
   if (!$has_orgs) {
-    drupal_set_message('The organization codes are not available. ' . l('Sync with the API now.', 'admin/config/capx/organizations/sync', array('query' => array('destination' => current_path()))), 'warning');
+    $link = l('Sync with the API now.', 'admin/config/capx/organizations/sync', array('query' => array('destination' => current_path())));
+    drupal_set_message(t('The organization codes are not available. @link', array("@link" => $link)), 'warning');
   }
 
   // Configuration group
@@ -1144,10 +1134,10 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   // New vs Edit
   if (!empty($importer->is_new)) {
-    drupal_set_message('Congratulations, Your importer has been created.', 'status', FALSE);
+    drupal_set_message(t('Congratulations, Your importer has been created.'), 'status', FALSE);
   }
   else {
-    drupal_set_message("Your importer has been updated.", 'status', FALSE);
+    drupal_set_message(t("Your importer has been updated."), 'status', FALSE);
   }
 
   // Do the save
@@ -1169,7 +1159,7 @@ function stanford_capx_importer_form_submit_run_import($form, $form_state) {
 
   $importer->createBatch();
 
-  drupal_set_message('Items successfully imported', 'status');
+  drupal_set_message(t('Items successfully imported'), 'status');
   batch_process($form['#redirect']);
 
 }
@@ -1260,7 +1250,7 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
         $wrapper = entity_metadata_wrapper($type, $profile);
         $wrapper->save();
       }
-      drupal_set_message($count . ' ' . $type . 's were set to unpublished.', 'status');
+      drupal_set_message(t('@count @type were set to unpublished.', array("@count" => $count, "@type" => $type)), 'status');
 
       break;
 
@@ -1268,18 +1258,18 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
       $ids = CAPx::getProfileIds($type, array('importer' => $machine_name));
       $count = count($ids);
       entity_delete_multiple($type, $ids);
-      drupal_set_message($count . ' ' . $type . 's were deleted.', 'status');
+      drupal_set_message(t('@count @type were deleted.', array("@count" => $count, "@type" => $type)), 'status');
       break;
 
     case "nothing":
     default:
-      drupal_set_message("All " . $type . "s were left unchanged.", "status");
+      drupal_set_message(t("All @type were left unchanged.", array("@type" => $type)), "status");
       break;
   }
 
   capx_cfe_delete($importer);
 
-  drupal_set_message('Importer was deleted.', 'status');
+  drupal_set_message(t('Importer was deleted.'), 'status');
   drupal_goto('admin/config/capx/importer');
 }
 
