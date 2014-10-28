@@ -209,6 +209,7 @@ class EntityImporter implements ImporterInterface {
       'init_message' => t('Profile information sync is starting.'),
       'progress_message' => t('Profile sync in progress. @current of @total completed.'),
       'error_message' => t('Profile information could not be imported. Please try again.'),
+      'finished' => "stanford_capx_importer_batch_finished",
     );
 
     // Loop through each type and chunk up into patch operations.

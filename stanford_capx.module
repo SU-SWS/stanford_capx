@@ -328,10 +328,8 @@ function stanford_capx_cron_queue_callback($item) {
  *   $item['profiles']
  */
 function stanford_capx_cron_orphan_queue_callback($item) {
-
   $orphanator = CAPxImporter::getEntityOrphanator($item['importer'], $item['profiles']);
   $orphanator->execute();
-
 }
 
 /**
@@ -340,6 +338,22 @@ function stanford_capx_cron_orphan_queue_callback($item) {
  */
 function stanford_capx_orgs_batch_finished($success, $results, $operations) {
   Orgs::syncOrganizationsBatchFinished($success, $results, $operations);
+}
+
+/**
+ * Batch finished callback
+ * @param  [type] $success    [description]
+ * @param  [type] $results    [description]
+ * @param  [type] $operations [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_importer_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t("Sync successfully completed."), "status");
+  }
+  else {
+    drupal_set_message(t("Sync failed. Please try again."), "error");
+  }
 }
 
 // END CRON AND BATCH
