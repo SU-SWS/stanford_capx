@@ -524,3 +524,29 @@ function stanford_capx_files_dir_exists() {
 
   return FALSE;
 }
+
+/**
+ * Implements hook_init().
+ *
+ * Shows error messages to admin user on admin pages.
+ */
+function stanford_capx_init() {
+  $path = current_path();
+  if (user_access('administer capx') && path_is_admin($path) && $path != 'batch') {
+
+    // We don't want to set message on "stanford_capx_mapper_form" form
+    // submission because message get set before it's processed in the submit
+    // handler and this can confuse a user if this mapper was the last one that
+    // was affected by issue specified in the message.
+    if (empty($_POST['form_id']) || $_POST['form_id'] != 'stanford_capx_mapper_form') {
+      $messages = variable_get('stanford_capx_field_issues', array());
+      foreach ($messages as $key => $message) {
+        $formatted_message = format_string(
+          $message['text'],
+          isset($message['message_vars']) ? $message['message_vars'] : NULL
+        );
+        drupal_set_message($formatted_message, 'error', FALSE);
+      }
+    }
+  }
+}

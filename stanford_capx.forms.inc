@@ -841,6 +841,41 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   // Do the save.
   capx_mapper_save($mapper);
 
+  // Lets check the error messages that may be related to this mapper.
+  $messages = variable_get('stanford_capx_field_issues', array());
+  foreach ($messages as $key => &$message) {
+    $message_meta = explode(':', $key);
+    // When the field is missing from some bundle in
+    // \CAPx\Drupal\Mapper\EntityMapper::mapFields we creating key from 4
+    // components:
+    // - mapper machine name
+    // - entity type
+    // - entity bundle
+    // - entity field name
+    // In this exact order.
+    if (count($message_meta) === 4) {
+      if (
+        $message_meta[0] == $values['machine-name']
+        && $message_meta[1] == $entity
+        && $message_meta[2] == $bundle
+      ) {
+        unset($messages[$key]);
+      }
+    }
+    elseif (!empty($message['mappers']) && array_key_exists($values['machine-name'], $message['mappers'])) {
+      unset($message['mappers'][$values['machine-name']]);
+
+      if (empty($message['mappers'])) {
+        // This was the last mapper that were using deleted field.
+        unset($messages[$key]);
+      }
+      else {
+        $message['message_vars']['!mappers'] = implode(', ', $message['mappers']);
+      }
+    }
+  }
+  variable_set('stanford_capx_field_issues', $messages);
+
   // Are we sure we want this?
   drupal_goto('admin/config/capx/mapper');
 }
