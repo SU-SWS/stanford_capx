@@ -126,7 +126,61 @@ function stanford_capx_views_data() {
     ),
   );
 
- // uid field
+  // Mapper edit link.
+  $data['capx_cfe']['mapper_edit_link'] = array(
+    'title' => t('Mapper edit link'),
+    'help' => t('Edit link for mappers'),
+    'field' => array(
+      'handler' => 'views_handler_field_mapper_edit_link',
+    ),
+  );
+
+  // Mapper delete link.
+  $data['capx_cfe']['mapper_delete_link'] = array(
+    'title' => t('Mapper delete link'),
+    'help' => t('Delete link for mappers'),
+    'field' => array(
+      'handler' => 'views_handler_field_mapper_delete_link',
+    ),
+  );
+
+  // Importer edit link.
+  $data['capx_cfe']['importer_edit_link'] = array(
+    'title' => t('Importer edit link'),
+    'help' => t('Edit link for importers'),
+    'field' => array(
+      'handler' => 'views_handler_field_importer_edit_link',
+    ),
+  );
+
+  // Importer sync profiles link.
+  $data['capx_cfe']['importer_sync_profiles'] = array(
+    'title' => t('Importer sync profiles action link'),
+    'help' => t('Sync profiles action'),
+    'field' => array(
+      'handler' => 'views_handler_field_importer_sync_profiles',
+    ),
+  );
+
+  // Importer orphan profiles check link.
+  $data['capx_cfe']['importer_orphan_profiles'] = array(
+    'title' => t('Importer orphan profiles action link'),
+    'help' => t('Check orphan profiles action'),
+    'field' => array(
+      'handler' => 'views_handler_field_importer_orphan_profiles',
+    ),
+  );
+
+  // Importer delete link.
+  $data['capx_cfe']['importer_delete_link'] = array(
+    'title' => t('Importer delete link'),
+    'help' => t('Delete link for importers'),
+    'field' => array(
+      'handler' => 'views_handler_field_importer_delete_link',
+    ),
+  );
+
+ // uid field.
   $data['capx_cfe']['uid'] = array(
     'title' => t('Author uid'),
     'help' => t('The user authoring the content. If you need more fields than the uid add the content: author relationship'),
@@ -300,7 +354,7 @@ function stanford_capx_views_data() {
       'handler' => 'views_handler_argument_numeric',
     ),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'views_handler_field_capx_profile_id',
       'click sortable' => TRUE,
     ),
     'filter' => array(

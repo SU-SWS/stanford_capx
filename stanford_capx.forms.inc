@@ -1458,6 +1458,50 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 }
 
 /**
+ * [stanford_capx_views_exposed_form_alter description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_form_views_exposed_form_alter(&$form, &$form_state) {
+
+  // Only run on profiles listing view.
+  if ($form['#id'] !== "views-exposed-form-capx-admin-profiles-profiles") {
+    return;
+  }
+
+  // Change the entity type and bundle type into drop downs.
+  $entity_info = capx_entity_get_info();
+
+  // Define no value.
+  $entity_options = array('' => t("- Any -"));
+  $bundle_options = array('' => t("- Any -"));
+
+  // Loop through information and populate options.
+  foreach ($entity_info as $entity_name => $info) {
+    $entity_options[$entity_name] = t("@title", array("@title" => $info['label']));
+    foreach ($info['bundles'] as $bundle_name => $bundle_info) {
+      $bundle_options[$info['label']][$bundle_name] = t("@name", array("@name" => $bundle_info['label']));
+    }
+  }
+
+  // Set up the entity type select.
+  $form['entity_type']['#type'] = "select";
+  $form['entity_type']['#options'] = $entity_options;
+  unset($form['entity_type']['#size']);
+
+  // Set up bundle type select.
+  $form['bundle_type']['#type'] = "select";
+  $form['bundle_type']['#options'] = $bundle_options;
+  unset($form['bundle_type']['#size']);
+
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+// End Form Alters
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
  * Recursively callled function that provides an array of information that is
  * used in the mapper form validation callback.
  * @see stanford_capx_mapper_form_validate_element()
