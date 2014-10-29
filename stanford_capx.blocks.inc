@@ -9,6 +9,7 @@
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Util\CAPxImporter;
+use CAPx\Drupal\Util\CAPxMapper;
 
 /**
  * Implements hook_block_info().
@@ -33,11 +34,19 @@ function stanford_capx_block_info() {
 
   $blocks['importer_in_use'] = array(
     'info' => t('Importer In Use'),
-    'cache' => DRUPAL_NO_CACHE,
+    'cache' => DRUPAL_CACHE_PER_PAGE,
     'properties' => array('administrative' => 1),
     'region' => 'help',
     'visibility' => BLOCK_VISIBILITY_LISTED,
     'pages' => 'admin/config/capx/importer/edit/*',
+  );
+
+  $blocks['mapper_in_use'] = array(
+    'info' => t('Mapper In Use'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+    'properties' => array('administrative' => 1),
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'admin/config/capx/mapper/edit/*',
   );
 
   return $blocks;
@@ -64,14 +73,13 @@ function stanford_capx_block_view($delta = '') {
     case "importer_in_use":
       $block['subject'] = t('Importer In Use');
       $block['title'] = t('Importer In Use');
-      $block['content'] = array(
-        '#markup' => stanford_capx_importer_in_use_block(),
-        '#attached' => array(
-          'css' => array(
-            drupal_get_path('module', 'stanford_capx') . '/css/stanford_capx.admin.css',
-          ),
-        ),
-      );
+      $block['content'] = stanford_capx_importer_in_use_block();
+      break;
+
+    case "mapper_in_use":
+      $block['subject'] = t('Mapper In Use');
+      $block['title'] = t('Mapper In Use');
+      $block['content'] = stanford_capx_mapper_in_use_block();
       break;
 
   }
@@ -184,7 +192,7 @@ function stanford_capx_importer_in_use_block() {
 
   // If no machine name this must be a new importer. Just end.
   if (empty($machine_name)) {
-    return;
+    return FALSE;
   }
 
   // Do not need to check to see if this works or not as the page wont load if
@@ -194,6 +202,10 @@ function stanford_capx_importer_in_use_block() {
   // The metadata.
   $meta = $importer->getMeta();
 
+  if ((int) $meta['count'] <= 0) {
+    return FALSE;
+  }
+
   $output .= "<p>";
   $output .= t("This importer is currently used to import !num profiles. Add or delete profiles by changing the settings below.", array("!num" => "<strong>" . $meta['count'] . "</strong>"));
   $output .= "</p><p>";
@@ -202,5 +214,68 @@ function stanford_capx_importer_in_use_block() {
   $output .= l(t("View all imported profiles"), "admin/config/capx/profiles", array("query" => array("importer" => $machine_name), "attributes" => array("class" => array("button"))));
   $output .= "</p>";
 
-  return $output;
+  return array(
+    '#markup' => $output,
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'stanford_capx') . '/css/stanford_capx.admin.css',
+      ),
+    ),
+  );
+
+}
+
+
+/**
+ * Creates the mapper in use block hook_view().
+ *
+ * Creates a render array of information to use on a mapper page.
+ *
+ * @return array
+ *   A render array of block information.
+ */
+function stanford_capx_mapper_in_use_block() {
+  $output = "";
+
+  // Get machine name from url.
+  $machine_name = arg(5);
+
+  // If no machine name this must be a new importer. Just end.
+  if (empty($machine_name)) {
+    return FALSE;
+  }
+
+  // Do not need to check to see if this works or not as the page wont load if
+  // the machine name is invalid.
+  $mapper = CAPxMapper::loadMapper($machine_name);
+  $importers = CAPxImporter::loadImportersByMapper($mapper);
+
+  if (empty($importers)) {
+    return FALSE;
+  }
+
+  $output .= "<p>";
+  $output .= t("WARNING: Any changes you make to this mapper will update existing content on your next CAP sync.");
+  $output .= "</p><p>";
+  $output .= t("This Mapper is currently used by: ");
+
+  $porters = array();
+  foreach ($importers as $k => $importer) {
+    $porters[] = l(t("!title", array("!title" => $importer->title)), "admin/config/capx/importer/edit/" . $importer->getMachineName());
+  }
+
+  $output .= implode(", ", $porters);
+  $output .= "</p><p>";
+  $output .= l(t("View all imported profiles"), "admin/config/capx/profiles", array("attributes" => array("class" => "button")));
+  $output .= "</p>";
+
+  return array(
+    '#markup' => $output,
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'stanford_capx') . '/css/stanford_capx.admin.css',
+      ),
+    ),
+  );
+
 }

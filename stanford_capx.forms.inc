@@ -1056,7 +1056,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
   if (!$has_orgs) {
     $link = l('Sync with the API now.', 'admin/config/capx/organizations/sync', array('query' => array('destination' => current_path())));
-    drupal_set_message(t('The organization codes are not available. @link', array("@link" => $link)), 'warning');
+    drupal_set_message(t('The organization codes are not available. !link', array("!link" => $link)), 'warning');
   }
 
   // Configuration group
