@@ -8,6 +8,7 @@
 
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
+use CAPx\Drupal\Util\CAPxImporter;
 
 /**
  * Implements hook_block_info().
@@ -28,7 +29,15 @@ function stanford_capx_block_info() {
     'region' => 'help',
     'visibility' => BLOCK_VISIBILITY_LISTED,
     'pages' => 'admin/config/capx/mapper/*',
+  );
 
+  $blocks['importer_in_use'] = array(
+    'info' => t('Importer In Use'),
+    'cache' => DRUPAL_NO_CACHE,
+    'properties' => array('administrative' => 1),
+    'region' => 'help',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'admin/config/capx/importer/edit/*',
   );
 
   return $blocks;
@@ -50,6 +59,19 @@ function stanford_capx_block_view($delta = '') {
     case "data_browser_launch":
       $block['subject'] = t('Data Browser');
       $block['content'] = stanford_capx_data_browser_launch_block();
+      break;
+
+    case "importer_in_use":
+      $block['subject'] = t('Importer In Use');
+      $block['title'] = t('Importer In Use');
+      $block['content'] = array(
+        '#markup' => stanford_capx_importer_in_use_block(),
+        '#attached' => array(
+          'css' => array(
+            drupal_get_path('module', 'stanford_capx') . '/css/stanford_capx.admin.css',
+          ),
+        ),
+      );
       break;
 
   }
@@ -144,6 +166,39 @@ function stanford_capx_data_browser_launch_block() {
   $rows[] = array('Field of study', '$.education.*.fieldOfStudy');
   $rows[] = array('Type', '$.titles.*.type');
   $output .= theme('table', array('rows' => $rows));
+
+  return $output;
+}
+
+/**
+ * Creates and displays the importer in use block.
+ * @return [type] [description]
+ */
+function stanford_capx_importer_in_use_block() {
+  $output = "";
+
+  // Get machine name from url.
+  $machine_name = arg(5);
+
+  // If no machine name this must be a new importer. Just end.
+  if (empty($machine_name)) {
+    return;
+  }
+
+  // Do not need to check to see if this works or not as the page wont load if
+  // the machine name is invalid.
+  $importer = CAPxImporter::loadEntityImporter($machine_name);
+
+  // The metadata.
+  $meta = $importer->getMeta();
+
+  $output .= "<p>";
+  $output .= t("This importer is currently used to import !num profiles. Add or delete profiles by changing the settings below.", array("!num" => "<strong>" . $meta['count'] . "</strong>"));
+  $output .= "</p><p>";
+  $output .= t("Configure your !link to determine what will happen when profiles are deleted from your Importer or the CAP API.", array("!link" => l(t("CAPx Settings"), "admin/config/capx/settings")));
+  $output .= "</p><p>";
+  $output .= l(t("View all imported profiles"), "admin/config/capx/profiles", array("query" => array("importer" => $machine_name), "attributes" => array("class" => array("button"))));
+  $output .= "</p>";
 
   return $output;
 }

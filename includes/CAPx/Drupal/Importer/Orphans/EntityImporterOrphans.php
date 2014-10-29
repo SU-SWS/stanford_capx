@@ -85,6 +85,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
    */
   public function execute() {
 
+    // If the action is set to do nothing to orphaned profiles, do nothing.
+    $action = variable_get("stanford_capx_orphan_action", "unpublish");
+    if ($action == "nothing") {
+      return;
+    }
+
     $importer =  $this->getImporter();
     $options = $this->getImporterOptions();
     $profiles = $this->getProfiles();
@@ -341,15 +347,22 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
       switch ($action) {
         case "delete":
-          drush_log("Deleted orphaned profile: " . $profile->label(), "status");
+          if (function_exists("drush_log")) {
+            drush_log("Deleted orphaned profile: " . $profile->label(), "status");
+          }
           $profile->delete();
           break;
 
         case "unpublish":
           $profile->status->value(0);
           $profile->save();
-          drush_log("Unpublished orphaned profile: " . $profile->label(), "status");
+          if (function_exists("drush_log")) {
+            drush_log("Unpublished orphaned profile: " . $profile->label(), "status");
+          }
           break;
+
+        default:
+          // Do nothing.
       }
     }
 
