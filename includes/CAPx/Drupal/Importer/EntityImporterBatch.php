@@ -31,29 +31,38 @@ class EntityImporterBatch {
 
     // Define a lot of things...
     $importer = CAPxImporter::loadEntityImporter($importerMachineName);
-    $options = $importer->getOptions();
-    $children = $options['child_orgs'];
-    $mapper = $importer->getMapper();
-    $client = $importer->getClient();
-    $types = $options['types'];
+    if ($importer) {
+      $options = $importer->getOptions();
+      $children = $options['child_orgs'];
+      $client = $importer->getClient();
+      $types = $options['types'];
 
-    // We need to adjust the search to grab results from the correct page.
-    $client->setLimit($limit);
-    $client->setPage($page);
+      // We need to adjust the search to grab results from the correct page.
+      $client->setLimit($limit);
+      $client->setPage($page);
 
-    // In order to get the values to search for we need to find out what index
-    // the type is as the values are in the corresponding index.
-    $index = array_search($type, $types);
-    $search = $options['values'][$index];
+      // In order to get the values to search for we need to find out what index
+      // the type is as the values are in the corresponding index.
+      $index = array_search($type, $types);
+      $search = $options['values'][$index];
 
-    $response = $client->api('profile')->search($type, $search, FALSE, $children);
-    $results = $response['values'];
+      $response = $client->api('profile')->search($type, $search, FALSE, $children);
+      $results = $response['values'];
 
-    $success = EntityImporterBatch::processResults($results, $importer);
+      $success = EntityImporterBatch::processResults($results, $importer);
 
-    if ($success) {
-      $now = time();
-      $importer->setLastCronRun($now);
+      if ($success) {
+        $now = time();
+        $importer->setLastCronRun($now);
+      }
+    }
+    else {
+      $vars = array(
+        '%name' => $importerMachineName,
+        '!log' => l(t('log messages'), 'admin/reports/dblog'),
+      );
+      drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+      drupal_goto('admin/config/capx/importer');
     }
 
   }
@@ -77,6 +86,9 @@ class EntityImporterBatch {
     $page = $item['page'];
     $limit = $item['limit'];
     $importer = CAPxImporter::loadEntityImporter($importerMachineName);
+    if (!$importer || !$importer->valid()) {
+      return FALSE;
+    }
     $options = $importer->getOptions();
     $children = $options['child_orgs'];
     $client = $importer->getClient();

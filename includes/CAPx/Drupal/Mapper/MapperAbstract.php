@@ -6,8 +6,8 @@
 
 namespace CAPx\Drupal\Mapper;
 
-use CAPx\Drupal\Mapper\FieldCollectionMapper;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
+use CAPx\Drupal\Entities\CFEntity;
 
 abstract class MapperAbstract implements MapperInterface {
 
@@ -20,6 +20,9 @@ abstract class MapperAbstract implements MapperInterface {
   // The mapper configuration entity (CFEntity).
   protected $mapper;
 
+  // Importer machine name this mapper is attached to.
+  protected $importer;
+
 
   /**
    * Merges default configuration options with the passed in set.
@@ -27,7 +30,7 @@ abstract class MapperAbstract implements MapperInterface {
    * @param CFEntity $mapper
    *   [description]
    */
-  public function __construct($mapper) {
+  public function __construct(CFEntity $mapper) {
     $this->setMapper($mapper);
     $this->addConfig($mapper->settings);
   }
@@ -153,6 +156,37 @@ abstract class MapperAbstract implements MapperInterface {
    */
   public function getMapper() {
     return $this->mapper;
+  }
+
+  /**
+   * Checks mapper status.
+   *
+   * @param string $importer
+   *   Importer machine name.
+   *
+   * @return bool
+   *  Mapper status.
+   */
+  public function valid($importer) {
+    return TRUE;
+  }
+
+  /**
+   * Get importer machine name.
+   *
+   * @return string
+   */
+  public function getImporter() {
+    return $this->importer;
+  }
+
+  /**
+   * Set importer machine name.
+   *
+   * @param string $importer
+   */
+  public function setImporter($importer) {
+    $this->importer = $importer;
   }
 
 }

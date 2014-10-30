@@ -73,12 +73,16 @@ class CAPxImporter {
    *   A fully instantiated EntityImporter
    */
   public static function loadEntityImporter($key) {
+    $entityImporter = NULl;
 
-    $importer = self::loadImporter($key);
-    $mapper = CAPxMapper::loadEntityMapper($importer->mapper);
+    $importerConfig = self::loadImporter($key);
+    $mapper = CAPxMapper::loadEntityMapper($importerConfig->mapper);
     $client = CAPxConnection::getAuthenticatedHTTPClient();
 
-    $entityImporter = new EntityImporter($importer, $mapper, $client);
+    if ($importerConfig && $mapper && $client) {
+      $entityImporter = new EntityImporter($importerConfig, $mapper, $client);
+    }
+
     return $entityImporter;
   }
 
@@ -125,26 +129,39 @@ class CAPxImporter {
    * @return [type]           [description]
    */
   public static function getEntityOrphanator($importerName, $profiles = array()) {
+    $orphanator = NULL;
+
     $importer = CAPxImporter::loadEntityImporter($importerName);
-    $lookups = array();
-    $comparisons = array();
 
-    // Load all the lookups...
-    $lookups[] = new LookupMissingFromAPI();
-    $lookups[] = new LookupMissingFromSunetList();
-    $lookups[] = new LookupOrgOrphans();
-    $lookups[] = new LookupWorkgroupOrphans();
+    if ($importer) {
+      $lookups = array();
+      $comparisons = array();
 
-    // Load all the comparisons...
-    $comparisons[] = new CompareMissingFromApi();
-    $comparisons[] = new CompareOrgCodesSunet();
-    $comparisons[] = new CompareOrgCodesWorkgroups();
-    $comparisons[] = new CompareSunetOrgCodes();
-    $comparisons[] = new CompareSunetWorkgroups();
-    $comparisons[] = new CompareWorkgroupsOrgCodes();
-    $comparisons[] = new CompareWorkgroupsSunet();
+      // Load all the lookups...
+      $lookups[] = new LookupMissingFromAPI();
+      $lookups[] = new LookupMissingFromSunetList();
+      $lookups[] = new LookupOrgOrphans();
+      $lookups[] = new LookupWorkgroupOrphans();
 
-    $orphanator = new EntityImporterOrphans($importer, $profiles, $lookups, $comparisons);
+      // Load all the comparisons...
+      $comparisons[] = new CompareMissingFromApi();
+      $comparisons[] = new CompareOrgCodesSunet();
+      $comparisons[] = new CompareOrgCodesWorkgroups();
+      $comparisons[] = new CompareSunetOrgCodes();
+      $comparisons[] = new CompareSunetWorkgroups();
+      $comparisons[] = new CompareWorkgroupsOrgCodes();
+      $comparisons[] = new CompareWorkgroupsSunet();
+
+      $orphanator = new EntityImporterOrphans($importer, $profiles, $lookups, $comparisons);
+    }
+    else {
+      $vars = array(
+        '%name' => $importerName,
+        '!log' => l(t('log messages'), 'admin/reports/dblog'),
+      );
+      drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+    }
+
     return $orphanator;
   }
 }

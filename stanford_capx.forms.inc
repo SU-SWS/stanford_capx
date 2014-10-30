@@ -938,7 +938,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   capx_mapper_save($mapper);
 
   // Lets check the error messages that may be related to this mapper.
-  $messages = variable_get('stanford_capx_field_issues', array());
+  $messages = variable_get('stanford_capx_admin_messages', array());
   foreach ($messages as $key => &$message) {
     $message_meta = explode(':', $key);
     // When the field is missing from some bundle in
@@ -970,7 +970,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
       }
     }
   }
-  variable_set('stanford_capx_field_issues', $messages);
+  variable_set('stanford_capx_admin_messages', $messages);
 
   // Are we sure we want this?
   drupal_goto('admin/config/capx/mapper');
@@ -1194,8 +1194,6 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#value' => t('Save & Import Now'),
   );
 
-  $form['#redirect'] = "admin/config/capx/importer";
-
   return $form;
 }
 
@@ -1273,7 +1271,24 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
 
   // Do the save
   capx_importer_save($importer);
+  $form_state['redirect'] = 'admin/config/capx/importer';
 
+  // Lets check the error messages that may be related to this importer.
+  $messages = variable_get('stanford_capx_admin_messages', array());
+  foreach ($messages as $key => &$message) {
+    if (!empty($message['importers']) && array_key_exists($values['machine-name'], $message['importers'])) {
+      unset($message['importers'][$values['machine-name']]);
+
+      if (empty($message['importers'])) {
+        // This was the last importer that were using deleted mapper.
+        unset($messages[$key]);
+      }
+      else {
+        $message['message_vars']['!importers'] = implode(', ', $message['importers']);
+      }
+    }
+  }
+  variable_set('stanford_capx_admin_messages', $messages);
 }
 
 /**
@@ -1285,14 +1300,21 @@ function stanford_capx_importer_form_submit_run_import($form, $form_state) {
   $importer = CAPxImporter::loadEntityImporter($values['machine-name']);
 
   if (!$importer) {
-    throw new \Exception("Could not load importer by machine name");
+    $vars = array(
+      '%name' => $values['machine-name'],
+      '!log' => l(t('log messages'), 'admin/reports/dblog'),
+    );
+    drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+    return;
   }
 
-  $importer->createBatch();
-
-  drupal_set_message(t('Items successfully imported'), 'status');
-  batch_process($form['#redirect']);
-
+  if (!$importer->valid()) {
+    drupal_set_message(t('There was an issue running the importer.'), 'error');
+  }
+  else {
+    $importer->createBatch();
+    drupal_set_message(t('Items successfully imported'), 'status');
+  }
 }
 
 /**
@@ -1305,7 +1327,7 @@ function stanford_capx_importer_form_submit_run_import($form, $form_state) {
  * @param  [type] $form_state [description]
  * @return [type]             [description]
  */
-function stanford_capx_admin_config_importer_delete($form = array(), $form_state, $machine_name) {
+function stanford_capx_admin_config_importer_delete($form, &$form_state, $machine_name) {
 
   // Get the importer.
   $importer = CAPxImporter::loadEntityImporter($machine_name);
@@ -1313,7 +1335,12 @@ function stanford_capx_admin_config_importer_delete($form = array(), $form_state
 
   // No importer, no need to continue.
   if (!$importer) {
-    throw new Exception("Could not load an importer with provided machine name. Please check url.");
+    $vars = array(
+      '%name' => $machine_name,
+      '!log' => l(t('log messages'), 'admin/reports/dblog'),
+    );
+    drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+    drupal_goto('admin/config/capx/importer');
   }
 
   // Add the machine name so we can do stuff with the importer later.

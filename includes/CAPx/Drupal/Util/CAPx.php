@@ -53,16 +53,26 @@ class CAPx {
    *   An arry of entity objects
    */
   public static function getProfilesByImporter($machine_name) {
+    $profiles = NULL;
 
     $importer = CAPxImporter::loadEntityImporter($machine_name);
-    $type = $importer->getEntityType();
-    $bundle = $importer->getBundleType();
+    if ($importer) {
+      $type = $importer->getEntityType();
+      $bundle = $importer->getBundleType();
 
-    $conditions = array(
-      'importer' => $machine_name,
-    );
+      $conditions = array(
+        'importer' => $machine_name,
+      );
 
-    $profiles = CAPx::getProfiles($type, $conditions);
+      $profiles = CAPx::getProfiles($type, $conditions);
+    }
+    else {
+      $vars = array(
+        '%name' => $machine_name,
+        '!log' => l(t('log messages'), 'admin/reports/dblog'),
+      );
+      drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+    }
 
     return $profiles;
   }
