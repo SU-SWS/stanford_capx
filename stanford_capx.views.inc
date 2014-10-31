@@ -494,3 +494,33 @@ function stanford_capx_views_data_alter(&$data) {
   );
 
 }
+
+/**
+ * Implements hook_views_pre_view()
+ *
+ */
+function stanford_capx_views_pre_view(&$view, &$display_id, $args) {
+
+  // Barrier for entry.
+  if ($view->name !== "importers_overview_page") {
+    return;
+  }
+  // Second barrier for entry.
+  if ($display_id !== "default") {
+    return;
+  }
+
+  // Set the footer of the view to have a dynamic more link.
+   $options = array(
+    'id' => 'area',
+    'table' => 'views',
+    'field' => 'area',
+    'empty' => FALSE,
+    'content' => l(t("View all imported profiles"), "admin/config/capx/profiles", array("attributes" => array("class" => array("button")))),
+    'format' => 'full_html',
+    'tokenize' => 0,
+  );
+  $view->display_handler->set_option('footer', array('text' => $options));
+
+}
+
