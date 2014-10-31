@@ -1558,7 +1558,7 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
 
   $form['variables']['stanford_capx_orphan_action'] = array(
     '#title' => t('Action to perform on orphaned profiles'),
-    '#description' => t('What should happen to a profile that is marked as orphaned?'),
+    '#description' => t('What should happen to a profile that is marked as orphaned? An orphaned profile is a profile that no longer exists in CAP or is no longer in the organization or workgroups defined in the importer.'),
     '#type' => "select",
     '#options' => array(
       'unpublish' => t('Unpublish'),
