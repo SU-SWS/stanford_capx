@@ -112,8 +112,47 @@ function stanford_capx_organizations_sync() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_help() {
-  $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+  $output = array();
+
+  $content = "<h2>" . t("Getting started") . "</h2>";
+  $content .= "<p>" . t("Importing content from CAP can be completed in 3 steps:") . "</p>";
+  $content .= "<ol><li>";
+  $content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Connect"), "admin/config/capx/connect")));
+  $content .= "</li><li>";
+  $content .= t("!mapping - Create a Mapper that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/mapper")));
+  $content .= "</li><li>";
+  $content .= t("!import - Choose which profiles you would like to import.", array("!import" => l(t("Import"), "admin/config/capx/importer")));
+  $content .= "</li></ol>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("Autentication credentials") . "</h2>";
+  $content .= "<p>" . t("Authentication credentials allow you to connect to the CAP API and import content into your website.") . "</p>";
+  $content .= "<p>" . t("To get authentication credentials, file a !helpsu to Administrative Applications/CAP Stanford Profiles.", array("!helpsu" => l(t("HelpSU request"), "https://www.stanford.edu/helpsu"))) . "</p>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("CAP data - Choosing fields") . "</h2>";
+  $content .= "<p>" . t("If you need help determining which fields you need in your Mapper, you can use the !caplink. The schema displays all fields in CAP and where they are nested. Yes, it is a ton of data, we know...", array("!caplink" => l(t("CAP Data Schema"), "admin/config/capx/data-browser"))) . "</p>";
+  $content .= "<p><strong>" . t("Common fields: ") . "</strong>";
+  $content .= t("A list of common fields can be found on the sidebar of any !mappingpage.", array("!mappingpage" => l(t("mapper page"), "admin/config/capx/mapper/new"))) . "</p>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("Resources for developers") . "</h2>";
+  $content .= "<p>" . t("Want to get involved in the development of the CAPx module? Check out the resources below:") . "</p>";
+  $content .= "<ol><li>";
+  $content .= l(t("CAPx Module UI documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Module API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx GitHub Repository"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Issue Queue"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Contribution help documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAP API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li></ol>";
+
+  $output['content']['textcontent']['#markup'] = $content;
   return $output;
 }
 
