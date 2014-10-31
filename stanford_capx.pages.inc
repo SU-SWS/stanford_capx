@@ -171,7 +171,8 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
  */
 function stanford_capx_admin_config_import() {
   $output = "";
-
+  $output .= "<p>" . t("After you have Mapping configured, create an Importer to chose which profiles you would like to import.") . "</p>";
+  $output .= "<p>" . t("Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs.") . "</p>";
   $output .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
   $output .= views_embed_view('capx_importers');
 
