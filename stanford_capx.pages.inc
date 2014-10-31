@@ -66,16 +66,32 @@ function stanford_capx_admin_config_connect() {
  */
 function stanford_capx_admin_config_settings() {
 
+  $output = array();
+
   $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
   if (!$has_orgs) {
     drupal_set_message(t('The organization codes are not available. You should sync with the API now.'), 'warning');
   }
 
-  $output = "<h2>" . t("Organizations") . "</h2>";
-  $output .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  // Organizations
+  // ---------------------------------------------------------------------------
+  $form = array();
+  $form['orggroup'] = array(
+    '#type' => "fieldset",
+    '#title' => t("Organizations"),
+    '#description' => t("Organization specific actions. Before you are able to start using organizations you have to sync them with the CAP API server."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['orggroup']['theactions']['#markup'] = "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  $output['content']["orgs"] = $form;
+
+  // Settings form
+  // ---------------------------------------------------------------------------
 
   $form = drupal_get_form('stanford_capx_forms_config_settings');
-  $output .= drupal_render($form);
+  $output["content"]["settingsform"] = $form;
 
   return $output;
 }

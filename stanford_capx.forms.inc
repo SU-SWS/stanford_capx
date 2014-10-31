@@ -1548,6 +1548,14 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 function stanford_capx_forms_config_settings($form, &$form_state) {
 
   $form['#tree'] = TRUE;
+  $form['variables'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Syncronization settings"),
+    '#description' => t("Settings for update and syncronization actions with the CAP API."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
   $form['variables']['stanford_capx_batch_limit'] = array(
     '#title' => t('Batch, or cron, processing limit'),
     '#description' => t('The number of items to process on one sync operation.'),
