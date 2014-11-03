@@ -6,8 +6,8 @@
  * A place to put your blocks.
  */
 
-use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxConnection;
+use CAPx\Drupal\Util\CAPxImporter;
 
 /**
  * Implements hook_block_info().
@@ -59,11 +59,13 @@ function stanford_capx_block_view($delta = '') {
 
 /**
  * Connection status block content callback.
+ *
  * Tests the API connection and outputs a text message.
- * @return [type] [description]
+ * @return string
+ *   Block content.
  */
 function stanford_capx_connection_status_block() {
-  $content = "";
+  $content = '';
   $connection = CAPxConnection::testConnection();
 
   // Try to authenticate if not connected first try.
@@ -74,13 +76,40 @@ function stanford_capx_connection_status_block() {
 
   // We good now!
   if ($connection->status) {
-    $content .= "<h2>" . t('Connected!') . "</h2>";
-    $content .= "<p>Congratulations, you have successfully authenticated with the CAP API.</p>";
+    $total_profiles = 0;
+    $last_update_human = 'Never';
+    $last_update = 0;
+
+    $importers = CAPxImporter::loadAllImporters();
+    foreach ($importers as $importer) {
+      $total_profiles += $importer->meta['count'];
+      if ($last_update < $importer->meta['lastUpdate']) {
+        $last_update = $importer->meta['lastUpdate'];;
+        $last_update_human = $importer->meta['lastUpdateHuman'];
+      }
+    }
+
+    $content .= '<h2>' . t('Connected!') . '</h2>';
+    $content .= '<div class="cap-status-ok"><p>Congratulations, you have successfully authenticated with the CAP API.</p></div>';
+
+    $content .= '<div class="profiles"><p>' . t('@count profiles imported from CAP.', array('@count' => $total_profiles)) . '</p></div>';
+    $content .= '<div class="last-updated"><p>' . t('Last import: @date', array('@date' => $last_update_human)) . '</p></div>';
+    // There is no need to show sync all link if there are no importers
+    // configured.
+    if (count($importers) > 0) {
+      $link_vars = array(
+        'attributes' => array('class' => array('button')),
+        'query' => array('destination' => current_path()),
+      );
+      $link = l(t('Manually update all profiles'), 'admin/config/capx/importer/sync-all', $link_vars);
+      $content .= '<div class="update-all"><p>' . $link . '</p></div>';
+    }
   }
   // Something is not set correctly and we cannot connect.
   else {
-    $content .= "<h2 class=\"error\">" . t('Not Connected') . "</h2>";
-    $content .= "<p>" . t('The server responded with error code: ') . $connection->code . " " . t($connection->message) . ".</p>";
+    $content .= '<h2 class="error">' . t('Not Connected') . '</h2>';
+    $vars = array('@code' => $connection->code, '@message' => $connection->message);
+    $content .= '<div class="cap-status-bad"><p>' . t('The server responded with error code: @code and message: @message.', $vars) . '</p></div>';
   }
 
   return $content;
