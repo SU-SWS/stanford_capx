@@ -10,6 +10,7 @@ use CAPx\Drupal\Processors\FieldProcessors\FieldProcessor;
 use CAPx\Drupal\Processors\PropertyProcessors\PropertyProcessor;
 use CAPx\Drupal\Processors\FieldCollectionProcessor;
 use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxImporter;
 
 class EntityMapper extends MapperAbstract {
 
@@ -210,8 +211,12 @@ class EntityMapper extends MapperAbstract {
    * If it happens that field used in mapper will be removed from bundle
    * or from the system entirely this will put a watchdog message and put a
    * persistent message for admin users on admin pages.
+   *
+   * @return bool
+   *   Boolean indicating status of mapper fields.
    */
   public function checkFields() {
+    $fields_status = TRUE;
     $config = $this->getConfig();
     $entity_type = $config['entity_type'];
     $bundle = $config['bundle_type'];
@@ -223,7 +228,8 @@ class EntityMapper extends MapperAbstract {
         $fieldInfoInstance = field_info_instance($entity_type, $fieldName, $bundle);
         if (!$fieldInfoInstance) {
           // Field was removed from this bundle.
-          $messages = variable_get('stanford_capx_field_issues', array());
+          $fields_status = FALSE;
+          $messages = variable_get('stanford_capx_admin_messages', array());
           $mapper = $this->getMapper();
           $message_key = $mapper->getMachineName() . ':' . $entity_type . ':' . $bundle . ':' . $fieldName;
 
@@ -235,18 +241,19 @@ class EntityMapper extends MapperAbstract {
               '!mapper' => l(check_plain($mapper->label()), 'admin/config/capx/mapper/edit/' . $mapper->getMachineName()),
             );
             $message = t('Field %field was removed from the %entity_type bundle %bundle, but is still used in !mapper. You should check configuration of the specified mapper!');
-            watchdog('stanford_capx_field_issues', $message, $message_vars, WATCHDOG_ERROR);
+            watchdog('stanford_capx_admin_messages', $message, $message_vars, WATCHDOG_ERROR);
             $messages[$message_key] = array(
               'text' => $message,
               'message_vars' => $message_vars,
             );
-            variable_set('stanford_capx_field_issues', $messages);
+            variable_set('stanford_capx_admin_messages', $messages);
           }
         }
       }
       else {
         // Field was removed from system.
-        $messages = variable_get('stanford_capx_field_issues', array());
+        $fields_status = FALSE;
+        $messages = variable_get('stanford_capx_admin_messages', array());
         $message_key = $fieldName;
 
         if (empty($messages[$message_key])) {
@@ -260,15 +267,122 @@ class EntityMapper extends MapperAbstract {
           }
           $message_vars = array('%field' => $fieldName, '!mappers' => implode(', ', $mapper_links));
           $message = t('Field %field was removed from the system, but is still used in !mappers. You should check configuration of the specified mappers!');
-          watchdog('stanford_capx_field_issues', $message, $message_vars, WATCHDOG_ERROR);
+          watchdog('stanford_capx_admin_messages', $message, $message_vars, WATCHDOG_ERROR);
           $messages[$message_key] = array(
             'text' => $message,
             'message_vars' => $message_vars,
             'mappers' => $mapper_links,
           );
-          variable_set('stanford_capx_field_issues', $messages);
+          variable_set('stanford_capx_admin_messages', $messages);
         }
       }
     }
+
+    return $fields_status;
   }
+
+  /**
+   * Checks mapper status.
+   *
+   * @param string $importer
+   *   Importer machine name.
+   *
+   * @return bool
+   *  Mapper status.
+   */
+  public function valid($importer) {
+    $this->setImporter($importer);
+
+    $entity_status = $this->checkEntity();
+    $fields_status = $this->checkFields();
+
+    return ($entity_status && $fields_status);
+  }
+
+  /**
+   * Checks if the entity type and bundle configured for mapper is still in place.
+   *
+   * @return bool
+   *   Boolean indicating status of mapper entity.
+   */
+  public function checkEntity() {
+    $entity_status = FALSE;
+    $entity_type = $this->getConfigSetting('entity_type');
+    $bundle = $this->getConfigSetting('bundle_type');
+
+    $entity_info = entity_get_info($entity_type);
+    if ($entity_info) {
+      if (!isset($entity_info['bundles']) || empty($entity_info['bundles'][$bundle])) {
+        $mapper = $this->getMapper();
+        $message_key = $this->getImporter();
+        $message_vars = array(
+          '%mapper' => $mapper->label(),
+          '%entity_type' => $entity_info['label'],
+          '%bundle' => $bundle,
+        );
+        $message_text = t('Invalid bundle setting on %mapper. The bundle %bundle is no longer available and should either be restored, or the mapper %mapper should be deleted.');
+        watchdog('stanford_capx_mapper_issue', $message_text, $message_vars, WATCHDOG_ERROR);
+      }
+      else {
+        // Entity end bundle info is in place - status OK.
+        $entity_status = TRUE;
+      }
+    }
+    else {
+      $mapper = $this->getMapper();
+      $message_key = $this->getImporter();
+      $message_vars = array(
+        '%mapper' => $mapper->label(),
+        '%entity_type' => $entity_type,
+        '%bundle' => $bundle,
+      );
+      $message_text = t('Invalid entity setting on %mapper. The entity %entity_type is no longer available. Please restore the entity type or remove the mapper.');
+      watchdog('stanford_capx_mapper_issue', $message_text, $message_vars, WATCHDOG_ERROR);
+    }
+
+    // Something is wrong - removing mapper config.
+    if (!$entity_status) {
+      $mapper = $this->getMapper();
+      capx_cfe_delete($mapper);
+
+      $importers = $this->getAffectedImporters();
+      $importer_links = array();
+      foreach ($importers as $importer) {
+        $importer_links[$importer->getMachineName()] = l(check_plain($importer->label()), 'admin/config/capx/importer/edit/' . $importer->getMachineName());
+      }
+      $message_vars['!importers'] = implode(', ', $importer_links);
+      $message_text .= ' ';
+      $message_text .= t('The following importers are using an invalid mapper. Please update or delete the mapper settings: !importers.');
+
+      $messages = variable_get('stanford_capx_admin_messages', array());
+      $messages[$message_key] = array(
+        'text' => $message_text,
+        'message_vars' => $message_vars,
+        'importers' => $importer_links,
+      );
+      variable_set('stanford_capx_admin_messages', $messages);
+    }
+
+    return $entity_status;
+  }
+
+  /**
+   * Returns array of importers that are using current mapper.
+   *
+   * @return array
+   *   Array is keyed by importer machine name.
+   */
+  public function getAffectedImporters() {
+    $mapper = $this->getMapper();
+    $importers = CAPxImporter::loadAllImporters();
+    $affected = array();
+    foreach ($importers as $importer) {
+      if ($importer->mapper == $mapper->getMachineName()) {
+        $affected[$importer->getMachineName()] = $importer;
+      }
+    }
+
+    return $affected;
+  }
+
 }

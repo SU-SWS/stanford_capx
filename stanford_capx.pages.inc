@@ -219,22 +219,28 @@ function stanford_capx_admin_config_import_edit($importer_machine_name) {
  */
 function stanford_capx_sync_importer($machine_name) {
 
-  // Sanity...
-  $machine_name = check_plain($machine_name);
-
   // Find by the name that was passed in.
   $importer = CAPxImporter::loadEntityImporter($machine_name);
 
   // Nothing to see here.
   if (!$importer) {
-    throw new Exception(t("Could not find an importer by that name."));
+    $vars = array(
+      '%name' => $machine_name,
+      '!log' => l(t('log messages'), 'admin/reports/dblog'),
+    );
+    drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
   }
 
-  // Set the batch items.
-  $importer->createBatch();
+  if (!$importer->valid()) {
+    drupal_set_message(t('There was an issue running the importer. Settings did not validate. Please check the error logs for more information.'), 'error');
+  }
+  else {
+    // Set the batch items.
+    $importer->createBatch();
 
-  // Run the show!
-  batch_process(drupal_get_destination());
+    // Run the show!
+    batch_process(drupal_get_destination());
+  }
 }
 
 /**

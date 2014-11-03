@@ -277,7 +277,15 @@ function stanford_capx_cron() {
   $importers = CAPxImporter::loadAllImporters();
   foreach ($importers as $key => $importer) {
     $entity_importer = CAPxImporter::loadEntityImporter($importer->getMachineName());
-    $entity_importer->cron();
+    if ($entity_importer) {
+      $entity_importer->cron();
+    }
+    else {
+      $vars = array(
+        '%name' => $importer->getMachineName(),
+      );
+      watchdog('There was an issue loading the importer with %name machine name.', $vars, WATCHDOG_ERROR);
+    }
   }
 
 }
@@ -533,13 +541,16 @@ function stanford_capx_files_dir_exists() {
 function stanford_capx_init() {
   $path = current_path();
   if (user_access('administer capx') && path_is_admin($path) && $path != 'batch') {
-
-    // We don't want to set message on "stanford_capx_mapper_form" form
+    // We don't want to set message on some forms
     // submission because message get set before it's processed in the submit
     // handler and this can confuse a user if this mapper was the last one that
     // was affected by issue specified in the message.
-    if (empty($_POST['form_id']) || $_POST['form_id'] != 'stanford_capx_mapper_form') {
-      $messages = variable_get('stanford_capx_field_issues', array());
+    $forms = array(
+      'stanford_capx_importer_form',
+      'stanford_capx_mapper_form',
+    );
+    if (empty($_POST['form_id']) || !in_array($_POST['form_id'], $forms)) {
+      $messages = variable_get('stanford_capx_admin_messages', array());
       foreach ($messages as $key => $message) {
         $formatted_message = format_string(
           $message['text'],

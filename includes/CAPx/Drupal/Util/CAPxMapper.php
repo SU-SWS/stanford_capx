@@ -50,9 +50,15 @@ class CAPxMapper {
    *   A fully loaded entity Mapper instance.
    */
   public static function loadEntityMapper($key) {
+    $mapper = NULL;
 
     $mapperConfig = self::loadMapper($key);
-    $mapper = new EntityMapper($mapperConfig);
+    if (empty($mapperConfig)) {
+      watchdog('stanford_capx_mapper_issue', 'Impossible to load mapper confiruration with %key key.', array('%key' => $key));
+    }
+    else {
+      $mapper = new EntityMapper($mapperConfig);
+    }
 
     return $mapper;
   }

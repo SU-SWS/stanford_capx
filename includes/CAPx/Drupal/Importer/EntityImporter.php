@@ -570,4 +570,13 @@ class EntityImporter implements ImporterInterface {
     return $mapper->getBundleType();
   }
 
+  /**
+   * Checks importer status.
+   *
+   * * @return bool
+   *  Importer status.
+   */
+  public function valid() {
+    return $this->getMapper()->valid($this->getMachineName());
+  }
 }
