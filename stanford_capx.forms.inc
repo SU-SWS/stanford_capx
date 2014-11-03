@@ -1639,7 +1639,7 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
 
   $form['variables']['stanford_capx_orphan_action'] = array(
     '#title' => t('Action to perform on orphaned profiles'),
-    '#description' => t('What should happen to a profile that is marked as orphaned?'),
+    '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
     '#type' => "select",
     '#options' => array(
       'nothing' => t("Nothing"),
