@@ -282,3 +282,17 @@ function stanford_capx_debug() {
   $output .= "Hey!";
   return $output;
 }
+
+/**
+ * Runs a batch on all importers.
+ */
+function stanford_capx_sync_all_importers() {
+
+  $importers = CAPxImporter::getAllEntityImporters();
+
+  foreach ($importers as $importer) {
+    $importer->createBatch();
+  }
+
+  batch_process(drupal_get_destination());
+}

@@ -83,6 +83,29 @@ class CAPxImporter {
   }
 
   /**
+   * Returns all EntityImporter.
+   *
+   * @return array
+   *   An array of fully instantiated EntityImporters.
+   */
+  public static function getAllEntityImporters() {
+    $entity_importers = array();
+
+    $importers = self::loadAllImporters();
+
+    foreach ($importers as $importer) {
+      $mapper = CAPxMapper::loadEntityMapper($importer->mapper);
+      $client = CAPxConnection::getAuthenticatedHTTPClient();
+      $entity_importer = new EntityImporter($importer, $mapper, $client);
+
+      // @todo: Add validation once CAPX-58 get in.
+      $entity_importers[$entity_importer->getMachineName()] = $entity_importer;
+    }
+
+    return $entity_importers;
+  }
+
+  /**
    * Loads EntityImporter's filtered by mapper.
    *
    * @param CFEntity $mapper

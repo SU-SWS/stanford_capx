@@ -236,6 +236,13 @@ function stanford_capx_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  $items['admin/config/capx/importer/sync-all'] = array(
+    'title' => 'Sync All Importers',
+    'page callback' => 'stanford_capx_sync_all_importers',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
   // Profile pages
   // ---------------------------------------------------------------------------
 
