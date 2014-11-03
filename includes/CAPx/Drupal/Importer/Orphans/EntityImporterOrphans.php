@@ -347,18 +347,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
       switch ($action) {
         case "delete":
-          if (function_exists("drush_log")) {
-            drush_log("Deleted orphaned profile: " . $profile->label(), "status");
-          }
           $profile->delete();
           break;
 
         case "unpublish":
           $profile->status->value(0);
           $profile->save();
-          if (function_exists("drush_log")) {
-            drush_log("Unpublished orphaned profile: " . $profile->label(), "status");
-          }
           break;
 
         default:

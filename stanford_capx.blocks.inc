@@ -172,7 +172,9 @@ function stanford_capx_data_browser_launch_block() {
 
 /**
  * Creates and displays the importer in use block.
- * @return [type] [description]
+ *
+ * @return string
+ *   HTML representation of the page.
  */
 function stanford_capx_importer_in_use_block() {
   $output = "";
