@@ -303,6 +303,13 @@ class EntityImporter implements ImporterInterface {
    *
    */
   public function createOrphansQueue() {
+
+    // If the action is set to do nothing to orphaned profiles, do nothing.
+    $action = variable_get("stanford_capx_orphan_action", "unpublish");
+    if ($action == "nothing") {
+      return;
+    }
+
     $limit = variable_get('stanford_capx_batch_limit', 100);
 
     // Get a list of all the profiles that are associated with this importer.

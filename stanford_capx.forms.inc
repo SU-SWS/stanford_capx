@@ -1114,13 +1114,13 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $form['cron'] = array(
     '#title' => t('Sync options'),
     '#type' => 'fieldset',
-    '#collapsed' => FALSE,
-    '#collapsible' => FALSE,
+    '#collapsed' => !empty($importer),
+    '#collapsible' => TRUE,
   );
 
   $form['cron']['cron_option'] = array(
     '#title' => t('Sync'),
-    '#description' => t('Select an interval on how often this importer should syncronize with the CAP server. This setting is dependant on !cron.', array('!cron' => l('cron configuration', 'admin/config/system/cron'))),
+    '#description' => t('Select an interval on how often this importer should syncronize with the CAP server. This setting is dependant on !cron.', array('!cron' => l(t('cron configuration'), 'admin/config/system/cron'))),
     '#type' => 'select',
     '#options' => CAPxImporter::getCronOptions(),
     '#default_value' => isset($importer->cron_option) ? $importer->cron_option : 'daily',
@@ -1615,7 +1615,8 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
     '#description' => t('What should happen to a profile that is marked as orphaned?'),
     '#type' => "select",
     '#options' => array(
-      'unpublish' => t('Unpublish'),
+      'nothing' => t("Nothing"),
+      'unpublish' => t('Unpublish - Nodes only'),
       'delete' => t('Delete'),
     ),
     '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
