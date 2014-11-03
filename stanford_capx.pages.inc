@@ -155,11 +155,15 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
 
   // Data browser block.
+  $block = block_load('stanford_capx', 'mapper_in_use');
+  $output['content']['mapper_in_use'] = _block_get_renderable_array(_block_render_blocks(array($block)));
+
+  // Data browser block.
   $block = block_load('stanford_capx', 'data_browser_launch');
-  $output += _block_get_renderable_array(_block_render_blocks(array($block)));
+  $output['content']['data_browser_launch'] = _block_get_renderable_array(_block_render_blocks(array($block)));
 
   // Render form.
-  $output += drupal_get_form('stanford_capx_mapper_form', $mapper);
+  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form', $mapper);
 
   return $output;
 }
@@ -194,16 +198,18 @@ function stanford_capx_admin_config_import_new() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import_edit($importer_machine_name) {
-  $output = "";
+  $output = array();
   $importer = CAPxImporter::loadImporter($importer_machine_name);
 
   if (!$importer) {
     throw new Exception(t("Could not load an importer with provided machine name. Please check url."));
   }
 
+  // The in use block.
+  $output['content']["in_use_block"] = _block_get_renderable_array(_block_render_blocks(array(block_load('stanford_capx', 'importer_in_use'))));
+
   // Render form.
-  $form = drupal_get_form('stanford_capx_importer_form', $importer);
-  $output .= drupal_render($form);
+  $output['content']["importer_form"] = drupal_get_form('stanford_capx_importer_form', $importer);
 
   return $output;
 }
