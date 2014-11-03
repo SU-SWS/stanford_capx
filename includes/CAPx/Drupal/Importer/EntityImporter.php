@@ -246,6 +246,11 @@ class EntityImporter implements ImporterInterface {
     $limit = variable_get('stanford_capx_batch_limit', 100);
     $numberOfProfiles = 0;
 
+    // If the importer is empty.
+    if (empty($options['types'])) {
+      return;
+    }
+
     // Loop through each of the import type options and ping the server for just
     // one item of each to get an idea of how many items there actually is.
     // Break up the number of items into sensible chunks.

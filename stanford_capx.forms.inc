@@ -335,7 +335,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
   foreach ($entity_types as $entity_machine_name => $entity_info_values) {
 
     // If this is an edit mapper form (mapper exists) do not render the other
-    // entities or bundles
+    // entities or bundles.
+
     if (isset($mapper->settings['entity_type']) && $mapper->settings['entity_type'] !== $entity_machine_name) {
       continue;
     }
@@ -344,10 +345,11 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     $entity_info = entity_get_property_info($entity_machine_name);
 
     $property_container = $entity_machine_name . "-properties";
-    // Generate property forms for each entity + bundle
+
+    // Generate property forms for each entity + bundle.
     $form['field-mapping'][$property_container] = array(
       '#type' => 'fieldset',
-      '#title' => t($entity_machine_name . ' Properties'),
+      '#title' => t('@name Properties', array("@name" => $entity_machine_name)),
       '#description' => t(''),
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
@@ -364,13 +366,24 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     foreach ($properties as $property_machine_name => $prop_info) {
 
       $form['field-mapping'][$property_container][$property_machine_name] = array(
-          '#type' => 'textfield',
-          '#title' => t($prop_info['label']),
-          '#description' => t($prop_info['description']),
-          '#default_value' => isset($mapper->properties[$property_machine_name]) ? $mapper->properties[$property_machine_name] : '',
-          '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
-          '#field_info' => $prop_info,
+        '#type' => 'container',
+        '#title' => t("@var", array("@var" => $prop_info['label'])),
+        '#field_info' => $prop_info,
+        '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
       );
+
+      $form['field-mapping'][$property_container][$property_machine_name]['value'] = array(
+        '#type' => 'textfield',
+        '#title' => t('value'),
+        '#description' => t("@var", array("@var" => $prop_info['description'])),
+        '#default_value' => isset($mapper->properties[$property_machine_name]) ? $mapper->properties[$property_machine_name] : '',
+        '#field_info' => $prop_info,
+      );
+
+      if (isset($prop_info['required'])) {
+        $form['field-mapping'][$property_container][$property_machine_name]['#attributes']['class'][] = "required";
+      }
+
     }
 
   }
@@ -380,7 +393,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
   foreach ($entity_types as $entity_machine_name => $entity_info_values) {
 
     // If this is an edit mapper form (mapper exists) do not render the other
-    // entities or bundles
+    // entities or bundles.
     if (isset($mapper->settings['entity_type']) && $mapper->settings['entity_type'] !== $entity_machine_name) {
       continue;
     }
@@ -388,12 +401,12 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     // Get all the properties of the entity type.
     $entity_info = entity_get_property_info($entity_machine_name);
 
-    // Skip those entities with no bundles
+    // Skip those entities with no bundles.
     if (!isset($entity_info['bundles'])) {
       continue;
     }
 
-    foreach($entity_info['bundles'] as $bundle_machine_name => $bundle_info) {
+    foreach ($entity_info['bundles'] as $bundle_machine_name => $bundle_info) {
 
       // Skip bundles that dont match a loaded mapper.
       if (isset($mapper->settings['bundle_type']) && $bundle_machine_name !== $mapper->settings['bundle_type']) {
@@ -403,10 +416,10 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       $fields = $entity_info['bundles'][$bundle_machine_name]['properties'];
       $field_container = $entity_machine_name . "-" . $bundle_machine_name . "-fields";
 
-      // Generate property forms for each entity + bundle
+      // Generate property forms for each entity + bundle.
       $form['field-mapping'][$field_container] = array(
         '#type' => 'fieldset',
-        '#title' => t($bundle_machine_name . ' Fields'),
+        '#title' => t("@var Fields", array("@var" => $bundle_machine_name)),
         '#description' => t(''),
         '#collapsed' => TRUE,
         '#collapsible' => TRUE,
@@ -431,8 +444,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
         $form['field-mapping'][$field_container][$field_machine_name] = array(
           '#type' => 'container',
-          '#title' => t($field_instance_info['label']),
-          '#description' => t($field_instance_info['description']),
+          '#title' => t("@var", array("@var" => $field_instance_info['label'])),
+          '#description' => t("@var", array("@var" => $field_instance_info['description'])),
           '#field_info' => $field_info_field,
           '#field_instance_info' => $field_instance_info,
           '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
@@ -448,6 +461,10 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
             '#default_value' => @$mapper->fields[$field_machine_name][0],
           );
 
+          if ($field_instance_info['required']) {
+            $form['field-mapping'][$field_container][$field_machine_name]['#attributes']['class'][] = "required";
+          }
+
           continue;
         }
 
@@ -455,14 +472,20 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         if (!isset($field_info_field['columns'])) {
           continue;
         }
+
         foreach ($field_info_field['columns'] as $column_key => $column_info) {
           if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
+
             $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
               '#type' => 'textfield',
-              '#title' => t($column_key),
-              '#description' => t(@$column_info['description']),
-              '#default_value' => @$mapper->fields[$field_machine_name][$column_key],
+              '#title' => t("@var", array("@var" => $column_key)),
+              '#description' => !empty($column_info['description']) ? t("@var", array("@var" => $column_info['description'])) : "",
+              '#default_value' => isset($mapper->fields[$field_machine_name][$column_key]) ? $mapper->fields[$field_machine_name][$column_key] : "",
             );
+
+            if ($field_instance_info['required']) {
+              $form['field-mapping'][$field_container][$field_machine_name]['#attributes']['class'][] = "required";
+            }
           }
         }
 
@@ -484,7 +507,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         // Fieldset for all fields on this entity -> bundle -> collection field
         $form['field-mapping'][$collection_container] = array(
           '#type' => 'fieldset',
-          '#title' => t($field_machine_name . ' Field Collection'),
+          '#title' => t('@name Field Collection', array("@name" => $field_machine_name)),
           '#description' => t(''),
           '#collapsed' => TRUE,
           '#collapsible' => TRUE,
@@ -502,9 +525,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
           $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name] = array(
             '#type' => 'container',
-            '#title' => t($instance_info['label']),
-            '#description' => t($instance_info['description']),
-            '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+            '#title' => t("@var", array("@var" => $instance_info['label'])),
+            '#description' => t("@var", array("@var" => $instance_info['description'])),
             '#field_info' => $fc_field_info,
             '#field_instance_info' => $instance_info,
           );
@@ -525,10 +547,15 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
             if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
               $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key] = array(
                 '#type' => 'textfield',
-                '#title' => t($column_key),
+                '#title' => t("@var", array("@var" => $column_key)),
                 '#description' => t(@$column_info['description']),
                 '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][$column_key],
               );
+
+              if ($instance_info['required']) {
+                $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key]["#attributes"]["class"] = "required";
+              }
+
             }
           }
         }
@@ -664,9 +691,12 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
   $entity = $form_state['values']['entity-type'];
   $bundle = $form_state['values']['bundle-' . $entity];
 
-  // Right now all entities have fields and properties.
+  // Entities have fields and properties.
   stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-properties"], array('field-mapping'));
-  stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"], array('field-mapping'));
+
+  if (isset($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"])) {
+    stanford_capx_mapper_form_validate_element($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"], array('field-mapping'));
+  }
 
   // Only some have field collections.
   if (isset($form_state['values']['field-mapping'][$entity . "-" . $bundle .  "-collections"])) {
@@ -675,14 +705,80 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
 
   // Set the error messages after everything has been looped through.
   stanford_capx_mapper_form_validate_element_set_messages();
+
+  // Ensure all required fields were posted. Because of the way the form works
+  // we cannot place a required on to each of the form element fields as there
+  // are a number of fields that are hidden and we do not want them. They still
+  // need to be filled out.
+  stanford_capx_mapper_form_validate_required_fields($form, $form_state, $entity, $bundle);
+
 }
 
 /**
+ * Ensure all required fields were posted.
+ *
+ * Because of the way the form works we cannot place a required on to each of
+ * the form element fields as there are a number of fields that are hidden and
+ * we do not want them. They still need to be filled out.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
+ * @param string $entity
+ *   The machine name of the entity type to be validated.
+ * @param string $bundle
+ *   The machine name of the bundle type to be validated.
+ */
+function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state, $entity, $bundle) {
+
+  // Get all the properties of the entity type.
+  $entity_info = entity_get_property_info($entity);
+  $properties = $entity_info['properties'];
+
+  $fields = isset($entity_info['bundles']) ? $entity_info['bundles'][$bundle]['properties'] : array();
+
+  // Properties validation.
+  foreach ($form_state['values']['field-mapping'][$entity . "-properties"] as $k => $v) {
+    if (empty($v['value']) && isset($properties[$k]['required'])) {
+      $element = 'field-mapping][' . $entity . "-properties][" . $k . "][value";
+      form_set_error($element, t('@name property is required', array("@name" => $k)));
+    }
+  }
+
+  // Field validation.
+  foreach ($fields as $field_name => $value) {
+
+    if (isset($value['required']) && $value['required']) {
+
+      if (!isset($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"][$field_name])) {
+        continue;
+      }
+
+      $columns = $form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"][$field_name];
+
+      // Loop through the columns and check for values.
+      foreach ($columns as $column_name => $value) {
+        if (empty($value)) {
+          $element = "field-mapping][" . $entity . "-" . $bundle . "-" . "fields][" . $field_name . "][" . $column_name;
+          form_set_error($element, t("@name field is required", array("@name" => $field_name)));
+          break;
+        }
+      }
+    }
+  }
+
+}
+
+/**
+ * Validate the user input.
+ *
  * Validate the user input from the mapper form by checking to see if the
  * selector finds something in the API schema.
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ *
+ * @param  [type] $element [description]
+ * @param  array  $parents [description]
+ * @return [type]          [description]
  */
 function stanford_capx_mapper_form_validate_element($element, $parents = array()) {
   static $json_parser;
@@ -840,6 +936,41 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   // Do the save.
   capx_mapper_save($mapper);
+
+  // Lets check the error messages that may be related to this mapper.
+  $messages = variable_get('stanford_capx_field_issues', array());
+  foreach ($messages as $key => &$message) {
+    $message_meta = explode(':', $key);
+    // When the field is missing from some bundle in
+    // \CAPx\Drupal\Mapper\EntityMapper::mapFields we creating key from 4
+    // components:
+    // - mapper machine name
+    // - entity type
+    // - entity bundle
+    // - entity field name
+    // In this exact order.
+    if (count($message_meta) === 4) {
+      if (
+        $message_meta[0] == $values['machine-name']
+        && $message_meta[1] == $entity
+        && $message_meta[2] == $bundle
+      ) {
+        unset($messages[$key]);
+      }
+    }
+    elseif (!empty($message['mappers']) && array_key_exists($values['machine-name'], $message['mappers'])) {
+      unset($message['mappers'][$values['machine-name']]);
+
+      if (empty($message['mappers'])) {
+        // This was the last mapper that were using deleted field.
+        unset($messages[$key]);
+      }
+      else {
+        $message['message_vars']['!mappers'] = implode(', ', $message['mappers']);
+      }
+    }
+  }
+  variable_set('stanford_capx_field_issues', $messages);
 
   // Are we sure we want this?
   drupal_goto('admin/config/capx/mapper');
@@ -1286,17 +1417,19 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
   // mapped.
   if (!empty($form['#entity_type'])) {
 
-    if ($form['#entity_type'] == "user") {
+    if ($form['#entity_type'] == "user" && isset($form["#user"])) {
       $entity = $form["#user"];
     }
-    else {
+    elseif (isset($form['#entity'])) {
       $entity = $form["#entity"];
     }
 
+    // If we find an entity after all that.
     if (isset($entity->capx)) {
       stanford_capx_entity_form_add_vt($form, $form_state, $form_id, $entity);
       stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
     }
+
   }
 
 }

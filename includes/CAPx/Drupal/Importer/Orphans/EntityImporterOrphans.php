@@ -351,7 +351,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
           break;
 
         case "unpublish":
-          $profile->status->value(0);
+          $profile->status->value(array(0));
           $profile->save();
           break;
 
