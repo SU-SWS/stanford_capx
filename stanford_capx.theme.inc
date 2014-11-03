@@ -21,17 +21,40 @@ function stanford_capx_theme($existing, $type, $theme, $path) {
  * @return [type] [description]
  */
 function theme_stanford_capx_columns_to_the_right($elements) {
+
   $element = array_pop($elements);
+
   global $stanford_capx_theme_zebra;
   $stanford_capx_theme_zebra = ($stanford_capx_theme_zebra == "even") ? "odd" : "even";
-  $header = array("<b>" . t($element['#title']) . "</b>", t('CAP API Path'));
 
+  // Header row cell information.
+  $header = array("<b>" . t(check_plain($element['#title'])) . "</b>", t('CAP API Path'));
+
+  // Grab the description from either the field_info or instance info.
+  $description = "";
+  if (isset($element['#field_info']['description'])) {
+    $description = $element['#field_info']['description'];
+  }
+  elseif (isset($element['#field_instance_info']['description'])) {
+    $description = $element['#field_instance_info']['description'];
+  }
+
+  // Left cell content.
   $info = "";
   if (isset($element['#field_info']['field_name'])) {
     $info .= "<p><b>Machine Name</b>: <em>" . $element['#field_info']['field_name'] . "</em></p>";
   }
-  $info .= "<p><b>Description</b>: " . t($element['#description']) . "</p>";
+  $info .= "<p><b>Description</b>: " . check_plain($description) . "</p>";
 
+  // Set the required text on the left cell.
+  $req = t("FALSE");
+  if (!empty($element["#attributes"]['class']) && in_array("required", $element['#attributes']['class'])) {
+    $req = "<b>" . t("TRUE") . "</b>";
+    $element['#children'] = preg_replace("/\<\/label>/", " <span class=\"form-required\" title=\"" . t("This field is required") . ".\">*</span>$0", $element['#children']);
+  }
+  $info .= "<p><b>Required</b>: " . $req . "</p>";
+
+  // Set up the rows even though there will only be one.
   $rows = array();
   $rows[] = array(
     'data' => array(
@@ -42,6 +65,7 @@ function theme_stanford_capx_columns_to_the_right($elements) {
     'no_striping' => TRUE,
   );
 
+  // Render and go!
   $output = theme('table', array(
     'header' => $header,
     'rows' => $rows,
