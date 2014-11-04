@@ -28,13 +28,21 @@ use CAPx\Drupal\Organizations\Orgs;
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config() {
-  // Connection Status Block.
-  $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
+  $output = array();
 
-  // Content Output.
-  $output = render($connection_block['content']);
-  $output .= "<h2>" . t('Importers') . "</h2>";
-  $output .= views_embed_view('importers_overview_page');
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
+
+  // Connection Status Block.
+  $block = block_load('stanford_capx', 'connection_status');
+  $output['content']['connection_block'] = _block_get_renderable_array(_block_render_blocks(array($block)));
+
+  // Header
+  $output['content']['thetext']['#markup'] = "<h2>" . t('Importers') . "</h2>";
+
+  // The view.
+  $output['content']['overviewview']['#markup'] = views_embed_view('importers_overview_page');
 
   return $output;
 }
@@ -120,9 +128,6 @@ function stanford_capx_admin_config_help() {
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
 
-  $output['content']['thetext']['#markup'] = "<p>Please create the functionality for this page</p>";
-  $output = array();
-
   $content = "<h2>" . t("Getting started") . "</h2>";
   $content .= "<p>" . t("Importing content from CAP can be completed in 3 steps:") . "</p>";
   $content .= "<ol><li>";
@@ -200,11 +205,10 @@ function stanford_capx_admin_config_mapper_new() {
   $output['content']['capx_menu_block'] = $menu_block;
 
   // Add some css.
-  // drupal_add_css(drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css");
   $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
 
   // Data browser block.
-  $block = block_load('stanford_capx','data_browser_launch');
+  $block = block_load('stanford_capx', 'data_browser_launch');
   $output['content']['data_browser'] = _block_get_renderable_array(_block_render_blocks(array($block)));
 
   // Get and render the mapper form.
@@ -259,14 +263,12 @@ function stanford_capx_admin_config_import() {
   // Management Menu.
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
-  $output = "";
-  $output .= "<p>" . t("After you have Mapping configured, create an Importer to chose which profiles you would like to import.") . "</p>";
-  $output .= "<p>" . t("Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs.") . "</p>";
-  $output .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
-  $output .= views_embed_view('capx_importers');
 
   // Text markup.
-  $output['content']['body']['#markup'] = "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
+  $content = "<p>" . t("After you have Mapping configured, create an Importer to chose which profiles you would like to import.") . "</p>";
+  $content .= "<p>" . t("Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs.") . "</p>";
+  $content .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
+  $output['content']['body']['#markup'] = $content;
 
   // The importer view.
   $output['content']['importer_view']['#markup'] = views_embed_view('capx_importers');

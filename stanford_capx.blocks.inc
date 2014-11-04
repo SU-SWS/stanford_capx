@@ -334,8 +334,17 @@ function stanford_capx_management_menu_block() {
 
   $path = 'admin/config/capx';
   $parent = menu_link_get_preferred($path);
+  $trail = menu_get_active_trail();
+  $trail_mlids = array();
+  foreach ($trail as $item) {
+    if (!isset($item['mlid'])) {
+      continue;
+    }
+    $trail_mlids[] = $item['mlid'];
+  }
+
   $parameters = array(
-    'active_trail' => array($parent['plid']),
+    'active_trail' => $trail_mlids,
     'only_active_trail' => FALSE,
     'min_depth' => $parent['depth'] + 1,
     'max_depth' => $parent['depth'] + 1,
