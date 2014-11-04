@@ -45,12 +45,7 @@ function stanford_capx_admin_config() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_connect() {
-
-  // Connection Status Block.
-  $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
-
-  // Content Output.
-  $output = render($connection_block['content']);
+  $output = "";
 
   // The settings form found in stanford_capx.forms.inc
   $form = drupal_get_form('stanford_capx_forms_connect_form');

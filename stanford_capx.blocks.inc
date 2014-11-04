@@ -131,7 +131,7 @@ function stanford_capx_connection_status_block() {
         'attributes' => array('class' => array('button')),
         'query' => array('destination' => current_path()),
       );
-      $link = l(t('Manually update all profiles'), 'admin/config/capx/importer/sync-all', $link_vars);
+      $link = l(t('Update all profiles now'), 'admin/config/capx/importer/sync-all', $link_vars);
       $content .= '<div class="update-all"><p>' . $link . '</p></div>';
     }
   }
@@ -153,7 +153,8 @@ function stanford_capx_connection_status_block() {
 function stanford_capx_data_browser_launch_block() {
   $output = "";
 
-  $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "</p>";
+  $output .= "<p>" . t("Having trouble finding the right field for mapping? Try viewing the data schema. We know... it is a lot. You can do it!") . "<br />";
+  $output .= t("For more help please visit the !helppage.", array("!helppage" => l(t("help page"), "admin/config/capx/help"))) . "</p>";
 
   // Generate a link to the data browser, which opens in a new window.
   $browser_link = l(t('Open Data Schema'),

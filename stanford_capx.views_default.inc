@@ -478,8 +478,11 @@ function stanford_capx_views_default_views() {
     'importer_1' => 'importer_1',
     'sync' => 'sync',
     'last_sync' => 'last_sync',
+    'orphaned' => 'orphaned',
     'edit_link' => 'edit_link',
     'edit_node' => 'edit_node',
+    'edit_node_1' => 'edit_node_1',
+    'profile_id' => 'profile_id',
     'nothing' => 'nothing',
   );
   $handler->display->display_options['style_options']['default'] = '-1';
@@ -506,21 +509,21 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
     'title' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'entity_type' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'bundle_type' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
@@ -532,14 +535,21 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
     'sync' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'last_sync' => array(
-      'sortable' => 0,
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'orphaned' => array(
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
@@ -551,6 +561,18 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
     'edit_node' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'edit_node_1' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'profile_id' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
@@ -625,6 +647,12 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['last_sync']['field'] = 'last_sync';
   $handler->display->display_options['fields']['last_sync']['date_format'] = 'time ago';
   $handler->display->display_options['fields']['last_sync']['second_date_format'] = 'long';
+  /* Field: CAPx profile: Orphaned Status */
+  $handler->display->display_options['fields']['orphaned']['id'] = 'orphaned';
+  $handler->display->display_options['fields']['orphaned']['table'] = 'capx_profiles';
+  $handler->display->display_options['fields']['orphaned']['field'] = 'orphaned';
+  $handler->display->display_options['fields']['orphaned']['label'] = 'Orphan';
+  $handler->display->display_options['fields']['orphaned']['not'] = 0;
   /* Field: Block: Edit link */
   $handler->display->display_options['fields']['edit_link']['id'] = 'edit_link';
   $handler->display->display_options['fields']['edit_link']['table'] = 'bean';

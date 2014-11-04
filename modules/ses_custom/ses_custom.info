@@ -1,6 +1,0 @@
-name = School of Earth Sciences main site customizations
-description = Various customizations for the main site
-core = 7.x
-package = Stanford
-project = ses_custom
-version = 1.01
