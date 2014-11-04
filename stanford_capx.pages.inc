@@ -45,16 +45,15 @@ function stanford_capx_admin_config() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_connect() {
+  $output = array();
 
-  // Connection Status Block.
-  $connection_block = module_invoke('stanford_capx', 'block_view', 'connection_status');
-
-  // Content Output.
-  $output = render($connection_block['content']);
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
 
   // The settings form found in stanford_capx.forms.inc
   $form = drupal_get_form('stanford_capx_forms_connect_form');
-  $output .= drupal_render($form);
+  $output['content']['config_form'] = $form;
 
   return $output;
 }
@@ -65,17 +64,22 @@ function stanford_capx_admin_config_connect() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_settings() {
+  $output = array();
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
 
   $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
   if (!$has_orgs) {
     drupal_set_message(t('The organization codes are not available. You should sync with the API now.'), 'warning');
   }
 
-  $output = "<h2>" . t("Organizations") . "</h2>";
-  $output .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  $output['content']['orgstext']['#markup'] = "<h2>" . t("Organizations") . "</h2>";
+  $output['content']['orgstext']['#markup'] .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
 
   $form = drupal_get_form('stanford_capx_forms_config_settings');
-  $output .= drupal_render($form);
+  $output['content']['settings_form'] = $form;
 
   return $output;
 }
@@ -96,8 +100,13 @@ function stanford_capx_organizations_sync() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_help() {
-  $output = "";
-  $output .= "<p>Please create the functionality for this page</p>";
+  $output = array();
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
+
+  $output['content']['thetext']['#markup'] = "<p>Please create the functionality for this page</p>";
   return $output;
 }
 
@@ -107,9 +116,19 @@ function stanford_capx_admin_config_help() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_mapper() {
-  $output = "<p>" . t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields") . ".</p>";
-  $output .= "<p><b>" . l(t('Create new mapper'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn'))) . "</b></p>";
-  $output .= views_embed_view('capx_mappers');
+  $output = array();
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
+
+  // Body content.
+  $output['content']['body']['#markup'] = "<p>" . t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields") . ".</p>";
+  $output['content']['body']['#markup'] .= "<p><b>" . l(t('Create new mapper'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn'))) . "</b></p>";
+
+  // The mapper view.
+  $output['content']['mapper_view']['#markup'] = views_embed_view('capx_mappers');
+
   return $output;
 }
 
@@ -119,20 +138,22 @@ function stanford_capx_admin_config_mapper() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_mapper_new() {
-  $output = "";
+  $output = array();
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
 
   // Add some css.
   // drupal_add_css(drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css");
-  $output = array();
   $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
 
   // Data browser block.
-  $block = block_load('stanford_capx', 'data_browser_launch');
-  $output += _block_get_renderable_array(_block_render_blocks(array($block)));
+  $block = block_load('stanford_capx','data_browser_launch');
+  $output['content']['data_browser'] = _block_get_renderable_array(_block_render_blocks(array($block)));
 
   // Get and render the mapper form.
-  $output += drupal_get_form('stanford_capx_mapper_form');
-
+  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form');
 
   return $output;
 }
@@ -149,6 +170,10 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   if (!$mapper) {
     throw new Exception(t("Could not load a mapper with provided machine name. Please check url."));
   }
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
 
   // Add some css.
   // drupal_add_css(drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css");
@@ -174,10 +199,17 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import() {
-  $output = "";
+  $output = array();
 
-  $output .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
-  $output .= views_embed_view('capx_importers');
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
+
+  // Text markup.
+  $output['content']['body']['#markup'] = "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
+
+  // The importer view.
+  $output['content']['importer_view']['#markup'] = views_embed_view('capx_importers');
 
   return $output;
 }
@@ -188,8 +220,17 @@ function stanford_capx_admin_config_import() {
  *   HTML representation of this page.
  */
 function stanford_capx_admin_config_import_new() {
+  $output = array();
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
+
   // Get and render the importer form.
-  return drupal_get_form('stanford_capx_importer_form');
+  $form = drupal_get_form('stanford_capx_importer_form');
+  $output['content']['importer_form'] = $form;
+
+  return $output;
 }
 
 /**
@@ -204,6 +245,10 @@ function stanford_capx_admin_config_import_edit($importer_machine_name) {
   if (!$importer) {
     throw new Exception(t("Could not load an importer with provided machine name. Please check url."));
   }
+
+  // Management Menu.
+  $menu_block = stanford_capx_management_menu_block();
+  $output['content']['capx_menu_block'] = $menu_block;
 
   // The in use block.
   $output['content']["in_use_block"] = _block_get_renderable_array(_block_render_blocks(array(block_load('stanford_capx', 'importer_in_use'))));
@@ -272,27 +317,6 @@ function stanford_capx_orphan_importer($machine_name) {
   // Call batch.
   batch_process(drupal_get_destination());
 
-}
-
-/**
- * [stanford_capx_admin_config description]
- * @return [type] [description]
- */
-
-function stanford_capx_debug() {
-  $output = "";
-
-  // $importers = CAPxImporter::loadAllImporters();
-  // foreach ($importers as $key => $importer) {
-  //   $entity_importer = $importer->getEntityImporter();
-  //   $entity_importer->cron();
-  // }
-
-
-  // batch_process('admin/config/capx/profiles');
-
-  $output .= "Hey!";
-  return $output;
 }
 
 /**

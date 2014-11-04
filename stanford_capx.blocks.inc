@@ -49,6 +49,14 @@ function stanford_capx_block_info() {
     'pages' => 'admin/config/capx/mapper/edit/*',
   );
 
+  $blocks['capx_management_menu'] = array(
+    'info' => t('CAPX management menu'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+    'properties' => array('administrative' => 1),
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'admin/config/capx*',
+  );
+
   return $blocks;
 }
 
@@ -81,6 +89,11 @@ function stanford_capx_block_view($delta = '') {
       $block['title'] = t('Mapper In Use');
       $block['content'] = stanford_capx_mapper_in_use_block();
       break;
+
+    case "capx_management_menu":
+      $block['subject'] = t('CAPX Management Menu');
+      $block['title'] = "<none>";
+      $block['content'] = stanford_capx_management_menu_block();
 
   }
 
@@ -307,4 +320,34 @@ function stanford_capx_mapper_in_use_block() {
     ),
   );
 
+}
+
+/**
+ * Returns the administrative menu items for CAPx.
+ *
+ * Returns a renderable array of html and attachments.
+ * @return array
+ *   Render array of markup
+ */
+function stanford_capx_management_menu_block() {
+  $output = array();
+
+  $path = 'admin/config/capx';
+  $parent = menu_link_get_preferred($path);
+  $parameters = array(
+    'active_trail' => array($parent['plid']),
+    'only_active_trail' => FALSE,
+    'min_depth' => $parent['depth'] + 1,
+    'max_depth' => $parent['depth'] + 1,
+    'conditions' => array('plid' => $parent['mlid']),
+  );
+
+  $children = menu_build_tree($parent['menu_name'], $parameters);
+  $menu_items = menu_tree_output($children);
+  $rendered = "<div class=\"capx-menu-block\">" . drupal_render($menu_items) . "</div>";
+
+  $output['#markup'] = $rendered;
+  $output['#attached']['css'][] = drupal_get_path("module", "stanford_capx") .  "/css/stanford_capx.admin.css";
+
+  return $output;
 }

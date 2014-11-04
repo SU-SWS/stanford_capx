@@ -107,9 +107,8 @@ function stanford_capx_menu() {
 
   // Connect page.
   $items['admin/config/capx/connect'] = array(
-    'title' => 'CAPx | Connect',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('stanford_capx_forms_connect_form'),
+    'title' => 'Connect',
+    'page callback' => 'stanford_capx_admin_config_connect',
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => -10,
@@ -190,7 +189,7 @@ function stanford_capx_menu() {
   // ---------------------------------------------------------------------------
 
   $items['admin/config/capx/importer'] = array(
-    'title' => 'Import',
+    'title' => 'Importing',
     'page callback' => 'stanford_capx_admin_config_import',
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
@@ -258,15 +257,6 @@ function stanford_capx_menu() {
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
   );
-
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-  $items['admin/config/capx/debug'] = array(
-    'title' => 'DEBUG CAPx',
-    'page callback' => 'stanford_capx_debug',
-    'access arguments' => array('administer capx'),
-    'type' => MENU_SUGGESTED_ITEM,
-  );
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
   return $items;
 }
