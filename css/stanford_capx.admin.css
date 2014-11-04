@@ -22,6 +22,7 @@
 div.capx-menu-block > ul {
   margin: 0;
   padding: 0;
+  text-align: right;
 }
 
 .capx-menu-block ul li {
