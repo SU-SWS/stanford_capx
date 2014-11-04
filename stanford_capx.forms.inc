@@ -367,17 +367,19 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
       $form['field-mapping'][$property_container][$property_machine_name] = array(
         '#type' => 'container',
-        '#title' => t("@var", array("@var" => $prop_info['label'])),
+        '#title' => check_plain($prop_info['label']),
         '#field_info' => $prop_info,
         '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+        '#tree' => FALSE,
       );
 
-      $form['field-mapping'][$property_container][$property_machine_name]['value'] = array(
+      $form['field-mapping'][$property_container][$property_machine_name][$property_machine_name] = array(
         '#type' => 'textfield',
         '#title' => t('value'),
-        '#description' => t("@var", array("@var" => $prop_info['description'])),
+        '#description' => check_plain($prop_info['description']),
         '#default_value' => isset($mapper->properties[$property_machine_name]) ? $mapper->properties[$property_machine_name] : '',
         '#field_info' => $prop_info,
+        '#parents' => array('field-mapping', $property_container, $property_machine_name),
       );
 
       if (isset($prop_info['required'])) {
@@ -740,9 +742,9 @@ function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state
 
   // Properties validation.
   foreach ($form_state['values']['field-mapping'][$entity . "-properties"] as $k => $v) {
-    if (empty($v['value']) && isset($properties[$k]['required'])) {
-      $element = 'field-mapping][' . $entity . "-properties][" . $k . "][value";
-      form_set_error($element, t('@name property is required', array("@name" => $k)));
+    if (empty($v) && !empty($properties[$k]['required'])) {
+      $element = 'field-mapping][' . $entity . "-properties][" . $k;
+      form_set_error($element, t('@name property is required.', array("@name" => $properties[$k]['label'])));
     }
   }
 
