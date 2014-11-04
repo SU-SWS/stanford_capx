@@ -18,6 +18,8 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
   function option_definition() {
     $options = parent::option_definition();
     $options['mapper'] = array('default' => FALSE);
+    $options['mapper_bundle_title'] = array('default' => FALSE);
+    $options['mapper_bundle_machine'] = array('default' => FALSE);
     return $options;
   }
 
@@ -25,6 +27,9 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
     parent::options_form($form, $form_state);
 
     $form['format']['#options']['mapper'] = t('Mapper link');
+    $form['format']['#options']['bundle_title'] = t('Bundle title');
+    $form['format']['#options']['bundle_machine'] = t('Bundle machine name');
+
     $form['mapper'] = array(
       '#type' => 'checkbox',
       '#title' => t('Render as plain text'),
@@ -39,6 +44,7 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
       $value = $values->{$this->field_alias};
       $field_values = unserialize($value);
 
+      // Link to mapper.
       if (!empty($field_values['mapper'])) {
         $mapper = CAPxMapper::loadMapper($field_values['mapper']);
         if (isset($mapper)) {
@@ -48,6 +54,46 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
           else {
             return l(check_plain($mapper->title), 'admin/config/capx/mapper/edit/' . $mapper->identifier());
           }
+        }
+      }
+      else {
+        return t('Mapper not found');
+      }
+    }
+
+    // Bundle Label.
+    if ($this->options['format'] == 'bundle_title') {
+      $value = $values->{$this->field_alias};
+      $field_values = unserialize($value);
+
+      if (!empty($field_values['bundle_type']) && !empty($field_values['entity_type'])) {
+        $entity_info = entity_get_info($field_values['entity_type']);
+        return t($entity_info['bundles'][$field_values['bundle_type']]['label']);
+      }
+      else if (!empty($field_values['mapper'])) {
+        $mapper = CAPxMapper::loadEntityMapper($field_values['mapper']);
+        if ($mapper) {
+          $entity_info = entity_get_info($mapper->getEntityType());
+          return t($entity_info['bundles'][$mapper->getBundleType()]['label']);
+        }
+      }
+      else {
+        return t('Mapper not found');
+      }
+    }
+
+    // Bundle Machine Name.
+    if ($this->options['format'] == 'bundle_machine') {
+      $value = $values->{$this->field_alias};
+      $field_values = unserialize($value);
+
+      if (!empty($field_values['bundle_type'])) {
+        return $field_values['bundle_type'];
+      }
+      else if(!empty($field_values['mapper'])) {
+        $mapper = CAPxMapper::loadEntityMapper($field_values['mapper']);
+        if ($mapper) {
+         return $mapper->getBundleType();
         }
       }
       else {

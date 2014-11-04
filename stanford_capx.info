@@ -9,9 +9,16 @@ dependencies[] = date
 dependencies[] = date_api
 dependencies[] = encrypt (>= 2.0-beta3)
 dependencies[] = views
-dependencies[] = views_base_url
 dependencies[] = ctools
+dependencies[] = bean
 
 files[] = includes/views/views_handler_filter_importer.inc
 files[] = includes/views/views_handler_field_configuration_settings.inc
 files[] = includes/views/views_handler_field_configuration_metadata.inc
+files[] = includes/views/views_handler_field_mapper_delete_link.inc
+files[] = includes/views/views_handler_field_mapper_edit_link.inc
+files[] = includes/views/views_handler_field_importer_delete_link.inc
+files[] = includes/views/views_handler_field_importer_edit_link.inc
+files[] = includes/views/views_handler_field_importer_sync_profiles.inc
+files[] = includes/views/views_handler_field_importer_orphan_profiles.inc
+files[] = includes/views/views_handler_field_capx_profile_id.inc
