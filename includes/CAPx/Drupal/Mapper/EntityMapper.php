@@ -80,8 +80,8 @@ class EntityMapper extends MapperAbstract {
             }
 
             // Attempt to get the data based on the path that was provided.
-            // No guarentee that the user wont enter valid jsonpath notation that
-            // does not have a valid result.
+            // No guarantee that the user will enter valid jsonpath notation
+            // that does have a valid result.
             try {
               $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
             }
@@ -96,14 +96,8 @@ class EntityMapper extends MapperAbstract {
             }
           }
 
-          // We got nothing!
-          if (empty($info)) {
-            // @todo: log this
-            continue;
-          }
-
-          // Widgets can change the way the data needs to be parsed. Provide that
-          // to the FieldProcessor.
+          // Widgets can change the way the data needs to be parsed. Provide
+          // that to the FieldProcessor.
           $widget = $fieldInfoInstance['widget']['type'];
           $field = $fieldInfoField['type'];
 

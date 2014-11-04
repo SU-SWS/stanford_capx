@@ -45,43 +45,26 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
    */
   public function put($data) {
 
-    $watchdog = function($fieldName, $entity) {
-      $entityId = $entity->getIdentifier();
-      watchdog('stanford_capx',
-        'EntityMetadataWrapperException: Could not save the field data for %field on %type id: %profileId',
-        array(
-          '%field' => $fieldName,
-          '%type' => $entity->getBundle(),
-          '%profileId' => $entityId ? $entityId : 'unknown',
-        ),
-        WATCHDOG_ERROR
-      );
-    };
-
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
-
-    // If there's no data, do nothing.
-    if (empty($data) || (count($data) === 1 && empty(current($data)))) {
-      $watchdog($fieldName, $entity);
-      return;
-    }
-
     $fieldInfo = field_info_field($fieldName);
-    $field = $entity->{$fieldName};
-    $keys = array_keys($fieldInfo['columns']);
-    $key = $keys[0];
 
-    // Reformat the jsonpath return data so it works with Durp.
+    // Reformat the jsonpath return data so it works with Drupal.
     $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
 
     // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
+    // If there's no data, do nothing.
     if (empty($data)) {
-      $watchdog($fieldName, $entity);
+      // @todo: Do we really need to log this?
+      $this->logIssue();
       return;
     }
+
+    $field = $entity->{$fieldName};
+    $keys = array_keys($fieldInfo['columns']);
+    $key = $keys[0];
 
     try {
       // Only want the first value for one cardinality field.
@@ -95,7 +78,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     }
     catch (\EntityMetadataWrapperException $e) {
       // Log the problem.
-      $watchdog($fieldName, $entity);
+      $this->logIssue($e);
     }
 
   }
@@ -125,7 +108,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
 
     // If no key value was specified then assume the column key.
     if (isset($data[0][0])) {
-      foreach($data[0] as $int => $value) {
+      foreach ($data[0] as $int => $value) {
         $return[$int][$columnKey] = $value;
       }
     }
@@ -139,8 +122,10 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   //
 
   /**
-   * Getter function
-   * @return Entity the entity being worked on.
+   * Returns current entity.
+   *
+   * @return \EntityMetadataWrapper
+   *   The entity being worked on, wrapped.
    */
   public function getEntity() {
     return $this->entity;
@@ -187,5 +172,28 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     return $this->type;
   }
 
+
+  public function logIssue(\Exception $e = NULL) {
+    $entity = $this->getEntity();
+    $entityId = $entity->getIdentifier();
+
+    $logText = 'Could not save the field data for %field on %type id: %profileId.';
+    if (isset($e)) {
+      $logText .= ' ';
+      $logText .= get_class($e);
+      $logText .= ': ' . check_plain($e->getMessage());
+    }
+
+    watchdog(
+      'stanford_capx_field',
+      $logText,
+      array(
+        '%field' => $this->getFieldName(),
+        '%type' => $entity->getBundle(),
+        '%profileId' => $entityId ? $entityId : 'unknown',
+      ),
+      WATCHDOG_ERROR
+    );
+  }
 
 }
