@@ -75,11 +75,25 @@ function stanford_capx_admin_config_settings() {
     drupal_set_message(t('The organization codes are not available. You should sync with the API now.'), 'warning');
   }
 
-  $output['content']['orgstext']['#markup'] = "<h2>" . t("Organizations") . "</h2>";
-  $output['content']['orgstext']['#markup'] .= "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  // Organizations
+  // ---------------------------------------------------------------------------
+  $form = array();
+  $form['orggroup'] = array(
+    '#type' => "fieldset",
+    '#title' => t("Organizations"),
+    '#description' => t("Organization specific actions. Before you are able to start using organizations you have to sync them with the CAP API server."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['orggroup']['theactions']['#markup'] = "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
+  $output['content']["orgs"] = $form;
+
+  // Settings form
+  // ---------------------------------------------------------------------------
 
   $form = drupal_get_form('stanford_capx_forms_config_settings');
-  $output['content']['settings_form'] = $form;
+  $output["content"]["settingsform"] = $form;
 
   return $output;
 }
@@ -107,6 +121,47 @@ function stanford_capx_admin_config_help() {
   $output['content']['capx_menu_block'] = $menu_block;
 
   $output['content']['thetext']['#markup'] = "<p>Please create the functionality for this page</p>";
+  $output = array();
+
+  $content = "<h2>" . t("Getting started") . "</h2>";
+  $content .= "<p>" . t("Importing content from CAP can be completed in 3 steps:") . "</p>";
+  $content .= "<ol><li>";
+  $content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Connect"), "admin/config/capx/connect")));
+  $content .= "</li><li>";
+  $content .= t("!mapping - Create a Mapper that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/mapper")));
+  $content .= "</li><li>";
+  $content .= t("!import - Choose which profiles you would like to import.", array("!import" => l(t("Import"), "admin/config/capx/importer")));
+  $content .= "</li></ol>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("Autentication credentials") . "</h2>";
+  $content .= "<p>" . t("Authentication credentials allow you to connect to the CAP API and import content into your website.") . "</p>";
+  $content .= "<p>" . t("To get authentication credentials, file a !helpsu to Administrative Applications/CAP Stanford Profiles.", array("!helpsu" => l(t("HelpSU request"), "https://www.stanford.edu/helpsu"))) . "</p>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("CAP data - Choosing fields") . "</h2>";
+  $content .= "<p>" . t("If you need help determining which fields you need in your Mapper, you can use the !caplink. The schema displays all fields in CAP and where they are nested. Yes, it is a ton of data, we know...", array("!caplink" => l(t("CAP Data Schema"), "admin/config/capx/data-browser"))) . "</p>";
+  $content .= "<p><strong>" . t("Common fields: ") . "</strong>";
+  $content .= t("A list of common fields can be found on the sidebar of any !mappingpage.", array("!mappingpage" => l(t("mapper page"), "admin/config/capx/mapper/new"))) . "</p>";
+  $content .= "<p>&nbsp;</p>";
+
+  $content .= "<h2>" . t("Resources for developers") . "</h2>";
+  $content .= "<p>" . t("Want to get involved in the development of the CAPx module? Check out the resources below:") . "</p>";
+  $content .= "<ol><li>";
+  $content .= l(t("CAPx Module UI documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Module API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx GitHub Repository"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Issue Queue"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAPx Contribution help documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li><li>";
+  $content .= l(t("CAP API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= "</li></ol>";
+
+  $output['content']['textcontent']['#markup'] = $content;
   return $output;
 }
 
@@ -204,6 +259,11 @@ function stanford_capx_admin_config_import() {
   // Management Menu.
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
+  $output = "";
+  $output .= "<p>" . t("After you have Mapping configured, create an Importer to chose which profiles you would like to import.") . "</p>";
+  $output .= "<p>" . t("Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs.") . "</p>";
+  $output .= "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
+  $output .= views_embed_view('capx_importers');
 
   // Text markup.
   $output['content']['body']['#markup'] = "<p>" . l(t('Create new importer'), 'admin/config/capx/importer/new', array('attributes' => array('class' => 'new-button button btn'))) . "</p>";
