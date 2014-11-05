@@ -33,6 +33,7 @@ class views_handler_field_configuration_metadata extends views_handler_field_ser
       '#default_value' => $this->options['timestamp'],
       '#dependency' => array('edit-options-format' => array('lastUpdateHuman')),
     );
+
   }
 
   function render($values) {

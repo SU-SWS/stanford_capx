@@ -367,17 +367,19 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
       $form['field-mapping'][$property_container][$property_machine_name] = array(
         '#type' => 'container',
-        '#title' => t("@var", array("@var" => $prop_info['label'])),
+        '#title' => check_plain($prop_info['label']),
         '#field_info' => $prop_info,
         '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+        '#tree' => FALSE,
       );
 
-      $form['field-mapping'][$property_container][$property_machine_name]['value'] = array(
+      $form['field-mapping'][$property_container][$property_machine_name][$property_machine_name] = array(
         '#type' => 'textfield',
         '#title' => t('value'),
-        '#description' => t("@var", array("@var" => $prop_info['description'])),
+        '#description' => check_plain($prop_info['description']),
         '#default_value' => isset($mapper->properties[$property_machine_name]) ? $mapper->properties[$property_machine_name] : '',
         '#field_info' => $prop_info,
+        '#parents' => array('field-mapping', $property_container, $property_machine_name),
       );
 
       if (isset($prop_info['required'])) {
@@ -740,9 +742,9 @@ function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state
 
   // Properties validation.
   foreach ($form_state['values']['field-mapping'][$entity . "-properties"] as $k => $v) {
-    if (empty($v['value']) && isset($properties[$k]['required'])) {
-      $element = 'field-mapping][' . $entity . "-properties][" . $k . "][value";
-      form_set_error($element, t('@name property is required', array("@name" => $k)));
+    if (empty($v) && !empty($properties[$k]['required'])) {
+      $element = 'field-mapping][' . $entity . "-properties][" . $k;
+      form_set_error($element, t('@name property is required.', array("@name" => $properties[$k]['label'])));
     }
   }
 
@@ -1583,6 +1585,50 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 }
 
 /**
+ * [stanford_capx_views_exposed_form_alter description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_form_views_exposed_form_alter(&$form, &$form_state) {
+
+  // Only run on profiles listing view.
+  if ($form['#id'] !== "views-exposed-form-capx-admin-profiles-profiles") {
+    return;
+  }
+
+  // Change the entity type and bundle type into drop downs.
+  $entity_info = capx_entity_get_info();
+
+  // Define no value.
+  $entity_options = array('' => t("- Any -"));
+  $bundle_options = array('' => t("- Any -"));
+
+  // Loop through information and populate options.
+  foreach ($entity_info as $entity_name => $info) {
+    $entity_options[$entity_name] = t("@title", array("@title" => $info['label']));
+    foreach ($info['bundles'] as $bundle_name => $bundle_info) {
+      $bundle_options[$info['label']][$bundle_name] = t("@name", array("@name" => $bundle_info['label']));
+    }
+  }
+
+  // Set up the entity type select.
+  $form['entity_type']['#type'] = "select";
+  $form['entity_type']['#options'] = $entity_options;
+  unset($form['entity_type']['#size']);
+
+  // Set up bundle type select.
+  $form['bundle_type']['#type'] = "select";
+  $form['bundle_type']['#options'] = $bundle_options;
+  unset($form['bundle_type']['#size']);
+
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+// End Form Alters
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
  * Recursively callled function that provides an array of information that is
  * used in the mapper form validation callback.
  * @see stanford_capx_mapper_form_validate_element()
@@ -1629,6 +1675,14 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 function stanford_capx_forms_config_settings($form, &$form_state) {
 
   $form['#tree'] = TRUE;
+  $form['variables'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Syncronization settings"),
+    '#description' => t("Settings for update and syncronization actions with the CAP API."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
   $form['variables']['stanford_capx_batch_limit'] = array(
     '#title' => t('Batch, or cron, processing limit'),
     '#description' => t('The number of items to process on one sync operation.'),
