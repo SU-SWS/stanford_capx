@@ -36,8 +36,12 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
 
     drupal_alter('capx_pre_property_set', $entity, $data, $propertyName);
 
-    // @todo: validate this data. try / catch.
-    $entity->{$propertyName}->set($data);
+    try {
+      $entity->{$propertyName}->set($data);
+    }
+    catch (\Exception $e) {
+      $this->logIssue($e);
+    }
   }
 
 
@@ -77,5 +81,33 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
     $this->PropertyName = $name;
   }
 
+  /**
+   * Logs issues to DB.
+   *
+   * @param \Exception $e
+   *   Optional.
+   */
+  public function logIssue(\Exception $e = NULL) {
+    $entity = $this->getEntity();
+    $entityId = $entity->getIdentifier();
+
+    $logText = 'There was an issue setting property value for %propery on %type id: %profileId.';
+    if (isset($e)) {
+      $logText .= ' ';
+      $logText .= get_class($e);
+      $logText .= ': ' . check_plain($e->getMessage());
+    }
+
+    watchdog(
+      'stanford_capx_property',
+      $logText,
+      array(
+        '%propery' => $this->getPropertyName(),
+        '%type' => $entity->getBundle(),
+        '%profileId' => $entityId ? $entityId : 'unknown',
+      ),
+      WATCHDOG_ERROR
+    );
+  }
 
 }
