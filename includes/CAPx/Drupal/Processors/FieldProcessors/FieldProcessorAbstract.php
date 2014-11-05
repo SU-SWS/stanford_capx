@@ -124,7 +124,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   /**
    * Returns current entity.
    *
-   * @return \EntityMetadataWrapper
+   * @return \EntityDrupalWrapper
    *   The entity being worked on, wrapped.
    */
   public function getEntity() {

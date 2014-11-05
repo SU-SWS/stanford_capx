@@ -90,7 +90,7 @@ function stanford_capx_admin_config_settings() {
   // Settings form
   // ---------------------------------------------------------------------------
 
-  $form = drupal_get_form('stanford_capx_forms_config_settings');
+  $form = drupal_get_form('stanford_capx_config_settings_form');
   $output["content"]["settingsform"] = $form;
 
   return $output;
