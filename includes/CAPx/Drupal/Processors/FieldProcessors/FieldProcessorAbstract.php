@@ -58,18 +58,28 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     // If there's no data, do nothing.
     if (empty($data)) {
       // @todo: Do we really need to log this?
-      $this->logIssue();
+      $this->logIssue(new \Exception(t('Field has no data.')));
       return;
     }
 
     $field = $entity->{$fieldName};
-    $keys = array_keys($fieldInfo['columns']);
-    $key = $keys[0];
 
     try {
-      // Only want the first value for one cardinality field.
       if ($fieldInfo['cardinality'] === "1") {
-        $field->set($data[0][$key]);
+        // Only want the first value for one cardinality field.
+        $data = array_shift($data);
+        // Metadata wrapper is smarter then plain field info.
+        switch (get_class($field)) {
+          // Structure wrapper assumes we providing multiple columns.
+          case 'EntityStructureWrapper':
+            $field->set($data);
+            break;
+
+          // Value wrapper assumes we providing single value.
+          case 'EntityValueWrapper':
+            $field->set(array_shift($data));
+            break;
+        }
       }
       else {
         // For everything else give it all.
