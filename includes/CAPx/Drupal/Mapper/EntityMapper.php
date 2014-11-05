@@ -136,8 +136,12 @@ class EntityMapper extends MapperAbstract {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }
       catch(\Exception $e) {
-        // ... silently continue. Please dont shoot me.
-        // @todo: log this for debugging.
+        $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
+        $message_vars = array(
+          '@path' => $remoteDataPath,
+          '@message' => $e->getMessage(),
+        );
+        watchdog('stanford_capx_jsonpath', $message, $message_vars);
         continue;
       }
 
