@@ -265,9 +265,14 @@ class CAPx {
 
   /**
    * Get the etag for an entity.
-   * @param  [type] $importer  [description]
-   * @param  [type] $profileId [description]
-   * @return [type]            [description]
+   *
+   * @param string $importer
+   *   Importer machine name.
+   * @param string $profileId
+   *   Profile ID.
+   *
+   * @return string
+   *   Profile Etag.
    */
   public static function getEntityETag($importer, $profileId) {
 
@@ -277,12 +282,7 @@ class CAPx {
       ->condition("profile_id", $profileId)
       ->execute();
 
-    $etag = $result->fetchField();
-    if (!is_numeric($etag)) {
-      return FALSE;
-    }
-
-    return $etag;
+    return $result->fetchField();
   }
 
   /**
