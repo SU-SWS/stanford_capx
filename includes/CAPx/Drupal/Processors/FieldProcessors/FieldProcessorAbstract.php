@@ -38,7 +38,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
    * Puts the information from the CAP API
    * In to the field via entity_metadata_wrapper. Tries to handle information
    * being provided to it for most field types. Specific FieldProcessors may
-   * override this function to provide their own custom procsessing.
+   * override this function to provide their own custom processing.
    *
    * @param array $data
    *   An array of data from the CAP API.

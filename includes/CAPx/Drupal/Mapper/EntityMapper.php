@@ -67,6 +67,7 @@ class EntityMapper extends MapperAbstract {
           drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
 
           // Allow just one path as a string.
+          // @todo For data structures like files we shouldn't convert data path to array.
           if (!is_array($remoteDataPaths)) {
             $remoteDataPaths = array($remoteDataPaths);
           }
