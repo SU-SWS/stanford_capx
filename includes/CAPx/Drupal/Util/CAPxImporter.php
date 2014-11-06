@@ -14,7 +14,7 @@ use CAPx\Drupal\Util\CAPxConnection;
 use CAPx\Drupal\Importer\EntityImporter;
 
 use CAPx\Drupal\Importer\Orphans\EntityImporterOrphans;
-use CAPx\Drupal\Importer\Orphans\Comparisons\CompareMissingFromApi;
+use CAPx\Drupal\Importer\Orphans\Comparisons\CompareMissingFromAPI;
 use CAPx\Drupal\Importer\Orphans\Comparisons\CompareOrgCodesSunet;
 use CAPx\Drupal\Importer\Orphans\Comparisons\CompareOrgCodesWorkgroups;
 use CAPx\Drupal\Importer\Orphans\Comparisons\CompareSunetOrgCodes;
@@ -167,7 +167,7 @@ class CAPxImporter {
       $lookups[] = new LookupWorkgroupOrphans();
 
       // Load all the comparisons...
-      $comparisons[] = new CompareMissingFromApi();
+      $comparisons[] = new CompareMissingFromAPI();
       $comparisons[] = new CompareOrgCodesSunet();
       $comparisons[] = new CompareOrgCodesWorkgroups();
       $comparisons[] = new CompareSunetOrgCodes();
