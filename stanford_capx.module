@@ -506,6 +506,12 @@ function stanford_capx_schema_refresh() {
     // Query the API for the profile schema as raw JSON.
     $client = CAPxConnection::getAuthenticatedHTTPClient();
     $response = $client->api('schema')->getRaw('profile');
+
+    if (empty($response)) {
+      drupal_set_message(t("Error: Something went wrong. Could not update schema information. Please contact your site administrator."), "error");
+      return FALSE;
+    }
+
     $schema = $response->getBody(TRUE);
 
     // Cache the result in a private file.

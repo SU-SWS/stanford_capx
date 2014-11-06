@@ -23,6 +23,11 @@ class LookupMissingFromApi implements LookupInterface {
     $profiles = $orphaner->getProfiles();
     $orphans = $orphaner->getOrphans();
 
+    // There are no results no need to continue. Keep the orphans the same.
+    if (empty($results)) {
+      return $orphans;
+    }
+
     // Gather up the profileIds of the request results.
     foreach ($results as $index => $profile) {
       $resultIds[] = $profile['profileId'];

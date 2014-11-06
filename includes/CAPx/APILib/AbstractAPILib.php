@@ -171,6 +171,9 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
    *   Returns either a JSON string or false if something went wrong.
    */
   protected function makeRawRequest($endpoint, $params = array(), $extraOptions = NULL) {
+
+    $code = "";
+
     // Get the guzzle client.
     $client = $this->getClient();
 
@@ -181,14 +184,23 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
     // Build and make the request.
-    $request = $client->get($endpoint, $params, $options);
-    $response = $request->send();
+    try {
 
-    // Store the last response for later use.
-    $this->setLastResponse($response);
+      $request = $client->get($endpoint, $params, $options);
+      $response = $request->send();
 
-    // Handle only valid response codes.
-    $code = $response->getStatusCode();
+      // Store the last response for later use.
+      $this->setLastResponse($response);
+
+      // Handle only valid response codes.
+      $code = $response->getStatusCode();
+
+    }
+    catch(\Exception $e) {
+      drupal_set_message(check_plain($e->getMessage()), 'error');
+    }
+
+
 
     // @todo: Handle non-valid response codes.
     switch ($code) {

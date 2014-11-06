@@ -87,7 +87,7 @@ class Orgs {
     $orgInfo = $client->api('org')->getOrg($org);
 
     if (!$orgInfo) {
-      throw new \Exception("Could not get organization information");
+      throw new \Exception("Could not get organization information.");
     }
 
     Orgs::prepareVocabulary();
