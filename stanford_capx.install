@@ -101,6 +101,13 @@ function stanford_capx_schema() {
         'default' => 1,
         'size' => 'tiny',
       ),
+      'orphaned' => array(
+        'description' => 'Wether or not the profile has been orphaned',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+        'size' => 'tiny',
+      ),
       'last_sync' => array(
         'description' => 'The last time this profile was successfully updated.',
         'type' => 'int',

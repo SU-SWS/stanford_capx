@@ -124,23 +124,30 @@ class AuthLib extends APILib {
     $client = $this->getClient();
     $parameters = $this->getAuthParams();
     $endpoint = $this->getEndpoint();
+    $code = null;
 
-    // Contact the server. Set exceptions == false so that Guzzle does not kill
-    // everything if the server fails to return what we need.
-    $request = $client->get($endpoint, array(), array('query' => $parameters, 'exceptions' => FALSE));
+    try {
 
-    // Set the username and password. Any will allow for a number of different
-    // authentication methods and will automagically find the right one.
-    $request->setAuth($username, $password, 'any');
+      // Contact the server.
+      $request = $client->get($endpoint, array(), array('query' => $parameters));
 
-    // Make the call and save the response.
-    $response = $request->send();
+      // Set the username and password. Any will allow for a number of different
+      // authentication methods and will automagically find the right one.
+      $request->setAuth($username, $password, 'any');
 
-    // Store the last response for later use.
-    $this->setLastResponse($response);
+      // Make the call and save the response.
+      $response = $request->send();
 
-    // Validate response code.
-    $code = $response->getStatusCode();
+      // Store the last response for later use.
+      $this->setLastResponse($response);
+
+      // Validate response code.
+      $code = $response->getStatusCode();
+
+    }
+    catch(\Exception $e) {
+      drupal_set_message(check_plain($e->getMessage()), 'error');
+    }
 
     // @todo: handle non 200 responses with error logging.
     switch ($code) {

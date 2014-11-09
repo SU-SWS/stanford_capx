@@ -190,6 +190,11 @@ class EntityImporter implements ImporterInterface {
           break;
       }
 
+      // No results no need to continue.
+      if (empty($results)) {
+        continue;
+      }
+
       // Keep a track of the number of items.
       // Because we have set the page results to 1 the number of pages will be
       // the number of results we get back.
@@ -223,14 +228,24 @@ class EntityImporter implements ImporterInterface {
       }
     }
 
-    // Update some meta information.
-    $meta = $this->getImporter()->getMeta();
-    $meta['count'] = $numberOfProfiles;
-    $this->getImporter()->setMeta($meta);
-    $this->getImporter()->save();
+    // There was nothing to work on. Don't do anything.
+    if ($numberOfProfiles) {
 
-    // Set the big batch after all...
-    batch_set($batch);
+      // Update some meta information.
+      $meta = $this->getImporter()->getMeta();
+      $meta['count'] = $numberOfProfiles;
+      $this->getImporter()->setMeta($meta);
+      $this->getImporter()->save();
+
+      // Set the big batch after all...
+      batch_set($batch);
+
+    }
+    else {
+      drupal_set_message(t("No profiles found. Please check importer settings and connection then try again."), "warning");
+      drupal_goto(drupal_get_destination());
+    }
+
   }
 
   /**
@@ -288,11 +303,17 @@ class EntityImporter implements ImporterInterface {
 
     }
 
-    // Update some meta information.
-    $meta = $this->getImporter()->getMeta();
-    $meta['count'] = $numberOfProfiles;
-    $this->getImporter()->setMeta($meta);
-    $this->getImporter()->save();
+    // Only update the meta count if we got a response from the server.
+    if (!empty($results)) {
+      // Update some meta information.
+      $meta = $this->getImporter()->getMeta();
+      $meta['count'] = $numberOfProfiles;
+      $this->getImporter()->setMeta($meta);
+      $this->getImporter()->save();
+    }
+    else {
+      watchdog("stanford_capx", "There was no response from the server when trying to fetch profile information.", array(), WATCHDOG_ERROR);
+    }
 
   }
 

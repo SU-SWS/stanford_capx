@@ -63,17 +63,19 @@ class CAPxConnection {
       $auth = $client->api('auth')->authenticate($username, $password);
     }
     catch(\Exception $e) {
-      $return->message = t($e->getMessage());
+      $return->message = check_plain($e->getMessage());
       return $return;
     }
 
     $token = $auth->getAuthApiToken();
     $response = $auth->getLastResponse();
-    $reasonPhrase = $response->getReasonPhrase();
-    $code = $response->getStatusCode();
 
-    $return->code = $code;
-    $return->message = t($reasonPhrase);
+    if (!empty($response)) {
+      $reasonPhrase = $response->getReasonPhrase();
+      $code = $response->getStatusCode();
+      $return->code = $code;
+      $return->message = check_plain($reasonPhrase);
+    }
 
     if (!empty($token)) {
       $return->status = 1;

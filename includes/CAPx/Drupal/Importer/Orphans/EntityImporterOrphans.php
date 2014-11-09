@@ -139,7 +139,9 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // In order to be an orphan the orphan id has to appear in all importer
     // Options. So we can just take one and run the process on that.
     $orphaned = array_pop($orphans);
+
     $this->processOrphans($orphaned, $importer);
+    $this->processAdopted($profiles, $orphaned);
 
   }
 
@@ -163,11 +165,6 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     $result = $query->execute();
     $assoc = $result->fetchAllAssoc('profile_id');
     $profiles = array_keys($assoc);
-
-    // Don't process empty sets.
-    if (empty($profiles)) {
-      return;
-    }
 
     // Batch definition.
     $batch = array(
@@ -343,6 +340,11 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     foreach ($profileIds as $id) {
       $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+      // If already an orphan we don't want to flood with messages.
+      if (CAPx::profileIsOrphan($profile)) {
+        continue;
+      }
+
       $profile = entity_metadata_wrapper($entityType, $profile);
 
       switch ($action) {
@@ -351,13 +353,102 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
           break;
 
         case "unpublish":
-          $profile->status->value(array(0));
-          $profile->save();
+
+          if ($entityType == "node") {
+            $profile->status->set(0);
+            $profile->save();
+          }
+
+          // Log that this profile was orphaned.
+          $this->logOrphan($profile);
+
           break;
 
         default:
           // Do nothing.
       }
+    }
+
+  }
+
+  /**
+   * Orphaned profiles that have returned to the importer.
+   *
+   * Find and process profiles that have been added back into an import by
+   * removing their orphan status.
+   *
+   * @param array $profiles
+   *   An array of profile ids
+   * @param array $orphans
+   *   An array of orphaned profile ides
+   */
+  public function processAdopted($profiles, $orphans) {
+    $importer = $this->getImporter();
+    $importerName = $importer->getMachineName();
+    $entityType = $importer->getEntityType();
+    $bundleType = $importer->getBundleType();
+
+    foreach ($profiles as $id) {
+      $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+
+      if (CAPx::profileIsOrphan($profile) && !in_array($id, $orphans)) {
+        // Profile is not an orphan. Lets enable it again.
+        $record = array(
+          'entity_type' => $entityType,
+          'bundle_type' => $bundleType,
+          'profile_id' => $id,
+          'importer' => $importerName,
+          'orphaned' => 0,
+        );
+
+        $keys = array(
+          'entity_type',
+          'profile_id',
+          'importer',
+          'bundle_type',
+        );
+
+        drupal_write_record('capx_profiles', $record, $keys);
+      }
+
+    }
+
+    return $orphans;
+  }
+  /**
+   * Logs that a profile was orphaned.
+   *
+   * @param object $profile
+   *   The loaded and wrapped entity metadata.
+   */
+  public function logOrphan($entity) {
+
+    // Set the flag to 1 in the capx_profiles table.
+    $id = $entity->getIdentifier();
+    $importer = $this->getImporter();
+    $importerName = $importer->getMachineName();
+    $entityType = $importer->getEntityType();
+    $bundleType = $importer->getBundleType();
+
+    $record = array(
+      'entity_type' => $entityType,
+      'bundle_type' => $bundleType,
+      'entity_id' => $id,
+      'importer' => $importerName,
+      'orphaned' => 1,
+    );
+
+    $keys = array(
+      'entity_type',
+      'entity_id',
+      'importer',
+      'bundle_type',
+    );
+
+    $yes = drupal_write_record('capx_profiles', $record, $keys);
+
+    if ($yes) {
+      watchdog('EntityImporterOrphans', "%title was orphaned from the importer %importername.", array("%title" => $entity->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
     }
 
   }

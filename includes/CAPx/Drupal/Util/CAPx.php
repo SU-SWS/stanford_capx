@@ -218,6 +218,7 @@ class CAPx {
       'bundle_type' => $bundleType,
       'sync' => 1,
       'last_sync' => $time,
+      'orphaned' => 0,
     );
 
     $yes = drupal_write_record('capx_profiles', $record);
@@ -265,9 +266,14 @@ class CAPx {
 
   /**
    * Get the etag for an entity.
-   * @param  [type] $importer  [description]
-   * @param  [type] $profileId [description]
-   * @return [type]            [description]
+   *
+   * @param string $importer
+   *   Importer machine name.
+   * @param string $profileId
+   *   Profile ID.
+   *
+   * @return string
+   *   Profile Etag.
    */
   public static function getEntityETag($importer, $profileId) {
 
@@ -277,12 +283,7 @@ class CAPx {
       ->condition("profile_id", $profileId)
       ->execute();
 
-    $etag = $result->fetchField();
-    if (!is_numeric($etag)) {
-      return FALSE;
-    }
-
-    return $etag;
+    return $result->fetchField();
   }
 
   /**
@@ -307,6 +308,22 @@ class CAPx {
       ->condition('entity_type', $entityType)
       ->condition('entity_id', $id)
       ->execute();
+  }
+
+  /**
+   * Check to see if profile is an orphan.
+   *
+   * @param Entity $profile
+   *   A loaded entity.
+   *
+   * @return bool
+   *   TRUE if orphaned FALSE if not.
+   */
+  public static function profileIsOrphan($profile) {
+    if (isset($profile->capx)) {
+      return (bool) $profile->capx['orphaned'];
+    }
+    return FALSE;
   }
 
   /**
