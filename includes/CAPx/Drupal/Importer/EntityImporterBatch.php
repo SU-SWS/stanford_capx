@@ -47,8 +47,13 @@ class EntityImporterBatch {
       $search = $options['values'][$index];
 
       $response = $client->api('profile')->search($type, $search, FALSE, $children);
-      $results = $response['values'];
 
+      if (empty($response)) {
+        drupal_set_message(t("ERROR: Could not fetch profile information. No response from the server."),  "error");
+        return;
+      }
+
+      $results = $response['values'];
       $success = EntityImporterBatch::processResults($results, $importer);
 
       if ($success) {

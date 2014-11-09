@@ -102,8 +102,16 @@ function stanford_capx_admin_config_settings() {
  *   redirects back to page user was on.
  */
 function stanford_capx_organizations_sync() {
-  watchdog('stanford_capx', 'Organization codes updated', array(), WATCHDOG_INFO);
-  \CAPx\Drupal\Organizations\Orgs::syncOrganizations(TRUE);
+  try {
+    watchdog('stanford_capx', 'Organization codes updated', array(), WATCHDOG_INFO);
+    \CAPx\Drupal\Organizations\Orgs::syncOrganizations(TRUE);
+  }
+  catch(\Exception $e) {
+    $message = t("ERROR! Could not update organization data. Reason given: %reason", array("%reason" => $e->getMessage()));
+    watchdog('stanford_capx', $message, array(), WATCHDOG_ERROR);
+    drupal_set_message($message, "error");
+    drupal_goto(drupal_get_destination());
+  }
 }
 
 /**

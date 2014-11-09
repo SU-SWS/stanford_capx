@@ -33,8 +33,15 @@ class LookupOrgOrphans implements LookupInterface {
       return $orphans;
     }
 
-    $profiles = $orphaner->getProfiles();
+    // Get the results from the server.
     $results = $orphaner->getResults();
+
+    // Lets make sure we have some results from the server to run on.
+    if (empty($results)) {
+      return $orphans;
+    }
+
+    $profiles = $orphaner->getProfiles();
     $myOrphans = array();
 
     $keyTids = array();
