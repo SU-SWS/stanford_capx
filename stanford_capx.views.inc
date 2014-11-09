@@ -519,26 +519,37 @@ function stanford_capx_views_data_alter(&$data) {
  */
 function stanford_capx_views_pre_view(&$view, &$display_id, $args) {
 
-  // Barrier for entry.
-  if ($view->name !== "importers_overview_page") {
-    return;
-  }
-  // Second barrier for entry.
-  if ($display_id !== "default") {
-    return;
+  // Overview form view all button.
+  if ($view->name == "importers_overview_page" && $display_id !== "default") {
+    // Set the footer of the view to have a dynamic more link.
+    $options = array(
+      'id' => 'area',
+      'table' => 'views',
+      'field' => 'area',
+      'empty' => FALSE,
+      'content' => l(t("View all imported profiles"), "admin/config/capx/profiles", array("attributes" => array("class" => array("button")))),
+      'format' => 'full_html',
+      'tokenize' => 0,
+    );
+    $view->display_handler->set_option('footer', array('text' => $options));
   }
 
-  // Set the footer of the view to have a dynamic more link.
-   $options = array(
-    'id' => 'area',
-    'table' => 'views',
-    'field' => 'area',
-    'empty' => FALSE,
-    'content' => l(t("View all imported profiles"), "admin/config/capx/profiles", array("attributes" => array("class" => array("button")))),
-    'format' => 'full_html',
-    'tokenize' => 0,
-  );
-  $view->display_handler->set_option('footer', array('text' => $options));
+  // Profile list view page menu in header.
+  if ($view->name == "capx_admin_profiles" && $display_id == "profiles") {
+    $menu_block = stanford_capx_management_menu_block();
+    drupal_add_css($menu_block['#attached']['css'][0]);
 
+    $options = array(
+      'id' => 'area',
+      'table' => 'views',
+      'field' => 'area',
+      'empty' => TRUE,
+      'content' => $menu_block['#markup'],
+      'format' => 'full_html',
+      'tokenize' => 0,
+    );
+
+    $view->display_handler->set_option('header', array('text' => $options));
+  }
 }
 
