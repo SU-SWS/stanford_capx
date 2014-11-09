@@ -102,11 +102,11 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   $endpoint = $form_state['values']['stanford_capx_api_base_url'];
   $authpoint = $form_state['values']['stanford_capx_api_auth_uri'];
 
-  // If password changed validate auth
+  // If password changed validate auth.
   if (!empty($password)) {
     $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
     if (!$auth_test->status) {
-      form_set_error('stanford_capx_username', 'Could not authenticate with server. Invalid credentials. Please check your username and password');
+      form_set_error('stanford_capx_username', t('Could not authenticate with server. Invalid credentials. Please check your username and password.'));
       form_set_error('stanford_capx_password');
     }
   }
@@ -114,7 +114,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   // In case the end points change we need to get pass from db.
   $password = !empty($password) ? $password : CAPx::getAuthPassword();
 
-  // If authpoint changed
+  // If authpoint changed.
   if ($authpoint !== "https://authz.stanford.edu/oauth/token") {
 
     if (!isset($auth_test)) {
@@ -122,12 +122,12 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
     }
 
     if (!$auth_test->status) {
-      form_set_error("stanford_capx_api_auth_uri", "Please check your authorization url");
+      form_set_error("stanford_capx_api_auth_uri", t("Please check your authorization url."));
     }
 
   }
 
-  // If endpoint changed
+  // If endpoint changed.
   if ($endpoint !== "https://api.stanford.edu") {
 
     if (!isset($auth_test)) {
@@ -222,7 +222,7 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state, $m
 
   $form['naming']['title'] = array(
     '#type' => 'textfield',
-    '#description' => t('Please enter a unique name for this mapper'),
+    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('Please enter a unique name for this mapper'),
     '#default_value' => isset($mapper->title) ? $mapper->title : '',
     '#disabled' => isset($mapper->machine_name),
   );
@@ -233,7 +233,7 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state, $m
     '#default_value' => isset($mapper->machine_name) ? $mapper->machine_name : '',
     '#size' => 64,
     '#maxlength' => 64,
-    '#description' => t('A unique name for the mapper. It must only contain lowercase letters, numbers and hyphens.'),
+    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('A unique name for the mapper. It must only contain lowercase letters, numbers and hyphens.'),
     '#machine_name' => array(
       'exists' => 'stanford_capx_mapper_machine_name_exits',
       'source' => array('naming','title'),
@@ -269,14 +269,14 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
   $form['entity-mapping'] = array(
     '#type' => 'fieldset',
     '#title' => t('Entity Mapping'),
-    '#description' => t('Select which entity type and bundle you would like to map CAP data into. Please select the entity type first and the bundle type will appear.'),
+    '#description' => t('Select which entity type and bundle you would like to map CAP data into. Please select the entity type first and the bundle type will appear. The entity and bundle has to exist before creating a mapping to it.'),
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
   );
 
   $form['entity-mapping']['entity-type'] = array(
     '#type' => 'select',
-    '#description' => t(''),
+    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
     '#options' => $entity_options,
     '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
     '#disabled' => isset($mapper->machine_name),
@@ -288,7 +288,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
     $form['entity-mapping']['bundle-'.$entity_name] = array(
       '#type' => 'select',
       '#title' => t('Select bundle'),
-      '#description' => t(''),
+      '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
       '#options' => $bundle_opts,
       '#default_value' => isset($mapper->bundle_type) ? $mapper->bundle_type : 'stanford_person',
       '#states' => array(
@@ -323,7 +323,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     '#tree' => TRUE,
   );
 
-  $form['field-mapping']['help']['#markup'] = "<p>" . t('Use the data browser to find the information you would like to map into the various different properties and fields below. You will need to use JSONPath syntax. For more information on JSONPath please read the documentation. ') . l('JSONPath Documentation →', 'http://goessner.net/articles/JsonPath/', array('attributes' => array('target' => '_blank'))) . "</p>";
+  $form['field-mapping']['help']['#markup'] = "<p>" . t("Using the fields below you are able to pull in data from the CAP API into your site. You do not have to input a setting for every field. Only use the fields that you want. The fields that you are importing data from the CAP API into will be locked and can only be changed by chaning the data on the CAP website.") . "</p>";
+  $form['field-mapping']['help']['#markup'] .= "<p>" . t('Use the data browser to find the information you would like to map into the various different properties and fields below. You will need to use JSONPath syntax. For more information on JSONPath please read the documentation. ') . l('JSONPath Documentation →', 'http://goessner.net/articles/JsonPath/', array('attributes' => array('target' => '_blank'))) . "</p>";
 
 
   // ******************************************************
@@ -1075,9 +1076,10 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $form['naming']['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Importer name'),
-    '#description' => t('Please enter a unique name for this Importer'),
+    '#description' => isset($importer->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('Please enter a unique name for this Importer'),
     '#default_value' => isset($importer->title) ? $importer->title : '',
     '#disabled' => isset($importer->machine_name),
+    '#required' => TRUE,
   );
 
   $form['naming']['machine-name'] = array(
@@ -1086,7 +1088,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#default_value' => isset($importer->machine_name) ? $importer->machine_name : '',
     '#size' => 64,
     '#maxlength' => 64,
-    '#description' => t('A unique name for the importer. It must only contain lowercase letters, numbers and hyphens.'),
+    '#description' => isset($importer->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('A unique name for the importer. It must only contain lowercase letters, numbers and hyphens.'),
     '#machine_name' => array(
       'exists' => 'stanford_capx_importer_machine_name_exits',
       'source' => array('naming','title'),
@@ -1097,6 +1099,11 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   // Create options...
   $mapping_options = array();
   $mappers = CAPxMapper::loadAllMappers();
+
+  if (!count($mappers)) {
+    drupal_set_message(t("No mappers found. Please !maplink before proceeding with this importer.", array("!maplink" => l(t("create a mapper"), "admin/config/capx/mapper/new"))), "error");
+  }
+
   foreach ($mappers as $cfid => $mapper) {
     $mapping_options[$mapper->machine_name] = $mapper->title;
   }
@@ -1104,10 +1111,10 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $form['naming']['mapper'] = array(
     '#type' => 'select',
     '#title' => t('Mapping'),
-    '#description' => t('Choose the Mapper you would like to import the items with.'),
+    '#description' => isset($importer->mapper) ? t("Changing this field can have adverse consquences to your data. Take great care before changing this field.") : t('Choose how you would like to import this profile(s) data.'),
     '#options' => $mapping_options,
     '#default_value' => isset($importer->mapper) ? $importer->mapper : '',
-    // '#disabled' => isset($importer->mapper),
+    '#required' => TRUE,
   );
 
   // Cron Settings
@@ -1455,6 +1462,7 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
 
     // If we find an entity after all that.
     if (isset($entity->capx)) {
+      drupal_set_message(t("This entity has been imported from the CAP API. Fields that are greyed out cannot be changed as that information is from the CAP website. If you would like to change that information please visit the CAP website and edit the information there."), "warning");
       stanford_capx_entity_form_add_vt($form, $form_state, $form_id, $entity);
       stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
     }
@@ -1471,7 +1479,7 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
  * @return [type]             [description]
  */
 function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entity) {
-   // Create a fieldset that will be included in the vertical tab.
+  // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
     '#title' => t('CAPx Information'),

@@ -365,6 +365,24 @@ function stanford_capx_views_data() {
     ),
   );
 
+  $data['capx_profiles']['orphaned'] = array(
+    'title' => t('Orphaned Status'),
+    'help' => t('A boolean value to wether or not the profile has been orphaned.'),
+    'argument' => array(
+      'handler' => 'views_handler_argument_boolean',
+    ),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
   $data['capx_profiles']['sync'] = array(
     'title' => t('Sync Status'),
     'help' => t('A boolean value to wether or not the profile is receiving update.'),
