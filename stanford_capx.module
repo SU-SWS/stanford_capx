@@ -579,3 +579,14 @@ function stanford_capx_form_user_profile_form_alter(&$form, &$form_state) {
     $form['actions']['cancel']['#access'] = FALSE;
   }
 }
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
+  global $user;
+  // Disable deletion of taxonomy terms synced from CAP.
+  if ($user->uid != 1 && isset($form_state['term']->capx) && !empty($form_state['term']->capx['sync'])) {
+    $form['actions']['delete']['#access'] = FALSE;
+  }
+}
