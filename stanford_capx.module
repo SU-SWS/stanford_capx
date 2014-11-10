@@ -258,6 +258,14 @@ function stanford_capx_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/capx/profile-sync/%/%'] = array(
+    'title' => 'Profile synchronization settings change callback',
+    'page callback' => 'stanford_capx_profile_sync_status',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -563,4 +571,36 @@ function stanford_capx_init() {
       }
     }
   }
+}
+
+/**
+ * Page callback for changing profile sync status.
+ *
+ * @param int $id
+ *   Internal profile ID.
+ *
+ * @param string $sync
+ *   Synchronization operation. One from 'enable', 'disable'.
+ */
+function stanford_capx_profile_sync_status($id, $sync) {
+  $sync_value = NULL;
+
+  switch ($sync) {
+    case 'enable':
+      $sync_value = 1;
+      break;
+
+    case 'disable':
+      $sync_value = 0;
+      break;
+  }
+
+  if (isset($sync_value)) {
+    db_update('capx_profiles')
+      ->condition('id', $id)
+      ->fields(array('sync' => $sync_value))
+      ->execute();
+  }
+
+  drupal_goto();
 }

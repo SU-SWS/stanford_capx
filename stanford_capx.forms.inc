@@ -1527,6 +1527,21 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
 
   $form['capx_vertical_tab']['tmpinfo']['#markup'] = $table;
 
+  if (user_access('administer capx')) {
+    $sync = empty($entity->capx['sync']) ? TRUE : FALSE;
+    $button_text = $sync ? t('Enable updates from CAP for this profile') : t('Disable updates from CAP for this profile');
+    $path = 'admin/config/capx/profile-sync/' . $entity->capx['id'] . '/';
+    $path .= $sync ? 'enable' : 'disable';
+    $options = array(
+      'attributes' => array(
+        'class' => array('button'),
+      ),
+      'query' => array(
+        'destination' => $_GET['q'],
+      ),
+    );
+    $form['capx_vertical_tab']['disable_sync']['#markup'] = l($button_text, $path, $options);
+  }
 }
 
 /**

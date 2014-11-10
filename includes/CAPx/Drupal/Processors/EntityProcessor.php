@@ -27,8 +27,7 @@ class EntityProcessor extends ProcessorAbstract {
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
-    // $entity = CAPx::getEntityByProfileId($entityType, $bundleType, $data['profileId']);
-    $entity = null;
+    $entity = NULL;
     $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
     if (is_array($entities)) {
       $entity = array_pop($entities);
@@ -36,6 +35,12 @@ class EntityProcessor extends ProcessorAbstract {
 
     // If we have an entity we need to update it.
     if (!empty($entity)) {
+
+      // Profile synchronization has been disabled.
+      if (empty($entity->capx['sync'])) {
+        return NULL;
+      }
+
       $this->setEntity($entity);
 
       // Check to see if the etag has changed. We can avoid processing a profile
