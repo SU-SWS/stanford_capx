@@ -1674,15 +1674,10 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 
 
 /**
- * The global configuration settings form for CAPx.
- *
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * The global configuration settings for CAPx form builder.
  */
-function stanford_capx_forms_config_settings($form, &$form_state) {
+function stanford_capx_config_settings_form($form, &$form_state) {
 
-  $form['#tree'] = TRUE;
   $form['variables'] = array(
     '#type' => 'fieldset',
     '#title' => t("Syncronization settings"),
@@ -1711,26 +1706,18 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
     '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
   );
 
-  $form['submit'] = array(
-    "#type" => 'submit',
-    "#name" => 'submit',
-    "#value" => "Submit",
+  $options = array();
+  $formats = filter_formats();
+  foreach ($formats as $format) {
+    $options[$format->format] = $format->name;
+  }
+  $form['variables']['stanford_capx_default_field_format'] = array(
+    '#title' => t('Text format'),
+    '#description' => t('Select text format that would be applied to all fields that have text processing enabled.'),
+    '#type' => "select",
+    '#options' => $options,
+    '#default_value' => variable_get('stanford_capx_default_field_format', 'plain_text'),
   );
 
-  return $form;
-}
-
-/**
- * [stanford_capx_forms_config_settings_form_submit description]
- * @param  [type] $form        [description]
- * @param  [type] $form_values [description]
- * @return [type]              [description]
- */
-function stanford_capx_forms_config_settings_submit($form, $form_values) {
-  $values = $form_values['values'];
-
-  // Loop through the variables tree and set em.
-  foreach ($values['variables'] as $var_name => $var_value) {
-    variable_set($var_name, $var_value);
-  }
+  return system_settings_form($form);
 }

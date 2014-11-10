@@ -114,6 +114,7 @@ class EntityProcessor extends ProcessorAbstract {
     // Wrap it up baby!
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
+    // @todo Need to catch exceptions here as well.
     $entity->save();
 
     drupal_alter('capx_post_entity_create', $entity);

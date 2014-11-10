@@ -5,7 +5,8 @@
  */
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
-use CAPx\Drupal\Processors\FieldProcessors\FieldProcessorAbstract;
+
+use CAPx\Drupal\Processors\FieldCollectionProcessor;
 
 /**
  * List of known fields and widgets

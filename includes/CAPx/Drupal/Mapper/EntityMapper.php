@@ -67,6 +67,7 @@ class EntityMapper extends MapperAbstract {
           drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
 
           // Allow just one path as a string.
+          // @todo For data structures like files we shouldn't convert data path to array.
           if (!is_array($remoteDataPaths)) {
             $remoteDataPaths = array($remoteDataPaths);
           }
@@ -80,8 +81,8 @@ class EntityMapper extends MapperAbstract {
             }
 
             // Attempt to get the data based on the path that was provided.
-            // No guarentee that the user wont enter valid jsonpath notation that
-            // does not have a valid result.
+            // No guarantee that the user will enter valid jsonpath notation
+            // that does have a valid result.
             try {
               $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
             }
@@ -96,14 +97,8 @@ class EntityMapper extends MapperAbstract {
             }
           }
 
-          // We got nothing!
-          if (empty($info)) {
-            // @todo: log this
-            continue;
-          }
-
-          // Widgets can change the way the data needs to be parsed. Provide that
-          // to the FieldProcessor.
+          // Widgets can change the way the data needs to be parsed. Provide
+          // that to the FieldProcessor.
           $widget = $fieldInfoInstance['widget']['type'];
           $field = $fieldInfoField['type'];
 
@@ -142,8 +137,12 @@ class EntityMapper extends MapperAbstract {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }
       catch(\Exception $e) {
-        // ... silently continue. Please dont shoot me.
-        // @todo: log this for debugging.
+        $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
+        $message_vars = array(
+          '@path' => $remoteDataPath,
+          '@message' => $e->getMessage(),
+        );
+        watchdog('stanford_capx_jsonpath', $message, $message_vars);
         continue;
       }
 

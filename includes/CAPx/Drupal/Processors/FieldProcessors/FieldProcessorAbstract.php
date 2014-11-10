@@ -22,59 +22,74 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
    * @param [type] $entity    [description]
    * @param [type] $fieldName [description]
    */
-  public function __construct($entity, $fieldName, $type = null) {
+  public function __construct($entity, $fieldName, $type = NULL) {
     $this->setEntity($entity);
     $this->setFieldName($fieldName);
 
-    if(!is_null($type)) {
+    if (!is_null($type)) {
       $this->setType($type);
     }
 
   }
 
   /**
-   * Default implementation of put. Puts the information from the CAP API
+   * Default implementation of put.
+   *
+   * Puts the information from the CAP API
    * In to the field via entity_metadata_wrapper. Tries to handle information
    * being provided to it for most field types. Specific FieldProcessors may
-   * override this function to provide their own custom procsessing.
-   * @param  array $data an array of data from the CAP API.
+   * override this function to provide their own custom processing.
+   *
+   * @param array $data
+   *   An array of data from the CAP API.
    */
   public function put($data) {
 
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();
     $fieldInfo = field_info_field($fieldName);
-    $field = $entity->{$fieldName};
 
-    $keys = array_keys($fieldInfo['columns']);
-    $key = $keys[0];
-
-    // No need for anything fancy when there is nothing to parse :)
-    if (count($data) == 1 && empty($data[0])) {
-      $field->set(null);
-      return;
-    }
-
-    // Reformat the jsonpath return data so it works with Durp.
+    // Reformat the jsonpath return data so it works with Drupal.
     $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
-
-    // No valid colums were found. Truncate field.
-    if (empty($data)) {
-      drupal_set_message('No valid columns found for ' . $fieldName, 'error');
-      $field->set(null);
-      return;
-    }
 
     // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
-    // Only want the first value for one cardinality field
-    if ($fieldInfo['cardinality'] == "1") {
-      $field->set($data[0][$key]);
+    // If there's no data, do nothing.
+    if (empty($data)) {
+      // @todo: Do we really need to log this?
+      $this->logIssue(new \Exception(t('Field has no data.')));
+      return;
     }
-    else {
-      // For everything else give it all.
-      $field->set($data);
+
+    $field = $entity->{$fieldName};
+
+    try {
+      if ($fieldInfo['cardinality'] === "1") {
+        // Only want the first value for one cardinality field.
+        $data = array_shift($data);
+        // Metadata wrapper is smarter then plain field info.
+        switch (get_class($field)) {
+          // Structure wrapper assumes we providing multiple columns.
+          case 'EntityStructureWrapper':
+            $field->set($data);
+            break;
+
+          // Value wrapper assumes we providing single value.
+          case 'EntityDrupalWrapper':
+          case 'EntityValueWrapper':
+            $field->set(array_shift($data));
+            break;
+        }
+      }
+      else {
+        // For everything else give it all.
+        $field->set($data);
+      }
+    }
+    catch (\EntityMetadataWrapperException $e) {
+      // Log the problem.
+      $this->logIssue($e);
     }
 
   }
@@ -104,7 +119,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
 
     // If no key value was specified then assume the column key.
     if (isset($data[0][0])) {
-      foreach($data[0] as $int => $value) {
+      foreach ($data[0] as $int => $value) {
         $return[$int][$columnKey] = $value;
       }
     }
@@ -118,8 +133,10 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
   //
 
   /**
-   * Getter function
-   * @return Entity the entity being worked on.
+   * Returns current entity.
+   *
+   * @return \EntityDrupalWrapper
+   *   The entity being worked on, wrapped.
    */
   public function getEntity() {
     return $this->entity;
@@ -166,5 +183,28 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     return $this->type;
   }
 
+
+  public function logIssue(\Exception $e = NULL) {
+    $entity = $this->getEntity();
+    $entityId = $entity->getIdentifier();
+
+    $logText = 'Could not save the field data for %field on %type id: %profileId.';
+    if (isset($e)) {
+      $logText .= ' ';
+      $logText .= get_class($e);
+      $logText .= ': ' . check_plain($e->getMessage());
+    }
+
+    watchdog(
+      'stanford_capx_field',
+      $logText,
+      array(
+        '%field' => $this->getFieldName(),
+        '%type' => $entity->getBundle(),
+        '%profileId' => $entityId ? $entityId : 'unknown',
+      ),
+      WATCHDOG_ERROR
+    );
+  }
 
 }
