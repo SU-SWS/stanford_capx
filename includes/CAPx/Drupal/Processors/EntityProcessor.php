@@ -5,20 +5,31 @@
  */
 
 namespace CAPx\Drupal\Processors;
+
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Util\CAPx;
 
 class EntityProcessor extends ProcessorAbstract {
 
+  /**
+   * Wrapped Drupal entity to be processed.
+   */
   protected $entity;
 
   /**
+   * Process entity.
+   *
    * The starting point for processing any entity. This function executes and
    * handles the saving and/or updating of an entity with the data that is
    * set to it.
-   * @return Entity The new or updated entity.
+   *
+   * @param bool $force
+   *   Synchronize even if synchronization is disable('sync' = 0).
+   *
+   * @return object
+   *   The new or updated wrapped entity.
    */
-  public function execute() {
+  public function execute($force = FALSE) {
     $data = $this->getData();
     $mapper = $this->getMapper();
     $entityImporter = $this->getEntityImporter();
@@ -27,8 +38,7 @@ class EntityProcessor extends ProcessorAbstract {
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
-    // $entity = CAPx::getEntityByProfileId($entityType, $bundleType, $data['profileId']);
-    $entity = null;
+    $entity = NULL;
     $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
     if (is_array($entities)) {
       $entity = array_pop($entities);
@@ -57,7 +67,6 @@ class EntityProcessor extends ProcessorAbstract {
     }
 
     return $entity;
-
   }
 
   /**

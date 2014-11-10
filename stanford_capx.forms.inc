@@ -1448,37 +1448,51 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
  * Implements hook_form_alter().
  */
 function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
-
-  // If on an entity form add the vertical tab and disable fields that are
+  // For supported entities add the vertical tab and disable fields that are
   // mapped.
-  if (!empty($form['#entity_type'])) {
+  list($entity_type, $entity) = _stanford_capx_entity_form_get_entity($form, $form_state, $form_id);
 
-    if ($form['#entity_type'] == "user" && isset($form["#user"])) {
-      $entity = $form["#user"];
-    }
-    elseif (isset($form['#entity'])) {
-      $entity = $form["#entity"];
-    }
-
-    // If we find an entity after all that.
-    if (isset($entity->capx)) {
-      drupal_set_message(t("This entity has been imported from the CAP API. Fields that are greyed out cannot be changed as that information is from the CAP website. If you would like to change that information please visit the CAP website and edit the information there."), "warning");
-      stanford_capx_entity_form_add_vt($form, $form_state, $form_id, $entity);
-      stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $form_id);
-    }
-
+  if (isset($entity->capx)) {
+    drupal_set_message(t("This entity has been imported from the CAP API. Fields that are greyed out cannot be changed as that information is from the CAP website. If you would like to change that information please visit the CAP website and edit the information there."), "warning");
+    stanford_capx_entity_form_add_vt($form, $form_state, $entity_type, $entity);
+    stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $entity_type, $entity);
   }
-
 }
 
 /**
- * [stanford_capx_entity_form_add_vt description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @param  [type] $form_id    [description]
- * @return [type]             [description]
+ * Figure out entity type.
+ *
+ * @return array
+ *   Entity type and entity of
  */
-function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entity) {
+function _stanford_capx_entity_form_get_entity(&$form, &$form_state, $form_id) {
+  $entity_type = NULL;
+  $entity = NULL;
+
+  switch ($form_id) {
+    case 'taxonomy_form_term':
+      $entity_type = 'taxonomy_term';
+      $entity =& $form_state['term'];
+      break;
+
+    case 'user_profile_form':
+      $entity_type = 'user';
+      $entity =& $form_state['user'];
+      break;
+  }
+
+  if (isset($form['#node_edit_form']) && $form['#node_edit_form']) {
+    $entity_type = 'node';
+    $entity =& $form_state['node'];
+  }
+
+  return array($entity_type, $entity);
+}
+
+/**
+ * Adds CAPx info to supported entity forms.
+ */
+function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $entity) {
   // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
@@ -1487,64 +1501,71 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
     '#collapsed' => FALSE,
     '#tree' => TRUE,
     '#weight' => -99,
+    // @todo Put more appropriate description here.
     '#description' => t('CAPx information about this vertical tab goes here'),
     '#summary' => t('summary'),
     // The #group value must match the name of the vertical tabs element.
     // In most cases, this is 'additional_settings'.
     '#group' => 'additional_settings',
-    // '#attached' => array(
-    //   'js' => array(
-    //     'vertical-tabs' => drupal_get_path('module', 'vertical_tabs_example') . '/vertical_tabs_example.js',
-    //   ),
-    // ),
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'stanford_capx') . '/css/stanford_capx.entity_form.css',
+      ),
+    ),
   );
 
   $capx_info = $entity->capx;
 
-  // Remove a few things.
-  unset($capx_info['entity_type']);
-  unset($capx_info['bundle_type']);
-  unset($capx_info['id']);
-  unset($capx_info['entity_id']);
-
-  // Small tweak
-  $capx_info['importer'] = l($capx_info['importer'], 'admin/config/capx/importer/edit/' . $capx_info['importer']);
-
-  $header = array_keys($capx_info);
-  $rows = array_values($capx_info);
-
-  $vars = array(
-    'header' => $header,
-    'rows' => array('data' => $rows),
-    'attributes' => array(),
-    'caption' => '',
-    'colgroups' => array(),
-    'sticky' => '',
-    'empty' => '',
+  $form['capx_vertical_tab']['last_update'] = array(
+    '#prefix' => '<p class="last-update"><span class="label">' . t('Last update:') . '</span><span class="info">',
+    '#markup' => format_date($capx_info['last_sync'], 'full'),
+    '#suffix' => '</span></p>',
   );
 
-  $table = theme_table($vars);
+  $importer = capx_cfe_load_by_machine_name($capx_info['importer'], 'importer');
+  $importer_label = entity_label('capx_cfe', $importer);
+  $importer_path = 'admin/config/capx/importer/edit/' . $capx_info['importer'];
+  $mapper = capx_cfe_load_by_machine_name($importer->mapper, 'mapper');
+  $mapper_label = entity_label('capx_cfe', $mapper);
+  $mapper_path = 'admin/config/capx/mapper/edit/' . $importer->mapper;
+  $vars = array(
+    '!importer' => l(check_plain($importer_label), $importer_path),
+    '!mapper' => l(check_plain($mapper_label), $mapper_path),
+  );
+  $form['capx_vertical_tab']['importer'] = array(
+    '#prefix' => '<p class="importer"><span class="label">' . t('Imported by:') . '</span><span class="info">',
+    '#markup' => t('!importer using !mapper mapping.', $vars),
+    '#suffix' => '</span></p>',
+  );
 
-  $form['capx_vertical_tab']['tmpinfo']['#markup'] = $table;
+  $status = empty($capx_info['sync']) ? t('Not receiving updates from CAP.') : t('Receiving updates from CAP.');
+  $form['capx_vertical_tab']['status'] = array(
+    '#prefix' => '<p class="status"><span class="label">' . t('Status:') . '</span><span class="info">',
+    '#markup' => $status,
+    '#suffix' => '</span></p>',
+  );
 
+  // Sync now button.
+  if (user_access('administer capx')) {
+    $path = 'admin/config/capx/profile-update/' . $capx_info['profile_id'] . '/' . $capx_info['importer'];
+    $options = array(
+      'attributes' => array(
+        'class' => array('button'),
+        ),
+      'query' => array(
+        'destination' => $_GET['q'],
+        ),
+      );
+    $form['capx_vertical_tab']['update']['#markup'] = l(t('Update this profile from CAP'), $path, $options);
+  }
 }
 
 /**
- * Disable all fields that have mapped data from all users.
- * @todo all of this. We may have to change the way we look up fields as they
- * might not be in the order we are assuming below.
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @param  [type] $ford_id    [description]
- * @return [type]             [description]
+ * Disable all fields that have mapped data.
  */
-function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $ford_id) {
-
-  $entity = $form["#entity"];
+function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $entity_type, $entity) {
   $importer = CAPxImporter::loadImporter($entity->capx['importer']);
   $mapper = CAPxMapper::loadMapper($importer->mapper);
-  global $language;
-  $lang = $language->language;
 
   $fields = $mapper->fields;
   $properties = $mapper->properties;
@@ -1552,22 +1573,34 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
 
   $description = t('This field is mapped with CAP data and cannot be changed through the UI. Please visit the CAP website to update this field.');
 
-  // Disable any properties...
+  // Disable any properties.
   foreach ($properties as $property_name => $value) {
     if (!empty($value)) {
-      $form[$property_name]['#disabled'] = TRUE;
-      $form[$property_name]['#description'] = $description;
+      if ($entity_type == 'user') {
+        $form['account'][$property_name]['#disabled'] = TRUE;
+        $form['account'][$property_name]['#description'] = $description;
+      }
+      else {
+        $form[$property_name]['#disabled'] = TRUE;
+        $form[$property_name]['#description'] = $description;
+      }
     }
   }
 
-  // Disable any fields with data...
+  // Disable any fields with data.
   foreach ($fields as $field_name => $columns) {
-    foreach ($columns as $column_name => $value) {
+    foreach ($columns as $value) {
       if (!empty($value)) {
-        $form[$field_name]["#disabled"] = TRUE;
-        $form[$field_name][LANGUAGE_NONE]['#description'] =
-        $form[$field_name][LANGUAGE_NONE][0]['#description'] = $description;
-        break;
+        $lng = field_language($entity_type, $entity, $field_name);
+
+        $form[$field_name]['#disabled'] = TRUE;
+        $form[$field_name][$lng]['#description'] = $description;
+        foreach (element_children($form[$field_name][$lng]) as $key) {
+          $form[$field_name][$lng][$key]['#description'] = $description;
+          foreach (element_children($form[$field_name][$lng][$key]) as $column) {
+            $form[$field_name][$lng][$key][$column]['#description'] = $description;
+          }
+        }
       }
     }
   }
@@ -1575,21 +1608,17 @@ function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $
   // Disable any field collection fields with data.
   foreach ($collections as $field_name => $fc_field) {
     foreach ($fc_field as $fc_field_name => $value) {
-
-        if (!empty($value)) {
-          foreach ($form[$field_name][LANGUAGE_NONE] as $key => $fc_entity) {
-            if (!is_numeric($key)) {
-              continue;
-            }
-            $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
-            $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name][LANGUAGE_NONE][0]['#description'] = $description;
-           }
-        }
-
+      if (!empty($value)) {
+        foreach ($form[$field_name][LANGUAGE_NONE] as $key => $fc_entity) {
+          if (!is_numeric($key)) {
+            continue;
+          }
+          $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name]["#disabled"] = TRUE;
+          $form[$field_name][LANGUAGE_NONE][$key][$fc_field_name][LANGUAGE_NONE][0]['#description'] = $description;
+         }
+      }
     }
   }
-
-
 }
 
 /**
