@@ -77,14 +77,18 @@ function stanford_capx_permission() {
  * Implements hook_node_access().
  */
 function stanford_capx_node_access($node, $op, $account) {
-  // Returning nothing from this function would have the same effect.
-  return NODE_ACCESS_IGNORE;
+  $access = NODE_ACCESS_IGNORE;
+
+  // Disable deletion of nodes synced from CAP.
+  if ($op == 'delete' && isset($node->capx) && !empty($node->capx['sync'])) {
+    $access = NODE_ACCESS_DENY;
+  }
+
+  return $access;
 }
 
 /**
- * Implements hook_views_api.
- * @return array
- *   returns views api info
+ * Implements hook_views_api().
  */
 function stanford_capx_views_api() {
   return array(
