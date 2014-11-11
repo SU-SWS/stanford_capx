@@ -787,6 +787,7 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
   static $json_parser;
   $form_error = &drupal_static(__FUNCTION__ . "_error", FALSE);
   $form_field_warnings = &drupal_static(__FUNCTION__ . "_warnings", FALSE);
+  $valid_paths = _stanford_capx_valid_jsonpaths();
 
   // Load and cache the parser.
   if (!isset($json_parser)) {
@@ -805,8 +806,8 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
         // Data types: 'string', 'boolean', 'integer', 'array' or 'object'.
         $data_type = $json_parser->get($child_element);
 
-        // Usually an empty array is returned for an invalid selector.
-        if (is_array($data_type) && !is_string(array_pop($data_type))) {
+        // Empty array is returned for an invalid selector.
+        if (empty($data_type) && !in_array($child_element, $valid_paths)) {
           throw new \Exception('String indicates a valid element.');
         }
       }
@@ -1733,4 +1734,13 @@ function stanford_capx_forms_config_settings_submit($form, $form_values) {
   foreach ($values['variables'] as $var_name => $var_value) {
     variable_set($var_name, $var_value);
   }
+}
+
+/**
+ * Returns list of known valid JSONPaths not described in schema.
+ */
+function _stanford_capx_valid_jsonpaths() {
+  return array(
+    '$.lastModified',
+  );
 }
