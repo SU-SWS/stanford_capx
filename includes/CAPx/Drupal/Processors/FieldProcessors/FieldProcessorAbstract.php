@@ -55,14 +55,22 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     // Allow others to alter the data before it is set to the field.
     drupal_alter('capx_field_processor_pre_set', $entity, $data, $fieldName);
 
+    $field = $entity->{$fieldName};
+    $fieldWrapperInfo = $field->info();
+
     // If there's no data, do nothing.
     if (empty($data)) {
-      // @todo: Do we really need to log this?
-      $this->logIssue(new \Exception(t('Field has no data.')));
+      if (empty($fieldWrapperInfo['required'])) {
+        $field->set(NULL);
+      }
+      else {
+        // Setting NULL for required fields
+        // will trigger EntityMetadataWrapperException.
+        $this->logIssue(new \Exception(t("CAP profile didn't provide any data for required field.")));
+      }
+
       return;
     }
-
-    $field = $entity->{$fieldName};
 
     try {
       if ($fieldInfo['cardinality'] === "1") {
