@@ -4,41 +4,16 @@
  */
 
 /**
- * Implements hook_install().
- */
-function stanford_capx_install() {
-  variable_set('stanford_capx_batch_limit', 100);
-}
-
-/**
- * Implements hook_enable().
- */
-function stanford_capx_enable() {
-  /*
-   *mymodule_cache_rebuild();
-   */
-  /* Your code here */
-}
-
-/**
- * Implements hook_disable().
- */
-function stanford_capx_disable() {
-  /*
-   *mymodule_cache_rebuild();
-   */
-  /* Your code here */
-}
-
-/**
  * Implements hook_uninstall().
  */
 function stanford_capx_uninstall() {
-
-  // @todo: Delete all the configuration entities and vars
   variable_del('stanford_capx_batch_limit');
-  variable_del('stanford_capx_orphan_action');
-
+  variable_del('stanford_capx_username');
+  variable_del('stanford_capx_password');
+  variable_del('stanford_capx_api_base_url');
+  variable_del('stanford_capx_api_auth_uri');
+  variable_del('stanford_capx_admin_messages');
+  variable_del('stanford_capx_token');
 }
 
 /**

@@ -272,9 +272,9 @@ function stanford_capx_cron() {
 
   // Call cron on all importers.
   $importers = CAPxImporter::loadAllImporters();
-  foreach ($importers as $key => $importer) {
+  foreach ($importers as $importer) {
     $entity_importer = CAPxImporter::loadEntityImporter($importer->getMachineName());
-    if ($entity_importer) {
+    if ($entity_importer && $entity_importer->valid()) {
       $entity_importer->cron();
     }
     else {
