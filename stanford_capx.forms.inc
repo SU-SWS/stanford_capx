@@ -1355,7 +1355,7 @@ function stanford_capx_admin_config_importer_delete($form, &$form_state, $machin
   // Add the machine name so we can do stuff with the importer later.
   $form['machine-name'] = array(
     '#type' => 'value',
-    '#value' => $importer->getMachineName(),
+    '#value' => $machine_name,
   );
 
   // Operations.

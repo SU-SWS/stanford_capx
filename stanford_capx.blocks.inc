@@ -304,7 +304,7 @@ function stanford_capx_mapper_in_use_block() {
 
   $porters = array();
   foreach ($importers as $k => $importer) {
-    $porters[] = l(t("!title", array("!title" => $importer->title)), "admin/config/capx/importer/edit/" . $importer->getMachineName());
+    $porters[] = l(t("!title", array("!title" => $importer->title)), "admin/config/capx/importer/edit/" . $importer->identifier());
   }
 
   $output .= implode(", ", $porters);

@@ -6,11 +6,7 @@
 
 namespace CAPx\Drupal\Entities;
 
-use CAPx\Drupal\Mapper\EntityMapper;
-use CAPx\Drupal\Mapper\FieldCollectionMapper;
-use CAPx\Drupal\Util\CAPxMapper;
-use CAPx\Drupal\Util\CAPxConnection;
-use CAPx\Drupal\Importer\EntityImporter;
+use CAPx\Drupal\Util\CAPxImporter;
 
 class CFEntity extends \Entity {
 
@@ -90,11 +86,42 @@ class CFEntity extends \Entity {
   /**
    * Returns the machine name of this entity.
    *
+   * @todo Should be removed - duplicating parent::identifier().
+   * Impossible to do it right now because many our classes have such method
+   * and we have poor documentation on method calls and returned values.
+   *
    * @return string
    *   The machine name
    */
   public function getMachineName() {
     return $this->machine_name;
+  }
+
+  /**
+   * Invalidates Etag of imported profiles.
+   */
+  public function save() {
+    parent::save();
+
+    switch ($this->bundle()) {
+      case 'importer':
+        $importer = $this->identifier();
+        break;
+
+      case 'mapper':
+        $importers = CAPxImporter::loadImportersByMapper($this);
+        $importer = array();
+        foreach ($importers as $i) {
+          $importer[] = $i->identifier();
+        }
+
+        break;
+    }
+
+    db_update('capx_profiles')
+      ->condition('importer', $importer)
+      ->fields(array('etag' => 'invalidated'))
+      ->execute();
   }
 
 }
