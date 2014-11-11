@@ -762,7 +762,7 @@ function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state
 
       // Loop through the columns and check for values.
       foreach ($columns as $column_name => $value) {
-        if (empty($value)) {
+        if (empty($value) && $column_name != 'summary') {
           $element = "field-mapping][" . $entity . "-" . $bundle . "-" . "fields][" . $field_name . "][" . $column_name;
           form_set_error($element, t("@name field is required", array("@name" => $field_name)));
           break;
