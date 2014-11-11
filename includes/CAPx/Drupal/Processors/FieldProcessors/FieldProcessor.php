@@ -146,13 +146,6 @@ class FieldProcessor extends FieldProcessorAbstract {
     $fieldName = $this->getFieldName();
 
     switch ($type) {
-
-      // Downloads and saves a file
-      case "image_file":
-      case "image_image":
-        $processor = new ImageFieldWidgetProcessor($entity, $fieldName);
-        break;
-
       default:
         $processor = $this;
     }

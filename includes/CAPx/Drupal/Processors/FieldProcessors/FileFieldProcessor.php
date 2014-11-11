@@ -23,7 +23,6 @@ class FileFieldProcessor extends FieldTypeProcessor {
    */
   public function put($data) {
     $data = $this->process($data);
-
     parent::put($data);
   }
 
@@ -49,66 +48,64 @@ class FileFieldProcessor extends FieldTypeProcessor {
       return array();
     }
 
-    foreach ($data as $values) {
-      foreach ($values as $value) {
-        // Validate we have required data.
-        if (empty($value['contentType']) || empty($value['url'])) {
-          $this->logIssue(new \Exception(t('Missing required information for field processor.')));
-          continue;
-        }
-
-        // Allow altering as this could get messy.
-        drupal_alter('capx_pre_fetch_remote_file', $value);
-
-        // @todo We can put a check in place to see if file was changed so
-        // we don't fetch it again, but Drupal doesn't allow to store
-        // lastModified data by default, this means we will need to handle
-        // this ourselves. DO we really want to do it?
-        // Request the file from the remote server.
-        $file_data = $this->fetchRemoteFile($value);
-        if (empty($file_data)) {
-          continue;
-        }
-
-        $filename = $this->getFilePath($value);
-        if (!$filename) {
-          continue;
-        }
-
-        $file = file_save_data($file_data, $filename, FILE_EXISTS_REPLACE);
-
-        if (!$file) {
-          $this->logIssue(new \Exception(t('Could not save file with filename %name from URL @url', array('%name' => $filename, '@url' => $value['url']))));
-          continue;
-        }
-
-        // We have a file, allow more altering.
-        drupal_alter('capx_post_save_remote_file', $file, $filename);
-
-        // @todo This Place is good candidate to become a new method, which can be overridden in image.
-        $fieldName = $this->getFieldName();
-        $fieldInfo = field_info_field($fieldName);
-        $entityType = $this->getEntity()->type();
-        $bundle = $this->getEntity()->getBundle();
-        $fieldInstance = field_info_instance($entityType, $fieldName, $bundle);
-
-        if ($fieldInfo['type'] == 'file') {
-          $display = TRUE;
-          if (!empty($fieldInfo['settings']['display_field'])) {
-            $display = (bool) $fieldInfo['settings']['display_default'];
-          }
-
-          $description = '';
-          if (!empty($fieldInstance['settings']['description_field']) && isset($value['label']) && !empty($value['label']['text'])) {
-            $description = $value['label']['text'];
-          }
-
-          $return['description'][] = $description;
-          $return['display'][] = $display;
-        }
-
-        $return['fid'][] = $file->fid;
+    foreach ($data as $value) {
+      // Validate we have required data.
+      if (empty($value['contentType']) || empty($value['url'])) {
+        $this->logIssue(new \Exception(t('Missing required information for field processor.')));
+        continue;
       }
+
+      // Allow altering as this could get messy.
+      drupal_alter('capx_pre_fetch_remote_file', $value);
+
+      // @todo We can put a check in place to see if file was changed so
+      // we don't fetch it again, but Drupal doesn't allow to store
+      // lastModified data by default, this means we will need to handle
+      // this ourselves. DO we really want to do it?
+      // Request the file from the remote server.
+      $file_data = $this->fetchRemoteFile($value);
+      if (empty($file_data)) {
+        continue;
+      }
+
+      $filename = $this->getFilePath($value);
+      if (!$filename) {
+        continue;
+      }
+
+      $file = file_save_data($file_data, $filename, FILE_EXISTS_REPLACE);
+
+      if (!$file) {
+        $this->logIssue(new \Exception(t('Could not save file with filename %name from URL @url', array('%name' => $filename, '@url' => $value['url']))));
+        continue;
+      }
+
+      // We have a file, allow more altering.
+      drupal_alter('capx_post_save_remote_file', $file, $filename);
+
+      // @todo This Place is good candidate to become a new method, which can be overridden in image.
+      $fieldName = $this->getFieldName();
+      $fieldInfo = field_info_field($fieldName);
+      $entityType = $this->getEntity()->type();
+      $bundle = $this->getEntity()->getBundle();
+      $fieldInstance = field_info_instance($entityType, $fieldName, $bundle);
+
+      if ($fieldInfo['type'] == 'file') {
+        $display = TRUE;
+        if (!empty($fieldInfo['settings']['display_field'])) {
+          $display = (bool) $fieldInfo['settings']['display_default'];
+        }
+
+        $description = '';
+        if (!empty($fieldInstance['settings']['description_field']) && isset($value['label']) && !empty($value['label']['text'])) {
+          $description = $value['label']['text'];
+        }
+
+        $return['description'][] = $description;
+        $return['display'][] = $display;
+      }
+
+      $return['fid'][] = $file->fid;
     }
 
     return $return;

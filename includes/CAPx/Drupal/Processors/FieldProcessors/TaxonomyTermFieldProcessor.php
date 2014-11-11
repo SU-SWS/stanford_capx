@@ -15,7 +15,8 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
    */
   public function put($data) {
     $data = $this->prepareData($data);
-
+    // dpm($this->getFieldName());
+    // dpm($data);
     parent::put($data);
   }
 
@@ -34,18 +35,46 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
     $vocabulary = taxonomy_vocabulary_machine_name_load($fieldInfo['settings']['allowed_values'][0]['vocabulary']);
     $return = array();
 
-    foreach ($data as $column => $values) {
-      foreach ($values as $value) {
-        $terms = explode(',', $value);
-        if (count($terms) > 1) {
-          foreach ($terms as $termName) {
-            $return[$column][] = $this->ensureTerm($termName, $vocabulary);
+    foreach ($data as $column => &$values) {
+
+      // Loop through the values.
+      foreach ($values as $key => $value) {
+
+        // Handle an array of terms.
+        if (is_array($value)) {
+          $values = $values + $value;
+          unset($values[$key]);
+          continue;
+        }
+
+        // Sometimes the term name is the key.
+        $termName = trim($value);
+        if (is_bool($value)) {
+          $termName = trim($key);
+        }
+
+        // Even here it is possible to have a comma separated list of terms.
+        if (is_string($termName)) {
+          $count = explode(",", $termName);
+          if (count($count) > 1) {
+            $values = $values + $count;
+            unset($values[$key]);
+            continue;
           }
         }
-        else {
-          $return[$column][] = $this->ensureTerm($value, $vocabulary);
-        }
       }
+
+      // You cannot add to an iterator in the middle of iterating and expect it
+      // to iterate over the new items.
+      foreach ($values as $key => $value) {
+        // Sometimes the term name is the key.
+        $termName = trim($value);
+        if (is_bool($value)) {
+          $termName = trim($key);
+        }
+        $return[$column][] = $this->ensureTerm($termName, $vocabulary);
+      }
+
     }
 
     return $return;
