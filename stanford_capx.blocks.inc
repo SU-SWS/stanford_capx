@@ -241,9 +241,11 @@ function stanford_capx_importer_in_use_block() {
     return FALSE;
   }
 
-  // Do not need to check to see if this works or not as the page wont load if
-  // the machine name is invalid.
+  // Try loading the importer.
   $importer = CAPxImporter::loadEntityImporter($machine_name);
+  if (!$importer) {
+    return FALSE;
+  }
 
   // The metadata.
   $meta = $importer->getMeta();
