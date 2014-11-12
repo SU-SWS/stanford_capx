@@ -156,14 +156,13 @@ class EntityImporterBatch {
 
       if (class_exists($className)) {
         $processor = new $className($mapper, $info);
-        $processor->setEntityImporter($importer);
-        $processor->execute();
       }
       else {
         $processor = new EntityProcessor($mapper, $info);
-        $processor->setEntityImporter($importer);
-        $processor->execute();
       }
+
+      $processor->setEntityImporter($importer);
+      $processor->execute();
 
       $message = $processor->getStatusMessage();
 

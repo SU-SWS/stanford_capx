@@ -15,8 +15,6 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
    */
   public function put($data) {
     $data = $this->prepareData($data);
-    // dpm($this->getFieldName());
-    // dpm($data);
     parent::put($data);
   }
 
