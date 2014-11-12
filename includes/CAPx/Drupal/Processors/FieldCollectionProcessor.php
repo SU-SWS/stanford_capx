@@ -17,7 +17,8 @@ class FieldCollectionProcessor extends EntityProcessor {
   protected $parentEntity = null;
 
   /**
-   * Override method execute
+   * Override method execute.
+   *
    * The field collection processor will assume all updates will create a new
    * field collection and toss the old one. No need to check for existing item.
    * @see  parent::execute();

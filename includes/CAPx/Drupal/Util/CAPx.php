@@ -287,6 +287,44 @@ class CAPx {
   }
 
   /**
+   * Invalidates profile etags by mapper or by importer.
+   *
+   * When a mapper or an importer changes we need to invalidate the etag on the
+   * profiles associated with it.
+   *
+   * @param string $type
+   *   Either mapper or importer
+   * @param object $object
+   *   Either a mapper or importer CFEntity
+   */
+  public static function invalidateEtags($type, $object) {
+    $or = db_or();
+
+    if ($type == "importer") {
+      $or->condition("importer", $object->getMachineName(), "=");
+    }
+    else if ($type == "mapper") {
+      $importers = CAPxImporter::loadImportersByMapper($object);
+
+      if(empty($importers)) {
+        return;
+      }
+
+      foreach ($importers as $k => $v) {
+        $or->condition("importer", $v->getMachineName(), "=");
+      }
+    }
+
+    $result = db_update("capx_profiles")
+    ->fields(array(
+      "etag" => 'invalidated',
+      ))
+    ->condition($or)
+    ->execute();
+
+  }
+
+  /**
    * Remove a profile record.
    *
    * Removes a profile record from the capx_profiles table when an entity is

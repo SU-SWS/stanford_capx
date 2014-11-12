@@ -388,7 +388,10 @@ function stanford_capx_autocomplete($type, $string) {
 
 /**
  * Matches function for organization lookup.
- * @param  string $string the string that came from the autocomplete field.
+ *
+ * @param string $string
+ *   $string the string that came from the autocomplete field.
+ *
  * @return array
  *   An array of results
  */
