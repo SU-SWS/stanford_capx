@@ -48,7 +48,7 @@ class EntityProcessor extends ProcessorAbstract {
     if (!empty($entity)) {
 
       // Profile synchronization has been disabled.
-      if (empty($entity->capx['sync'])) {
+      if (empty($entity->capx['sync']) && !$force) {
         return NULL;
       }
 
