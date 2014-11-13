@@ -594,20 +594,24 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['relationships']['node']['id'] = 'node';
   $handler->display->display_options['relationships']['node']['table'] = 'capx_profiles';
   $handler->display->display_options['relationships']['node']['field'] = 'node';
-  /* Relationship: CAPx profile: CAPx Profile BEAN Information */
-  $handler->display->display_options['relationships']['bean']['id'] = 'bean';
-  $handler->display->display_options['relationships']['bean']['table'] = 'capx_profiles';
-  $handler->display->display_options['relationships']['bean']['field'] = 'bean';
+  if (module_exists("bean")) {
+    /* Relationship: CAPx profile: CAPx Profile BEAN Information */
+    $handler->display->display_options['relationships']['bean']['id'] = 'bean';
+    $handler->display->display_options['relationships']['bean']['table'] = 'capx_profiles';
+    $handler->display->display_options['relationships']['bean']['field'] = 'bean';
+  }
   /* Relationship: CAPx profile: CAPx Profile User Information */
   $handler->display->display_options['relationships']['user']['id'] = 'user';
   $handler->display->display_options['relationships']['user']['table'] = 'capx_profiles';
   $handler->display->display_options['relationships']['user']['field'] = 'user';
-  /* Field: Block: Block Delta */
-  $handler->display->display_options['fields']['delta']['id'] = 'delta';
-  $handler->display->display_options['fields']['delta']['table'] = 'bean';
-  $handler->display->display_options['fields']['delta']['field'] = 'delta';
-  $handler->display->display_options['fields']['delta']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['delta']['exclude'] = TRUE;
+  if (module_exists("bean")) {
+    /* Field: Block: Block Delta */
+    $handler->display->display_options['fields']['delta']['id'] = 'delta';
+    $handler->display->display_options['fields']['delta']['table'] = 'bean';
+    $handler->display->display_options['fields']['delta']['field'] = 'delta';
+    $handler->display->display_options['fields']['delta']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['delta']['exclude'] = TRUE;
+  }
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
@@ -617,13 +621,15 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['name']['empty_zero'] = TRUE;
   $handler->display->display_options['fields']['name']['overwrite_anonymous'] = TRUE;
   $handler->display->display_options['fields']['name']['anonymous_text'] = ' ';
-  /* Field: Block: Title */
-  $handler->display->display_options['fields']['title_1']['id'] = 'title_1';
-  $handler->display->display_options['fields']['title_1']['table'] = 'bean';
-  $handler->display->display_options['fields']['title_1']['field'] = 'title';
-  $handler->display->display_options['fields']['title_1']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['title_1']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['title_1']['alter']['path'] = 'block/[delta]/edit';
+  if (module_exists("bean")) {
+    /* Field: Block: Title */
+    $handler->display->display_options['fields']['title_1']['id'] = 'title_1';
+    $handler->display->display_options['fields']['title_1']['table'] = 'bean';
+    $handler->display->display_options['fields']['title_1']['field'] = 'title';
+    $handler->display->display_options['fields']['title_1']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['title_1']['alter']['make_link'] = TRUE;
+    $handler->display->display_options['fields']['title_1']['alter']['path'] = 'block/[delta]/edit';
+  }
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -660,13 +666,15 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['orphaned']['field'] = 'orphaned';
   $handler->display->display_options['fields']['orphaned']['label'] = 'Orphan';
   $handler->display->display_options['fields']['orphaned']['not'] = 0;
-  /* Field: Block: Edit link */
-  $handler->display->display_options['fields']['edit_link']['id'] = 'edit_link';
-  $handler->display->display_options['fields']['edit_link']['table'] = 'bean';
-  $handler->display->display_options['fields']['edit_link']['field'] = 'edit_link';
-  $handler->display->display_options['fields']['edit_link']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['edit_link']['exclude'] = TRUE;
-  $handler->display->display_options['fields']['edit_link']['text'] = 'Edit';
+  if (module_exists("bean")) {
+    /* Field: Block: Edit link */
+    $handler->display->display_options['fields']['edit_link']['id'] = 'edit_link';
+    $handler->display->display_options['fields']['edit_link']['table'] = 'bean';
+    $handler->display->display_options['fields']['edit_link']['field'] = 'edit_link';
+    $handler->display->display_options['fields']['edit_link']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['edit_link']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['edit_link']['text'] = 'Edit';
+  }
   /* Field: Content: Edit link */
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
   $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
@@ -694,7 +702,11 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
   $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing']['alter']['text'] = '[edit_node][edit_link][edit_node_1] | [profile_id]';
+  $handler->display->display_options['fields']['nothing']['alter']['text'] = '[edit_node]';
+  if (module_exists("bean")) {
+    $handler->display->display_options['fields']['nothing']['alter']['text'] .= "[edit_link]";
+  }
+  $handler->display->display_options['fields']['nothing']['alter']['text'] .= "[edit_node_1] | [profile_id]";
   /* Filter criterion: Global: Combine fields filter */
   $handler->display->display_options['filters']['combine']['id'] = 'combine';
   $handler->display->display_options['filters']['combine']['table'] = 'views';
