@@ -532,6 +532,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
             '#description' => t("@var", array("@var" => $instance_info['description'])),
             '#field_info' => $fc_field_info,
             '#field_instance_info' => $instance_info,
+            '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
           );
 
           // Do not give all options for the file field. File field processor
@@ -612,6 +613,10 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['bean'][] = "type";
   $blacklist['bean'][] = "url";
   $blacklist['bean'][] = "uid";
+  $blacklist['bean'][] = "created";
+  $blacklist['bean'][] = "changed";
+  $blacklist['bean'][] = "data";
+  $blacklist['bean'][] = "body"; // body is not a property!
 
   // Field collection item.
   $blacklist['field_collection_item'][] = "item_id";
@@ -643,7 +648,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['node'][] = "comment_count_new";
   $blacklist['node'][] = "body"; // body is not a property!
 
-  // Terms
+  // Terms.
   $blacklist['taxonomy_term'][] = "tid";
   $blacklist['taxonomy_term'][] = "weight";
   $blacklist['taxonomy_term'][] = "node_count";
@@ -651,8 +656,11 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['taxonomy_term'][] = "vocabulary";
   $blacklist['taxonomy_term'][] = "parent";
   $blacklist['taxonomy_term'][] = "parents_all";
+  $blacklist['taxonomy_term'][] = "created";
+  $blacklist['taxonomy_term'][] = "changed";
+  $blacklist['taxonomy_term'][] = "body"; // body is not a property!
 
-  // User
+  // User.
   $blacklist['user'][] = "uid";
   $blacklist['user'][] = "url";
   $blacklist['user'][] = "edit_url";
@@ -661,13 +669,20 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['user'][] = "roles";
   $blacklist['user'][] = "status";
   $blacklist['user'][] = "theme";
+  $blacklist['user'][] = "created";
+  $blacklist['user'][] = "changed";
+  $blacklist['user'][] = "body"; // body is not a property!
 
-  // Anything we don't know about
+  // Anything we don't know about.
   $blacklist['unknown'][] = "id";
   $blacklist['unknown'][] = "vid";
   $blacklist['unknown'][] = "url";
   $blacklist['unknown'][] = "edit_url";
   $blacklist['unknown'][] = "uid";
+  $blacklist['unknown'][] = "changed";
+  $blacklist['unknown'][] = "created";
+  $blacklist['unknown'][] = "body"; // body is not a property!
+
 
   if (!isset($blacklist[$entity_type])) {
     $entity_type = "unknown";
@@ -934,6 +949,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
     drupal_set_message(t('Congratulations, Your mapper has been created.'), 'status', FALSE);
   }
   else {
+    CAPx::invalidateEtags("mapper", $mapper);
     drupal_set_message(t("Your mapper has been updated."), 'status', FALSE);
   }
 
@@ -1487,7 +1503,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
     '#collapsed' => FALSE,
     '#tree' => TRUE,
     '#weight' => -99,
-    '#description' => t('CAPx information about this vertical tab goes here'),
+    '#description' => t(''),
     '#summary' => t('summary'),
     // The #group value must match the name of the vertical tabs element.
     // In most cases, this is 'additional_settings'.
@@ -1506,9 +1522,14 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
   unset($capx_info['bundle_type']);
   unset($capx_info['id']);
   unset($capx_info['entity_id']);
+  unset($capx_info['etag']);
+  unset($capx_info['profile_id']);
 
-  // Small tweak
+  // Small tweaks.
   $capx_info['importer'] = l($capx_info['importer'], 'admin/config/capx/importer/edit/' . $capx_info['importer']);
+  $capx_info['last_sync'] = format_date($capx_info['last_sync'], 'short');
+  $capx_info['sync'] = ($capx_info['sync']) ? t("Enabled. Automatically receiving updates.") : t("Disabled. Not receiving automatic updates.");
+
 
   $header = array_keys($capx_info);
   $rows = array_values($capx_info);
@@ -1537,7 +1558,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
         'class' => array('button'),
       ),
       'query' => array(
-        'destination' => $_GET['q'],
+        'destination' => check_plain($_GET['q']),
       ),
     );
     $form['capx_vertical_tab']['disable_sync']['#markup'] = l($button_text, $path, $options);
@@ -1689,15 +1710,10 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 
 
 /**
- * The global configuration settings form for CAPx.
- *
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * The global configuration settings for CAPx form builder.
  */
-function stanford_capx_forms_config_settings($form, &$form_state) {
+function stanford_capx_config_settings_form($form, &$form_state) {
 
-  $form['#tree'] = TRUE;
   $form['variables'] = array(
     '#type' => 'fieldset',
     '#title' => t("Syncronization settings"),
@@ -1726,26 +1742,18 @@ function stanford_capx_forms_config_settings($form, &$form_state) {
     '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
   );
 
-  $form['submit'] = array(
-    "#type" => 'submit',
-    "#name" => 'submit',
-    "#value" => "Submit",
+  $options = array();
+  $formats = filter_formats();
+  foreach ($formats as $format) {
+    $options[$format->format] = $format->name;
+  }
+  $form['variables']['stanford_capx_default_field_format'] = array(
+    '#title' => t('Text format'),
+    '#description' => t('Select text format that would be applied to all fields that have text processing enabled.'),
+    '#type' => "select",
+    '#options' => $options,
+    '#default_value' => variable_get('stanford_capx_default_field_format', 'plain_text'),
   );
 
-  return $form;
-}
-
-/**
- * [stanford_capx_forms_config_settings_form_submit description]
- * @param  [type] $form        [description]
- * @param  [type] $form_values [description]
- * @return [type]              [description]
- */
-function stanford_capx_forms_config_settings_submit($form, $form_values) {
-  $values = $form_values['values'];
-
-  // Loop through the variables tree and set em.
-  foreach ($values['variables'] as $var_name => $var_value) {
-    variable_set($var_name, $var_value);
-  }
+  return system_settings_form($form);
 }

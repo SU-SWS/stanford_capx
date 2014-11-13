@@ -79,12 +79,18 @@ function stanford_capx_permission() {
 function stanford_capx_node_access($node, $op, $account) {
   // Returning nothing from this function would have the same effect.
   return NODE_ACCESS_IGNORE;
+  $access = NODE_ACCESS_IGNORE;
+
+  // Disable deletion of nodes synced from CAP.
+  if ($op == 'delete' && isset($node->capx) && !empty($node->capx['sync'])) {
+    $access = NODE_ACCESS_DENY;
+  }
+
+  return $access;
 }
 
 /**
- * Implements hook_views_api.
- * @return array
- *   returns views api info
+ * Implements hook_views_api().
  */
 function stanford_capx_views_api() {
   return array(
@@ -342,6 +348,10 @@ function stanford_capx_cron_queue_callback($item) {
  */
 function stanford_capx_cron_orphan_queue_callback($item) {
   $orphanator = CAPxImporter::getEntityOrphanator($item['importer'], $item['profiles']);
+  if (!$orphanator) {
+    watchdog('stanford_capx_orphans', 'Could not load orphanator for %porter', array('%porter' => $item['importer']), WATCHDOG_WARNING);
+    return FALSE;
+  }
   $orphanator->execute();
 }
 
@@ -396,7 +406,10 @@ function stanford_capx_autocomplete($type, $string) {
 
 /**
  * Matches function for organization lookup.
- * @param  string $string the string that came from the autocomplete field.
+ *
+ * @param string $string
+ *   $string the string that came from the autocomplete field.
+ *
  * @return array
  *   An array of results
  */
@@ -584,14 +597,17 @@ function stanford_capx_init() {
  */
 function stanford_capx_profile_sync_status($id, $sync) {
   $sync_value = NULL;
+  $message = "";
 
   switch ($sync) {
     case 'enable':
       $sync_value = 1;
+      $message = t("Automatic updates ENABLED for this profile.");
       break;
 
     case 'disable':
       $sync_value = 0;
+      $message = t("Automatic updates DISABLED for this profile.");
       break;
   }
 
@@ -602,5 +618,28 @@ function stanford_capx_profile_sync_status($id, $sync) {
       ->execute();
   }
 
+  drupal_set_message($message, "status");
   drupal_goto();
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function stanford_capx_form_user_profile_form_alter(&$form, &$form_state) {
+  global $user;
+  // Disable deletion of users synced from CAP.
+  if ($user->uid != 1 && isset($form_state['user']->capx) && !empty($form_state['user']->capx['sync'])) {
+    $form['actions']['cancel']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
+  global $user;
+  // Disable deletion of taxonomy terms synced from CAP.
+  if ($user->uid != 1 && isset($form_state['term']->capx) && !empty($form_state['term']->capx['sync'])) {
+    $form['actions']['delete']['#access'] = FALSE;
+  }
 }
