@@ -17,9 +17,8 @@ require_once "stanford_capx.views.inc";
 require_once "stanford_capx.pages.inc";
 
 
-use CAPx\APILib\HTTPClient;
-use CAPx\Drupal\Importer\EntityImporter;
 use CAPx\Drupal\Importer\EntityImporterBatch;
+use CAPx\Drupal\Processors\EntityProcessor;
 
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
@@ -28,7 +27,6 @@ use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 use CAPx\Drupal\Util\CAPxConnection;
-
 use CAPx\Drupal\Organizations\Orgs;
 
 // No mapping into these entity types.
@@ -260,6 +258,14 @@ function stanford_capx_menu() {
     'title' => 'Autocomplete Callback Endpoint',
     'page callback' => 'stanford_capx_autocomplete',
     'page arguments' => array(4),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/capx/profile-update/%/%'] = array(
+    'title' => 'Force profile update callback',
+    'page callback' => 'stanford_capx_profile_update',
+    'page arguments' => array(4, 5),
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
   );
@@ -584,6 +590,44 @@ function stanford_capx_init() {
       }
     }
   }
+}
+
+/**
+ * Sync profile page callback.
+ *
+ * Do profile synchronization in enforcing mode.
+ *
+ * @param int $profile_id
+ *   Profile ID to sync.
+ * @param string $importer
+ *   Importer machine name.
+ */
+function stanford_capx_profile_update($profile_id, $importer) {
+
+  $importer = CAPxImporter::loadEntityImporter($importer);
+  if (!$importer || !$importer->valid()) {
+    drupal_set_message(t('There was an error in importer validation.'));
+    return FALSE;
+  }
+
+  $client = $importer->getClient();
+
+  $profile = $client->api('profile')->get($profile_id);
+
+  // Allow altering of the results.
+  drupal_alter('capx_preprocess_profile_update', $profile, $importer);
+
+  $mapper = $importer->getMapper();
+
+  $processor = new EntityProcessor($mapper, $profile);
+  $processor->setEntityImporter($importer);
+  $processor->execute(TRUE);
+
+  $message = $processor->getStatusMessage();
+
+  // Log some information.
+  watchdog('stanford_capx_profile_force_update', check_plain($message) . " | " . check_plain($profile['displayName']), array(), WATCHDOG_INFO);
+  drupal_goto();
 }
 
 /**

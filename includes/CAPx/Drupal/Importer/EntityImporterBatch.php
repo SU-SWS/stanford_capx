@@ -142,7 +142,6 @@ class EntityImporterBatch {
     }
 
     $mapper = $importer->getMapper();
-    $mapper->checkFields();
     // Allow altering of the results.
     drupal_alter('capx_preprocess_results', $results, $importer);
 

@@ -194,7 +194,14 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
 
   public function logIssue(\Exception $e = NULL) {
     $entity = $this->getEntity();
-    $entityId = $entity->getIdentifier();
+
+    // BEAN is returning its delta when using this.
+    // $entityId = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($entityId, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
 
     $logText = 'Could not save the field data for %field on %type id: %profileId.';
     if (isset($e)) {

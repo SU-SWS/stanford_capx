@@ -5,20 +5,31 @@
  */
 
 namespace CAPx\Drupal\Processors;
+
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Util\CAPx;
 
 class EntityProcessor extends ProcessorAbstract {
 
+  /**
+   * Wrapped Drupal entity to be processed.
+   */
   protected $entity;
 
   /**
+   * Process entity.
+   *
    * The starting point for processing any entity. This function executes and
    * handles the saving and/or updating of an entity with the data that is
    * set to it.
-   * @return Entity The new or updated entity.
+   *
+   * @param bool $force
+   *   Synchronize even if synchronization is disable('sync' = 0).
+   *
+   * @return object
+   *   The new or updated wrapped entity.
    */
-  public function execute() {
+  public function execute($force = FALSE) {
     $data = $this->getData();
     $mapper = $this->getMapper();
     $entityImporter = $this->getEntityImporter();
@@ -37,7 +48,7 @@ class EntityProcessor extends ProcessorAbstract {
     if (!empty($entity)) {
 
       // Profile synchronization has been disabled.
-      if (empty($entity->capx['sync'])) {
+      if (empty($entity->capx['sync']) && !$force) {
         return NULL;
       }
 
@@ -53,6 +64,9 @@ class EntityProcessor extends ProcessorAbstract {
       }
       else {
         $this->setStatus(2, 'Etag matched. No processing happened.');
+        // Call this function so that the timestamp of sync is updated.
+        $entity = entity_metadata_wrapper($entityType, $entity);
+        CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
       }
 
     }
@@ -62,7 +76,6 @@ class EntityProcessor extends ProcessorAbstract {
     }
 
     return $entity;
-
   }
 
   /**

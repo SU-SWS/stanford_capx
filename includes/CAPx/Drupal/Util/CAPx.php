@@ -178,7 +178,13 @@ class CAPx {
    *   The cap API profile id.
    */
   public static function getProfileIdByEntity($entity) {
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
     $entityType = $entity->type();
     $bundleType = $entity->getBundle();
 
@@ -204,8 +210,12 @@ class CAPx {
    *   The entity that was just saved.
    */
   public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $entityId = $entity->getIdentifier();
+
     $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
     $bundleType = $entity->getBundle();
     $time = time();
 
@@ -240,8 +250,12 @@ class CAPx {
   public static function updateProfileRecord($entity, $profileId, $etag, $importer) {
 
     $time = time();
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
     $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
     $bundleType = $entity->getBundle();
 
     $record = array(
