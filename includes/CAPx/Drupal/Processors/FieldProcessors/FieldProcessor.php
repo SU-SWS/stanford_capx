@@ -5,7 +5,8 @@
  */
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
-use CAPx\Drupal\Processors\FieldProcessors\FieldProcessorAbstract;
+
+use CAPx\Drupal\Processors\FieldCollectionProcessor;
 
 /**
  * List of known fields and widgets
@@ -145,13 +146,6 @@ class FieldProcessor extends FieldProcessorAbstract {
     $fieldName = $this->getFieldName();
 
     switch ($type) {
-
-      // Downloads and saves a file
-      case "image_file":
-      case "image_image":
-        $processor = new ImageFieldWidgetProcessor($entity, $fieldName);
-        break;
-
       default:
         $processor = $this;
     }

@@ -321,13 +321,12 @@ class EntityImporter implements ImporterInterface {
    * Search through the values we have and find orphans in the api.
    *
    * Create queue api queues that run on cron to check for orphans.
-   *
    */
   public function createOrphansQueue() {
 
     // If the action is set to do nothing to orphaned profiles, do nothing.
-    $action = variable_get("stanford_capx_orphan_action", "unpublish");
-    if ($action == "nothing") {
+    $options = $this->getOptions();
+    if ($options['orphan_action'] == 'nothing') {
       return;
     }
 

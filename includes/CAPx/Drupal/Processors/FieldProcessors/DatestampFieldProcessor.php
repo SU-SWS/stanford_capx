@@ -10,6 +10,4 @@ class DatestampFieldProcessor extends DateFieldProcessor {
 
   protected $dbFormatValue = "datestamp";
 
-
-
 }
