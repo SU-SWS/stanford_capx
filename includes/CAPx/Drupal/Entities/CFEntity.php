@@ -97,31 +97,4 @@ class CFEntity extends \Entity {
     return $this->machine_name;
   }
 
-  /**
-   * Invalidates Etag of imported profiles.
-   */
-  public function save() {
-    parent::save();
-
-    switch ($this->bundle()) {
-      case 'importer':
-        $importer = $this->identifier();
-        break;
-
-      case 'mapper':
-        $importers = CAPxImporter::loadImportersByMapper($this);
-        $importer = array();
-        foreach ($importers as $i) {
-          $importer[] = $i->identifier();
-        }
-
-        break;
-    }
-
-    db_update('capx_profiles')
-      ->condition('importer', $importer)
-      ->fields(array('etag' => 'invalidated'))
-      ->execute();
-  }
-
 }
