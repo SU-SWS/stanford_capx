@@ -14,12 +14,11 @@ class FieldCollectionMapper extends EntityMapper {
    * Additionaly to the parent set the bundle "field_name".
    * @see parent::__construct()
    *
-   * @param array $config
+   * @param array $mapper
    *   Additional configuration.
    */
-  public function __construct($config) {
-    parent::__construct($config);
-    $this->setBundle($config['bundleType']);
+  public function __construct($mapper) {
+    $this->setBundle($mapper->settings['bundle_type']);
   }
 
   /**

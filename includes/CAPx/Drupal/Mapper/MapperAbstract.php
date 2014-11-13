@@ -72,8 +72,8 @@ abstract class MapperAbstract implements MapperInterface {
   }
 
   /**
-   * Getter function
-   * @return array the configuration array
+   * Setter function
+   * @param array the configuration array
    */
   protected function setConfig($config) {
     $this->config = $config;
@@ -94,15 +94,17 @@ abstract class MapperAbstract implements MapperInterface {
   public function addConfig($settings) {
 
     $config = $this->getConfig();
+    $mapper = $this->getMapper();
+
     $settings['fieldCollections'] = array();
 
     if (isset($settings['collections'])) {
       foreach ($settings['collections'] as $fieldName => $fields) {
-        $collectionConfig = array();
-        $collectionConfig['bundle_type'] = $fieldName;
-        $collectionConfig['fields'] = $fields;
-        $collectionConfig['properties'] = array();
-        $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($collectionConfig);
+        $mapper->settings['bundle_type'] = $fieldName;
+        $mapper->settings['fields'] = $fields;
+        $mapper->settings['properties'] = array();
+        $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($mapper);
+        $settings['fieldCollections'][$fieldName]->addConfig($mapper->settings);
       }
     }
 
