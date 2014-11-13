@@ -944,7 +944,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   $mapper->settings = $settings;
 
-  // New vs Edit
+  // New vs Edit.
   if (!empty($mapper->is_new)) {
     drupal_set_message(t('Congratulations, Your mapper has been created.'), 'status', FALSE);
   }
@@ -1291,6 +1291,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
     drupal_set_message(t('Congratulations, Your importer has been created.'), 'status', FALSE);
   }
   else {
+    CAPx::invalidateEtags("importer", $importer);
     drupal_set_message(t("Your importer has been updated."), 'status', FALSE);
   }
 
@@ -1371,7 +1372,7 @@ function stanford_capx_admin_config_importer_delete($form, &$form_state, $machin
   // Add the machine name so we can do stuff with the importer later.
   $form['machine-name'] = array(
     '#type' => 'value',
-    '#value' => $importer->getMachineName(),
+    '#value' => $machine_name,
   );
 
   // Operations.
