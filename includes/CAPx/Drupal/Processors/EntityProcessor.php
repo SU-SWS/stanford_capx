@@ -46,6 +46,12 @@ class EntityProcessor extends ProcessorAbstract {
 
     // If we have an entity we need to update it.
     if (!empty($entity)) {
+
+      // Profile synchronization has been disabled.
+      if (empty($entity->capx['sync'])) {
+        return NULL;
+      }
+
       $this->setEntity($entity);
 
       // Check to see if the etag has changed. We can avoid processing a profile
@@ -58,6 +64,9 @@ class EntityProcessor extends ProcessorAbstract {
       }
       else {
         $this->setStatus(2, 'Etag matched. No processing happened.');
+        // Call this function so that the timestamp of sync is updated.
+        $entity = entity_metadata_wrapper($entityType, $entity);
+        CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
       }
 
     }
@@ -123,6 +132,7 @@ class EntityProcessor extends ProcessorAbstract {
     // Wrap it up baby!
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
+    // @todo Need to catch exceptions here as well.
     $entity->save();
 
     drupal_alter('capx_post_entity_create', $entity);

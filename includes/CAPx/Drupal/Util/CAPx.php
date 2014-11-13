@@ -178,7 +178,13 @@ class CAPx {
    *   The cap API profile id.
    */
   public static function getProfileIdByEntity($entity) {
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
     $entityType = $entity->type();
     $bundleType = $entity->getBundle();
 
@@ -204,8 +210,12 @@ class CAPx {
    *   The entity that was just saved.
    */
   public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $entityId = $entity->getIdentifier();
+
     $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
     $bundleType = $entity->getBundle();
     $time = time();
 
@@ -240,8 +250,12 @@ class CAPx {
   public static function updateProfileRecord($entity, $profileId, $etag, $importer) {
 
     $time = time();
-    $id = $entity->getIdentifier();
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
     $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
     $bundleType = $entity->getBundle();
 
     $record = array(
@@ -284,6 +298,44 @@ class CAPx {
       ->execute();
 
     return $result->fetchField();
+  }
+
+  /**
+   * Invalidates profile etags by mapper or by importer.
+   *
+   * When a mapper or an importer changes we need to invalidate the etag on the
+   * profiles associated with it.
+   *
+   * @param string $type
+   *   Either mapper or importer
+   * @param object $object
+   *   Either a mapper or importer CFEntity
+   */
+  public static function invalidateEtags($type, $object) {
+    $or = db_or();
+
+    if ($type == "importer") {
+      $or->condition("importer", $object->getMachineName(), "=");
+    }
+    else if ($type == "mapper") {
+      $importers = CAPxImporter::loadImportersByMapper($object);
+
+      if(empty($importers)) {
+        return;
+      }
+
+      foreach ($importers as $k => $v) {
+        $or->condition("importer", $v->getMachineName(), "=");
+      }
+    }
+
+    $result = db_update("capx_profiles")
+    ->fields(array(
+      "etag" => 'invalidated',
+      ))
+    ->condition($or)
+    ->execute();
+
   }
 
   /**

@@ -424,7 +424,14 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
   public function logOrphan($entity) {
 
     // Set the flag to 1 in the capx_profiles table.
-    $id = $entity->getIdentifier();
+
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
     $importer = $this->getImporter();
     $importerName = $importer->getMachineName();
     $entityType = $importer->getEntityType();

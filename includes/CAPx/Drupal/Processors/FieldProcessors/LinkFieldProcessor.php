@@ -9,39 +9,38 @@ namespace CAPx\Drupal\Processors\FieldProcessors;
 class LinkFieldProcessor extends FieldTypeProcessor {
 
   /**
-   * Link field override of the put function.
-   * @see  parent::put();
-   * @param  array $data an array of CAP API data
-   * @return [type]       [description]
+   * Default implementation of put.
+   *
+   * @see FieldProcessorAbstract::put()
    */
   public function put($data) {
-    $entity = $this->getEntity();
-    $fieldName = $this->getFieldName();
-    $fieldInfo = field_info_field($fieldName);
-    $field = $entity->{$fieldName};
+    $data = $this->prepareData($data);
 
-    $keys = array_keys($fieldInfo['columns']);
+    parent::put($data);
+  }
 
-    // No need for anything fancy when there is nothing to parse :)
-    if (empty($data) && empty($data[0])) {
-      $field->set(null);
-      return;
-    }
-
-    // Reformat the jsonpath return data so it works with Durp.
-    $data = $this->repackageJsonDataForDrupal($data, $fieldInfo);
-
-    if ($fieldInfo['cardinality'] !== "1") {
-      $field->set($data);
-    }
-    else {
-      foreach($keys as $columnName) {
-        if (isset($data[0][$columnName])) {
-          $field->{$columnName}->set($data[0][$columnName]);
+  /**
+   * Prepares CAP API data to feet to Drupal field.
+   *
+   * @param array $data
+   *   CAP API field data.
+   *
+   * @return array
+   *   Prepared data.
+   */
+  public function prepareData($data) {
+    foreach ($data as $column => $values) {
+      foreach ($values as $delta => $value) {
+        if (!is_string($value)) {
+          $data[$column][$delta] = '';
+          // @todo: Do we really want to log this?
+          // Keep in mind that log will be polluted.
+          $this->logIssue(new \Exception(t('Received not allowed value, expecting string got %type.', array('%type' => gettype($value)))));
         }
       }
     }
 
+    return $data;
   }
 
 }

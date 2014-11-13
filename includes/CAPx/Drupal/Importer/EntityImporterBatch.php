@@ -149,9 +149,17 @@ class EntityImporterBatch {
     // mapping and saving.
     foreach ($results as $index => $info) {
 
-      // Only one type of processor for now. Plan to add other types in the
-      // future.
-      $processor = new EntityProcessor($mapper, $info);
+      $entityType = $mapper->getEntityType();
+      $entityType = ucfirst(strtolower($entityType));
+      $className = "\CAPx\Drupal\Processors\\" . $entityType . 'Processor';
+
+      if (class_exists($className)) {
+        $processor = new $className($mapper, $info);
+      }
+      else {
+        $processor = new EntityProcessor($mapper, $info);
+      }
+
       $processor->setEntityImporter($importer);
       $processor->execute();
 
