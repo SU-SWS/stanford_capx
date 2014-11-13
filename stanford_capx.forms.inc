@@ -1503,7 +1503,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
     '#collapsed' => FALSE,
     '#tree' => TRUE,
     '#weight' => -99,
-    '#description' => t('CAPx information about this vertical tab goes here'),
+    '#description' => t(''),
     '#summary' => t('summary'),
     // The #group value must match the name of the vertical tabs element.
     // In most cases, this is 'additional_settings'.
@@ -1522,9 +1522,14 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
   unset($capx_info['bundle_type']);
   unset($capx_info['id']);
   unset($capx_info['entity_id']);
+  unset($capx_info['etag']);
+  unset($capx_info['profile_id']);
 
-  // Small tweak
+  // Small tweaks.
   $capx_info['importer'] = l($capx_info['importer'], 'admin/config/capx/importer/edit/' . $capx_info['importer']);
+  $capx_info['last_sync'] = format_date($capx_info['last_sync'], 'short');
+  $capx_info['sync'] = ($capx_info['sync']) ? t("Enabled. Automatically receiving updates.") : t("Disabled. Not receiving automatic updates.");
+
 
   $header = array_keys($capx_info);
   $rows = array_values($capx_info);
@@ -1543,6 +1548,21 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $form_id, $entit
 
   $form['capx_vertical_tab']['tmpinfo']['#markup'] = $table;
 
+  if (user_access('administer capx')) {
+    $sync = empty($entity->capx['sync']) ? TRUE : FALSE;
+    $button_text = $sync ? t('Enable updates from CAP for this profile') : t('Disable updates from CAP for this profile');
+    $path = 'admin/config/capx/profile-sync/' . $entity->capx['id'] . '/';
+    $path .= $sync ? 'enable' : 'disable';
+    $options = array(
+      'attributes' => array(
+        'class' => array('button'),
+      ),
+      'query' => array(
+        'destination' => check_plain($_GET['q']),
+      ),
+    );
+    $form['capx_vertical_tab']['disable_sync']['#markup'] = l($button_text, $path, $options);
+  }
 }
 
 /**

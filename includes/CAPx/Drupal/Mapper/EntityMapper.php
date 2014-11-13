@@ -341,14 +341,13 @@ class EntityMapper extends MapperAbstract {
 
     // Something is wrong - removing mapper config.
     if (!$entity_status) {
-      $mapper = $this->getMapper();
-      capx_cfe_delete($mapper);
 
       $importers = $this->getAffectedImporters();
       $importer_links = array();
       foreach ($importers as $importer) {
         $importer_links[$importer->getMachineName()] = l(check_plain($importer->label()), 'admin/config/capx/importer/edit/' . $importer->getMachineName());
       }
+
       $message_vars['!importers'] = implode(', ', $importer_links);
       $message_text .= ' ';
       $message_text .= t('The following importers are using an invalid mapper. Please update or delete the mapper settings: !importers.');
@@ -359,6 +358,7 @@ class EntityMapper extends MapperAbstract {
         'message_vars' => $message_vars,
         'importers' => $importer_links,
       );
+
       variable_set('stanford_capx_admin_messages', $messages);
     }
 

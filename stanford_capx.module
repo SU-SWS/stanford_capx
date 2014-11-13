@@ -77,6 +77,8 @@ function stanford_capx_permission() {
  * Implements hook_node_access().
  */
 function stanford_capx_node_access($node, $op, $account) {
+  // Returning nothing from this function would have the same effect.
+  return NODE_ACCESS_IGNORE;
   $access = NODE_ACCESS_IGNORE;
 
   // Disable deletion of nodes synced from CAP.
@@ -262,6 +264,14 @@ function stanford_capx_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/capx/profile-sync/%/%'] = array(
+    'title' => 'Profile synchronization settings change callback',
+    'page callback' => 'stanford_capx_profile_sync_status',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -338,6 +348,10 @@ function stanford_capx_cron_queue_callback($item) {
  */
 function stanford_capx_cron_orphan_queue_callback($item) {
   $orphanator = CAPxImporter::getEntityOrphanator($item['importer'], $item['profiles']);
+  if (!$orphanator) {
+    watchdog('stanford_capx_orphans', 'Could not load orphanator for %porter', array('%porter' => $item['importer']), WATCHDOG_WARNING);
+    return FALSE;
+  }
   $orphanator->execute();
 }
 
@@ -570,6 +584,42 @@ function stanford_capx_init() {
       }
     }
   }
+}
+
+/**
+ * Page callback for changing profile sync status.
+ *
+ * @param int $id
+ *   Internal profile ID.
+ *
+ * @param string $sync
+ *   Synchronization operation. One from 'enable', 'disable'.
+ */
+function stanford_capx_profile_sync_status($id, $sync) {
+  $sync_value = NULL;
+  $message = "";
+
+  switch ($sync) {
+    case 'enable':
+      $sync_value = 1;
+      $message = t("Automatic updates ENABLED for this profile.");
+      break;
+
+    case 'disable':
+      $sync_value = 0;
+      $message = t("Automatic updates DISABLED for this profile.");
+      break;
+  }
+
+  if (isset($sync_value)) {
+    db_update('capx_profiles')
+      ->condition('id', $id)
+      ->fields(array('sync' => $sync_value))
+      ->execute();
+  }
+
+  drupal_set_message($message, "status");
+  drupal_goto();
 }
 
 /**
