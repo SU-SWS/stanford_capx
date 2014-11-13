@@ -170,8 +170,21 @@ function hook_capx_field_processor_widget_alter(&$processor, $type, $field_name,
  * @param  [EntityImporter] $importer the entity importer that made the request.
  * @return [type]           [description]
  */
-function hook_capx_preprocess_results_alter(&$results, $importer) {
+function hook_capx_preprocess_results_alter(&$results, &$importer) {
+}
 
+/**
+ * Acts on profile data received from CAP before sync.
+ *
+ * This happens when user clicks on "Update this profile from CAP"
+ * button on eny profile editing page.
+ *
+ * @param array $profile
+ *   Profile data received from CAP.
+ * @param object $importer
+ *   CAPx\Drupal\Importer\EntityImporter object.
+ */
+function hook_capx_preprocess_profile_update_alter(&$profile, &$importer) {
 }
 
 /**

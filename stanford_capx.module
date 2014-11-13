@@ -17,9 +17,8 @@ require_once "stanford_capx.views.inc";
 require_once "stanford_capx.pages.inc";
 
 
-use CAPx\APILib\HTTPClient;
-use CAPx\Drupal\Importer\EntityImporter;
 use CAPx\Drupal\Importer\EntityImporterBatch;
+use CAPx\Drupal\Processors\EntityProcessor;
 
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Mapper\FieldCollectionMapper;
@@ -28,7 +27,6 @@ use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 use CAPx\Drupal\Util\CAPxConnection;
-
 use CAPx\Drupal\Organizations\Orgs;
 
 // No mapping into these entity types.
@@ -78,13 +76,18 @@ function stanford_capx_permission() {
  */
 function stanford_capx_node_access($node, $op, $account) {
   // Returning nothing from this function would have the same effect.
-  return NODE_ACCESS_IGNORE;
+  $access = NODE_ACCESS_IGNORE;
+
+  // Disable deletion of nodes synced from CAP.
+  if ($op == 'delete' && isset($node->capx) && !empty($node->capx['sync'])) {
+    $access = NODE_ACCESS_DENY;
+  }
+
+  return $access;
 }
 
 /**
- * Implements hook_views_api.
- * @return array
- *   returns views api info
+ * Implements hook_views_api().
  */
 function stanford_capx_views_api() {
   return array(
@@ -258,6 +261,22 @@ function stanford_capx_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/capx/profile-update/%/%'] = array(
+    'title' => 'Force profile update callback',
+    'page callback' => 'stanford_capx_profile_update',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/capx/profile-sync/%/%'] = array(
+    'title' => 'Profile synchronization settings change callback',
+    'page callback' => 'stanford_capx_profile_sync_status',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -272,14 +291,14 @@ function stanford_capx_cron() {
 
   // Call cron on all importers.
   $importers = CAPxImporter::loadAllImporters();
-  foreach ($importers as $importer) {
-    $entity_importer = CAPxImporter::loadEntityImporter($importer->getMachineName());
-    if ($entity_importer && $entity_importer->valid()) {
+  foreach ($importers as $key => $importer) {
+    $entity_importer = CAPxImporter::loadEntityImporter($importer->identifier());
+    if ($entity_importer) {
       $entity_importer->cron();
     }
     else {
       $vars = array(
-        '%name' => $importer->getMachineName(),
+        '%name' => $importer->identifier(),
       );
       watchdog('There was an issue loading the importer with %name machine name.', $vars, WATCHDOG_ERROR);
     }
@@ -334,6 +353,10 @@ function stanford_capx_cron_queue_callback($item) {
  */
 function stanford_capx_cron_orphan_queue_callback($item) {
   $orphanator = CAPxImporter::getEntityOrphanator($item['importer'], $item['profiles']);
+  if (!$orphanator) {
+    watchdog('stanford_capx_orphans', 'Could not load orphanator for %porter', array('%porter' => $item['importer']), WATCHDOG_WARNING);
+    return FALSE;
+  }
   $orphanator->execute();
 }
 
@@ -388,7 +411,10 @@ function stanford_capx_autocomplete($type, $string) {
 
 /**
  * Matches function for organization lookup.
- * @param  string $string the string that came from the autocomplete field.
+ *
+ * @param string $string
+ *   $string the string that came from the autocomplete field.
+ *
  * @return array
  *   An array of results
  */
@@ -562,5 +588,101 @@ function stanford_capx_init() {
         drupal_set_message($formatted_message, 'error', FALSE);
       }
     }
+  }
+}
+
+/**
+ * Sync profile page callback.
+ *
+ * Do profile synchronization in enforcing mode.
+ *
+ * @param int $profile_id
+ *   Profile ID to sync.
+ * @param string $importer
+ *   Importer machine name.
+ */
+function stanford_capx_profile_update($profile_id, $importer) {
+
+  $importer = CAPxImporter::loadEntityImporter($importer);
+  if (!$importer || !$importer->valid()) {
+    drupal_set_message(t('There was an error in importer validation.'));
+    return FALSE;
+  }
+
+  $client = $importer->getClient();
+
+  $profile = $client->api('profile')->get($profile_id);
+
+  // Allow altering of the results.
+  drupal_alter('capx_preprocess_profile_update', $profile, $importer);
+
+  $mapper = $importer->getMapper();
+
+  $processor = new EntityProcessor($mapper, $profile);
+  $processor->setEntityImporter($importer);
+  $processor->execute(TRUE);
+
+  $message = $processor->getStatusMessage();
+
+  // Log some information.
+  watchdog('stanford_capx_profile_force_update', check_plain($message) . " | " . check_plain($profile['displayName']), array(), WATCHDOG_INFO);
+  drupal_goto();
+}
+
+/**
+ * Page callback for changing profile sync status.
+ *
+ * @param int $id
+ *   Internal profile ID.
+ *
+ * @param string $sync
+ *   Synchronization operation. One from 'enable', 'disable'.
+ */
+function stanford_capx_profile_sync_status($id, $sync) {
+  $sync_value = NULL;
+  $message = "";
+
+  switch ($sync) {
+    case 'enable':
+      $sync_value = 1;
+      $message = t("Automatic updates ENABLED for this profile.");
+      break;
+
+    case 'disable':
+      $sync_value = 0;
+      $message = t("Automatic updates DISABLED for this profile.");
+      break;
+  }
+
+  if (isset($sync_value)) {
+    db_update('capx_profiles')
+      ->condition('id', $id)
+      ->fields(array('sync' => $sync_value))
+      ->execute();
+  }
+
+  drupal_set_message($message, "status");
+  drupal_goto();
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function stanford_capx_form_user_profile_form_alter(&$form, &$form_state) {
+  global $user;
+  // Disable deletion of users synced from CAP.
+  if ($user->uid != 1 && isset($form_state['user']->capx) && !empty($form_state['user']->capx['sync'])) {
+    $form['actions']['cancel']['#disabled'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
+  global $user;
+  // Disable deletion of taxonomy terms synced from CAP.
+  if ($user->uid != 1 && isset($form_state['term']->capx) && !empty($form_state['term']->capx['sync'])) {
+    $form['actions']['delete']['#disabled'] = TRUE;
   }
 }

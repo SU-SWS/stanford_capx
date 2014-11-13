@@ -303,6 +303,144 @@ function stanford_capx_views_default_views() {
   //////////////////////////////////////////////////////////////////////////////
 
   $view = new view();
+  $view->name = 'importers_overview_page';
+  $view->description = '';
+  $view->tag = 'default';
+  $view->base_table = 'capx_cfe';
+  $view->human_name = 'Importers - Overview page';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Importers';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '50';
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'machine_name' => 'machine_name',
+    'title' => 'title',
+    'settings' => 'settings',
+    'meta_1' => 'meta_1',
+    'meta' => 'meta',
+    'nothing' => 'nothing',
+  );
+  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['info'] = array(
+    'machine_name' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'title' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'settings' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'meta_1' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'meta' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'nothing' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+  );
+  /* Field: Configuration Entity: Machine name */
+  $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
+  $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['machine_name']['field'] = 'machine_name';
+  $handler->display->display_options['fields']['machine_name']['label'] = '';
+  $handler->display->display_options['fields']['machine_name']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['machine_name']['element_label_colon'] = FALSE;
+  /* Field: Configuration Entity: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['alter']['make_link'] = TRUE;
+  $handler->display->display_options['fields']['title']['alter']['path'] = 'admin/config/capx/importer/edit/[machine_name]';
+  /* Field: Configuration Entity: Configuration Settings */
+  $handler->display->display_options['fields']['settings']['id'] = 'settings';
+  $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['settings']['field'] = 'settings';
+  $handler->display->display_options['fields']['settings']['label'] = 'Mapper';
+  $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
+  $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/capx/mapper/edit/[settings]';
+  $handler->display->display_options['fields']['settings']['format'] = 'mapper';
+  $handler->display->display_options['fields']['settings']['key'] = 'mapper';
+  $handler->display->display_options['fields']['settings']['mapper'] = 0;
+  /* Field: Configuration Entity: Meta Data */
+  $handler->display->display_options['fields']['meta_1']['id'] = 'meta_1';
+  $handler->display->display_options['fields']['meta_1']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['meta_1']['field'] = 'meta';
+  $handler->display->display_options['fields']['meta_1']['label'] = 'Number of profiles';
+  $handler->display->display_options['fields']['meta_1']['format'] = 'count';
+  $handler->display->display_options['fields']['meta_1']['key'] = 'count';
+  $handler->display->display_options['fields']['meta_1']['timestamp'] = 0;
+  /* Field: Configuration Entity: Meta Data */
+  $handler->display->display_options['fields']['meta']['id'] = 'meta';
+  $handler->display->display_options['fields']['meta']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['meta']['field'] = 'meta';
+  $handler->display->display_options['fields']['meta']['label'] = 'Last Update';
+  $handler->display->display_options['fields']['meta']['format'] = 'lastUpdateHuman';
+  $handler->display->display_options['fields']['meta']['key'] = 'lastUpdateHuman';
+  $handler->display->display_options['fields']['meta']['timestamp'] = 0;
+  /* Field: Configuration Entity: Importer sync profiles action link */
+  $handler->display->display_options['fields']['importer_sync_profiles']['id'] = 'importer_sync_profiles';
+  $handler->display->display_options['fields']['importer_sync_profiles']['table'] = 'capx_cfe';
+  $handler->display->display_options['fields']['importer_sync_profiles']['field'] = 'importer_sync_profiles';
+  $handler->display->display_options['fields']['importer_sync_profiles']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['importer_sync_profiles']['text'] = 'Update profiles now';
+  /* Field: Global: Custom text */
+  $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
+  $handler->display->display_options['fields']['nothing']['table'] = 'views';
+  $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
+  $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
+  $handler->display->display_options['fields']['nothing']['alter']['text'] = '[importer_sync_profiles]';
+  /* Sort criterion: Configuration Entity: Title */
+  $handler->display->display_options['sorts']['title']['id'] = 'title';
+  $handler->display->display_options['sorts']['title']['table'] = 'capx_cfe';
+  $handler->display->display_options['sorts']['title']['field'] = 'title';
+  /* Filter criterion: Configuration Entity: type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'capx_cfe';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = 'importer';
+
+  /* Display: Importer Overview */
+  $handler = $view->new_display('block', 'Importer Overview', 'importers_overview');
+  $handler->display->display_options['display_description'] = 'Importer Overview';
+  $handler->display->display_options['block_description'] = 'Importer Overview Block';
+
+  $views['importers_overview_page'] = $view;
+
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  $view = new view();
   $view->name = 'capx_admin_profiles';
   $view->description = '';
   $view->tag = 'default';
@@ -456,20 +594,24 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['relationships']['node']['id'] = 'node';
   $handler->display->display_options['relationships']['node']['table'] = 'capx_profiles';
   $handler->display->display_options['relationships']['node']['field'] = 'node';
-  /* Relationship: CAPx profile: CAPx Profile BEAN Information */
-  $handler->display->display_options['relationships']['bean']['id'] = 'bean';
-  $handler->display->display_options['relationships']['bean']['table'] = 'capx_profiles';
-  $handler->display->display_options['relationships']['bean']['field'] = 'bean';
+  if (module_exists("bean")) {
+    /* Relationship: CAPx profile: CAPx Profile BEAN Information */
+    $handler->display->display_options['relationships']['bean']['id'] = 'bean';
+    $handler->display->display_options['relationships']['bean']['table'] = 'capx_profiles';
+    $handler->display->display_options['relationships']['bean']['field'] = 'bean';
+  }
   /* Relationship: CAPx profile: CAPx Profile User Information */
   $handler->display->display_options['relationships']['user']['id'] = 'user';
   $handler->display->display_options['relationships']['user']['table'] = 'capx_profiles';
   $handler->display->display_options['relationships']['user']['field'] = 'user';
-  /* Field: Block: Block Delta */
-  $handler->display->display_options['fields']['delta']['id'] = 'delta';
-  $handler->display->display_options['fields']['delta']['table'] = 'bean';
-  $handler->display->display_options['fields']['delta']['field'] = 'delta';
-  $handler->display->display_options['fields']['delta']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['delta']['exclude'] = TRUE;
+  if (module_exists("bean")) {
+    /* Field: Block: Block Delta */
+    $handler->display->display_options['fields']['delta']['id'] = 'delta';
+    $handler->display->display_options['fields']['delta']['table'] = 'bean';
+    $handler->display->display_options['fields']['delta']['field'] = 'delta';
+    $handler->display->display_options['fields']['delta']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['delta']['exclude'] = TRUE;
+  }
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
@@ -479,13 +621,15 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['name']['empty_zero'] = TRUE;
   $handler->display->display_options['fields']['name']['overwrite_anonymous'] = TRUE;
   $handler->display->display_options['fields']['name']['anonymous_text'] = ' ';
-  /* Field: Block: Title */
-  $handler->display->display_options['fields']['title_1']['id'] = 'title_1';
-  $handler->display->display_options['fields']['title_1']['table'] = 'bean';
-  $handler->display->display_options['fields']['title_1']['field'] = 'title';
-  $handler->display->display_options['fields']['title_1']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['title_1']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['title_1']['alter']['path'] = 'block/[delta]/edit';
+  if (module_exists("bean")) {
+    /* Field: Block: Title */
+    $handler->display->display_options['fields']['title_1']['id'] = 'title_1';
+    $handler->display->display_options['fields']['title_1']['table'] = 'bean';
+    $handler->display->display_options['fields']['title_1']['field'] = 'title';
+    $handler->display->display_options['fields']['title_1']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['title_1']['alter']['make_link'] = TRUE;
+    $handler->display->display_options['fields']['title_1']['alter']['path'] = 'block/[delta]/edit';
+  }
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -522,13 +666,15 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['orphaned']['field'] = 'orphaned';
   $handler->display->display_options['fields']['orphaned']['label'] = 'Orphan';
   $handler->display->display_options['fields']['orphaned']['not'] = 0;
-  /* Field: Block: Edit link */
-  $handler->display->display_options['fields']['edit_link']['id'] = 'edit_link';
-  $handler->display->display_options['fields']['edit_link']['table'] = 'bean';
-  $handler->display->display_options['fields']['edit_link']['field'] = 'edit_link';
-  $handler->display->display_options['fields']['edit_link']['relationship'] = 'bean';
-  $handler->display->display_options['fields']['edit_link']['exclude'] = TRUE;
-  $handler->display->display_options['fields']['edit_link']['text'] = 'Edit';
+  if (module_exists("bean")) {
+    /* Field: Block: Edit link */
+    $handler->display->display_options['fields']['edit_link']['id'] = 'edit_link';
+    $handler->display->display_options['fields']['edit_link']['table'] = 'bean';
+    $handler->display->display_options['fields']['edit_link']['field'] = 'edit_link';
+    $handler->display->display_options['fields']['edit_link']['relationship'] = 'bean';
+    $handler->display->display_options['fields']['edit_link']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['edit_link']['text'] = 'Edit';
+  }
   /* Field: Content: Edit link */
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
   $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
@@ -556,7 +702,11 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
   $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
-  $handler->display->display_options['fields']['nothing']['alter']['text'] = '[edit_node][edit_link][edit_node_1] | [profile_id]';
+  $handler->display->display_options['fields']['nothing']['alter']['text'] = '[edit_node]';
+  if (module_exists("bean")) {
+    $handler->display->display_options['fields']['nothing']['alter']['text'] .= "[edit_link]";
+  }
+  $handler->display->display_options['fields']['nothing']['alter']['text'] .= "[edit_node_1] | [profile_id]";
   /* Filter criterion: Global: Combine fields filter */
   $handler->display->display_options['filters']['combine']['id'] = 'combine';
   $handler->display->display_options['filters']['combine']['table'] = 'views';
