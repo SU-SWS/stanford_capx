@@ -81,13 +81,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
   /**
    * Process handling for queue items.
-   *
    */
   public function execute() {
 
     // If the action is set to do nothing to orphaned profiles, do nothing.
-    $action = variable_get("stanford_capx_orphan_action", "unpublish");
-    if ($action == "nothing") {
+    $options = $this->getImporterOptions();
+    if ($options['orphan_action'] == 'nothing') {
       return;
     }
 
@@ -336,7 +335,8 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     $importer = $this->getImporter();
     $entityType = $importer->getEntityType();
     $bundleType = $importer->getBundleType();
-    $action = variable_get("stanford_capx_orphan_action", "unpublish");
+    $options = $this->getImporterOptions();
+    $action = $options['orphan_action'];
 
     foreach ($profileIds as $id) {
       $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
@@ -348,20 +348,17 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
       $profile = entity_metadata_wrapper($entityType, $profile);
 
       switch ($action) {
-        case "delete":
+        case 'delete':
           $profile->delete();
           break;
 
-        case "unpublish":
-
-          if ($entityType == "node") {
-            $profile->status->set(0);
-            $profile->save();
-          }
+        case 'block':
+        case 'unpublish':
+          $profile->status->set(0);
+          $profile->save();
 
           // Log that this profile was orphaned.
           $this->logOrphan($profile);
-
           break;
 
         default:

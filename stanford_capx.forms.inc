@@ -1112,7 +1112,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#disabled' => isset($importer->machine_name),
   );
 
-  // Create options...
+  // Mapper options.
   $mapping_options = array();
   $mappers = CAPxMapper::loadAllMappers();
 
@@ -1120,7 +1120,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     drupal_set_message(t("No mappers found. Please !maplink before proceeding with this importer.", array("!maplink" => l(t("create a mapper"), "admin/config/capx/mapper/new"))), "error");
   }
 
-  foreach ($mappers as $cfid => $mapper) {
+  foreach ($mappers as $mapper) {
     $mapping_options[$mapper->machine_name] = $mapper->title;
   }
 
@@ -1131,6 +1131,50 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#options' => $mapping_options,
     '#default_value' => isset($importer->mapper) ? $importer->mapper : '',
     '#required' => TRUE,
+    '#empty_option' => t('--Please select--'),
+    '#ajax' => array(
+      'wrapper' => 'orphan-action-wrapper',
+      'callback' => '_stanford_capx_importer_form_mapper_ajax_callback'
+    ),
+  );
+
+  // Orphan action section.
+  $action_options = array(
+    'nothing' => t('Nothing'),
+  );
+  $default_action = 'nothing';
+  if (empty($form_state['values']['mapper'])) {
+    $mapper = isset($importer) ? $importer->mapper : NULL;
+  }
+  else {
+    $mapper = $form_state['values']['mapper'];
+  }
+  if (isset($mapper)) {
+    $mapper = capx_cfe_load_by_machine_name($mapper, 'mapper');
+    $entity_type = $mapper->entity_type;
+    switch ($entity_type) {
+      case 'node':
+        $default_action = 'unpublish';
+        $action_options[$default_action] = t('Unpublish node');
+        break;
+
+      case 'user':
+        $default_action = 'block';
+        $action_options[$default_action] = t('Block user');
+        break;
+    }
+  }
+  // Adding this option here to keep meaningful order for the end user.
+  $action_options['delete'] = t('Delete');
+
+  $form['naming']['orphan_action'] = array(
+    '#title' => t('Action to perform on orphaned profiles'),
+    '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
+    '#type' => "select",
+    '#options' => $action_options,
+    '#default_value' => $default_action,
+    '#prefix' => '<div id="orphan-action-wrapper">',
+    '#suffix' => '</div>',
   );
 
   // Cron Settings
@@ -1223,6 +1267,13 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
 }
 
 /**
+ * AJAX callback.
+ */
+function _stanford_capx_importer_form_mapper_ajax_callback($form, $form_state) {
+  return $form['naming']['orphan_action'];
+}
+
+/**
  * [stanford_capx_importer_machine_name_exits description]
  * @todo refactor this with the mapper_machine_name_exists function.
  * @param  [type] $name [description]
@@ -1283,6 +1334,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   $settings['workgroup'] = $values['workgroup'];
   $settings['sunet_id'] = $values['sunet_id'];
   $settings['cron_option'] = $values['cron_option'];
+  $settings['orphan_action'] = $values['orphan_action'];
 
   $importer->settings = $settings;
 
