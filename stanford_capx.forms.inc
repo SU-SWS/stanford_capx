@@ -802,7 +802,6 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
   static $json_parser;
   $form_error = &drupal_static(__FUNCTION__ . "_error", FALSE);
   $form_field_warnings = &drupal_static(__FUNCTION__ . "_warnings", FALSE);
-  $valid_paths = _stanford_capx_valid_jsonpaths();
 
   // Load and cache the parser.
   if (!isset($json_parser)) {
@@ -820,9 +819,8 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
       try {
         // Data types: 'string', 'boolean', 'integer', 'array' or 'object'.
         $data_type = $json_parser->get($child_element);
-
         // Empty array is returned for an invalid selector.
-        if (empty($data_type) && !in_array($child_element, $valid_paths)) {
+        if (empty($data_type) && !_stanford_capx_mapper_is_valid_path($child_element, $json_parser)) {
           throw new \Exception('String indicates a valid element.');
         }
       }
@@ -1842,10 +1840,61 @@ function stanford_capx_config_settings_form($form, &$form_state) {
 }
 
 /**
+ * Validates wether or not a path is acceptible.
+ *
+ * @param string $path
+ *   The path being looked up.
+ * @param object $parser
+ *   The JSONParser object
+ *
+ * @return bool
+ *   True for valid and False for invalid.
+ */
+function _stanford_capx_mapper_is_valid_path($path, $parser) {
+  $trimmed_path = preg_replace("/\[[0-9]\]/", "", $path);
+  $valid_paths = _stanford_capx_valid_jsonpaths();
+  $valid_patterns = _stanford_capx_valid_jsonpath_patterns();
+
+  // If the path is in the whitelist then return TRUE.
+  if (in_array($trimmed_path, $valid_paths)) {
+    return TRUE;
+  }
+
+  // If the path validates after being trimmed return TRUE.
+  $data_type = $parser->get($trimmed_path);
+  if (!empty($data_type)) {
+    return TRUE;
+  }
+
+  // If the path matches any of our patterns then return TRUE;
+  foreach ($valid_patterns as $pattern) {
+    if (preg_match($pattern, $trimmed_path)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+
+/**
  * Returns list of known valid JSONPaths not described in schema.
  */
 function _stanford_capx_valid_jsonpaths() {
   return array(
-    '$.lastModified',
+    // '$.lastModified',
+    // '$.documents.cv',
+    // '$.documents.resume',
+    // '$.affiliations',
+  );
+}
+
+/**
+ * Returns an array of json path patterns for use in regex.
+ */
+function _stanford_capx_valid_jsonpath_patterns() {
+  return array(
+    '/\$\.documents\..*/',
+    '/\$\.affiliations\..*/',
   );
 }
