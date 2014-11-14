@@ -220,8 +220,26 @@ class EntityMapper extends MapperAbstract {
     $entity_type = $config['entity_type'];
     $bundle = $config['bundle_type'];
     $fields = $config['fields'];
+    $collections = $config['fieldCollections'];
+    $items = array();
 
-    foreach (array_keys($fields) as $fieldName) {
+    foreach ($fields as $fieldName => $values) {
+      $items[] = array("name" => $fieldName, "bundle" => $bundle, "entity" => $entity_type);
+    }
+
+    foreach ($collections as $fcMapper) {
+      $fcConfig = $fcMapper->getConfig();
+      foreach ($fcConfig['fields'] as $fieldName => $values) {
+        $items[] = array("name" => $fieldName, "bundle" => $fcMapper->bundle, "entity" => "field_collection_item");
+      }
+    }
+
+    foreach ($items as $fieldInfo) {
+
+      $fieldName = $fieldInfo['name'];
+      $bundle = $fieldInfo['bundle'];
+      $entity_type = $fieldInfo['entity'];
+
       $fieldInfoField = field_info_field($fieldName);
       if ($fieldInfoField) {
         $fieldInfoInstance = field_info_instance($entity_type, $fieldName, $bundle);
