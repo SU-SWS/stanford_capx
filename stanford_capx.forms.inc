@@ -1811,18 +1811,6 @@ function stanford_capx_config_settings_form($form, &$form_state) {
     '#default_value' => variable_get("stanford_capx_batch_limit", 100),
   );
 
-  $form['variables']['stanford_capx_orphan_action'] = array(
-    '#title' => t('Action to perform on orphaned profiles'),
-    '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
-    '#type' => "select",
-    '#options' => array(
-      'nothing' => t("Nothing"),
-      'unpublish' => t('Unpublish - Nodes only'),
-      'delete' => t('Delete'),
-    ),
-    '#default_value' => variable_get('stanford_capx_orphan_action', 'unpublish'),
-  );
-
   $options = array();
   $formats = filter_formats();
   foreach ($formats as $format) {
