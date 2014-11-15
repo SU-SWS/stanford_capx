@@ -157,7 +157,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // Get a list of all the profiles that are associated with this importer.
     $query = db_select("capx_profiles", 'capx')
       ->fields('capx', array('entity_type', 'entity_id', 'profile_id'))
-      ->condition('importer', $importer->identifier())
+      ->condition('importer', $importer->getMachineName())
       ->condition('sync', TRUE)
       ->orderBy('profile_id', 'ASC');
 
@@ -178,7 +178,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     foreach ($chunk as $slice) {
       $batch['operations'][] = array(
         '\CAPx\Drupal\Importer\Orphans\EntityImporterOrphansBatch::batch',
-        array($importer->identifier(), $slice),
+        array($importer->getMachineName(), $slice),
       );
     }
 
