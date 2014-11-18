@@ -139,8 +139,11 @@ class CAPxImporter {
   public static function getCronOptions() {
     return array(
       'none' => t('Do not sync'),
-      'daily' => t('Every day'),
       'all' => t('As often as possible'),
+      'daily' => t('Once a day'),
+      'weekly' => t('Once a week'),
+      'monthly' => t('Once a month'),
+      'yearly' => t('Once a year'),
     );
   }
 

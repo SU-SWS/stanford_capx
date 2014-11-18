@@ -1166,16 +1166,6 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   // Adding this option here to keep meaningful order for the end user.
   $action_options['delete'] = t('Delete');
 
-  $form['naming']['orphan_action'] = array(
-    '#title' => t('Action to perform on orphaned profiles'),
-    '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
-    '#type' => "select",
-    '#options' => $action_options,
-    '#default_value' => $default_action,
-    '#prefix' => '<div id="orphan-action-wrapper">',
-    '#suffix' => '</div>',
-  );
-
   // Cron Settings
   // -–-–-–-–-–-–-–-–-–-–-
 
@@ -1192,6 +1182,85 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#type' => 'select',
     '#options' => CAPxImporter::getCronOptions(),
     '#default_value' => isset($importer->cron_option) ? $importer->cron_option : 'daily',
+  );
+
+  $form['cron']['cron_option_hour'] = array(
+    "#type" => "textfield",
+    "#title" => t("At hour of the day"),
+    "#description" => t("Please enter the hour of the day you wish this to run at. eg: 3:00am or 18:00"),
+    "#default_value" => isset($importer->cron_option_hour) ? $importer->cron_option_hour : "3:00",
+    "#states" => array(
+      "visible" => array(
+        ":input[name='cron_option']" => array(
+          array("value" => "daily"),
+          array("value" => "weekly"),
+          array("value" => "monthly"),
+          array("value" => "yearly"),
+        ),
+      ),
+    ),
+  );
+
+  $form['cron']['cron_option_day_week'] = array(
+    "#type" => "select",
+    "#title" => t("At day of the week"),
+    "#description" => t("Select the day of the week you wish to sync on."),
+    "#options" => array(
+      "monday" => t("Monday"),
+      "tuesday" => t("Tuesday"),
+      "wednesday" => t("Wednesday"),
+      "thursday" => t("Thursday"),
+      "friday" => t("Friday"),
+      "saturday" => t("Saturday"),
+      "sunday" => t("Sunday")),
+    "#default_value" => isset($importer->cron_option_day_week) ? $importer->cron_option_day_week : "Sunday",
+    "#states" => array(
+      "visible" => array(
+        ":input[name='cron_option']" => array(
+          array("value" => "weekly"),
+        ),
+      ),
+    ),
+  );
+
+  $form['cron']['cron_option_day_number'] = array(
+    "#type" => "textfield",
+    "#title" => t("At day of the month"),
+    "#description" => t("Select the day of the month you wish to sync on. eg: 23"),
+    "#default_value" => isset($importer->cron_option_day_number) ? $importer->cron_option_day_number : "1",
+    "#states" => array(
+      "visible" => array(
+        ":input[name='cron_option']" => array(
+          array("value" => "monthly"),
+          array("value" => "yearly"),
+        ),
+      ),
+    ),
+  );
+
+  $form['cron']['cron_option_month'] = array(
+    "#type" => "select",
+    "#title" => t("At month of the year"),
+    "#description" => t("Select the month of the year you wish to sync on."),
+    "#options" => array(t("January"), t("February"), t("March"), t("April"), t("May"), t("June"), t("July"), t("August"), t("September"), t("October"), t("November"), t("December")),
+    "#default_value" => isset($importer->cron_option_month) ? $importer->cron_option_month : "January",
+    "#states" => array(
+      "visible" => array(
+        ":input[name='cron_option']" => array(
+          array("value" => "yearly"),
+        ),
+      ),
+    ),
+  );
+
+  $form['cron']['orphan_action'] = array(
+    '#title' => t('Action to perform on orphaned profiles'),
+    '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
+    '#type' => "select",
+    '#options' => $action_options,
+    '#default_value' => $default_action,
+    '#prefix' => '<div id="orphan-action-wrapper">',
+    '#suffix' => '</div>',
   );
 
   // Profile group
@@ -1269,7 +1338,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
  * AJAX callback.
  */
 function _stanford_capx_importer_form_mapper_ajax_callback($form, $form_state) {
-  return $form['naming']['orphan_action'];
+  return $form['cron']['orphan_action'];
 }
 
 /**
@@ -1333,11 +1402,15 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
   $settings['workgroup'] = $values['workgroup'];
   $settings['sunet_id'] = $values['sunet_id'];
   $settings['cron_option'] = $values['cron_option'];
+  $settings['cron_option_day_number'] = $values['cron_option_day_number'];
+  $settings['cron_option_day_week'] = $values['cron_option_day_week'];
+  $settings['cron_option_month'] = $values['cron_option_month'];
+  $settings['cron_option_hour'] = $values['cron_option_hour'];
   $settings['orphan_action'] = $values['orphan_action'];
 
   $importer->settings = $settings;
 
-  // New vs Edit
+  // New vs Edit.
   if (!empty($importer->is_new)) {
     drupal_set_message(t('Congratulations, Your importer has been created.'), 'status', FALSE);
   }
@@ -1346,7 +1419,7 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
     drupal_set_message(t("Your importer has been updated."), 'status', FALSE);
   }
 
-  // Do the save
+  // Do the save.
   capx_importer_save($importer);
   $form_state['redirect'] = 'admin/config/capx/importer';
 

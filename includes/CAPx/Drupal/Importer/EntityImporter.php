@@ -82,8 +82,10 @@ class EntityImporter implements ImporterInterface {
    *   True if cron action should run, false otherwise.
    */
   protected function shouldIRunCron() {
-    $now = time();
     $options = $this->getOptions();
+    $now = time();
+    $lastRun = $this->getLastCronRun();
+    $nextRun = 0;
 
     switch ($options['cron_option']) {
       case 'none':
@@ -93,13 +95,39 @@ class EntityImporter implements ImporterInterface {
         return TRUE;
 
       case 'daily':
-        // One days time.
-        $lastRun = $this->getLastCronRun();
-        $nextRun = $lastRun + (60 * 60 * 24);
-        if ($now >= $nextRun ) {
-          return TRUE;
-        }
+        $hour = $options['cron_option_hour'];
+        $nextRun = strtotime("Tomorrow " . $hour, $lastRun);
         break;
+
+      case 'weekly':
+        $hour = $options['cron_option_hour'];
+        $day = $options['cron_option_day_week'];
+        $nextRun = strtotime($hour . " next " . $day, $lastRun);
+        break;
+
+      case 'monthly':
+        $hour = $options['cron_option_hour'];
+        $day = $options['cron_option_day_number'];
+        $nextMonth = strtotime("next month", $lastRun);
+        $year = (date("m", $nextMonth) == "01") ? date("Y", strtotime("next year")) : date("Y");
+        $nextRun = strtotime($hour . " " . $day . " " . date("F", $nextMonth) . " " . $year);
+        break;
+
+      case 'yearly':
+        $hour = $options['cron_option_hour'];
+        $day = $options['cron_option_day_number'];
+        $month = $options['cron_option_month'];
+        $month++;
+        $dateObj = \DateTime::createFromFormat('!m', $month);
+        $monthName = $dateObj->format('F');
+        $year = strtotime("next year", $lastRun);
+        $nextRun = strtotime($hour . " " . $day . " " . $monthName . " " . date("Y" , $year));
+        break;
+    }
+
+    // Check to see if now is after next.
+    if ($now > $nextRun) {
+      return TRUE;
     }
 
     return FALSE;
