@@ -197,7 +197,8 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
     }
     catch(\Exception $e) {
-      drupal_set_message(check_plain($e->getMessage()), 'error');
+      // drupal_set_message(check_plain($e->getMessage()), 'error');
+      watchdog('AbstractAPILib', check_plain($e->getMessage()), array(), WATCHDOG_DEBUG);
     }
 
 

@@ -151,8 +151,15 @@ function stanford_capx_connection_status_block() {
   // Something is not set correctly and we cannot connect.
   else {
     $content .= '<h2 class="error">' . t('Not Connected') . '</h2>';
-    $vars = array('@code' => $connection->code, '@message' => $connection->message);
-    $content .= '<div class="cap-status-bad"><p>' . t('The server responded with error code: @code and message: @message.', $vars) . '</p></div>';
+
+    if ($connection->code == 0) {
+      $content .= t("Please go to the !connt page to connect to the CAP API.", array("!connt" => l(t("CAPx connection"), "admin/config/capx/connect")));
+    }
+    else {
+      $vars = array('@code' => $connection->code, '@message' => $connection->message);
+      $content .= '<div class="cap-status-bad"><p>' . t('The server responded with error code: @code and message: @message.', $vars) . '</p></div>';
+    }
+
   }
 
   return $content;

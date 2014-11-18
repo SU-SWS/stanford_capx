@@ -146,7 +146,8 @@ class AuthLib extends APILib {
 
     }
     catch(\Exception $e) {
-      drupal_set_message(check_plain($e->getMessage()), 'error');
+      // drupal_set_message(check_plain($e->getMessage()), 'error');
+      watchdog('AuthLib', check_plain($e->getMessage()), array(), WATCHDOG_DEBUG);
     }
 
     // @todo: handle non 200 responses with error logging.

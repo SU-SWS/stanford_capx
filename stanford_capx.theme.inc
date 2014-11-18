@@ -22,7 +22,8 @@ function stanford_capx_theme($existing, $type, $theme, $path) {
  */
 function theme_stanford_capx_columns_to_the_right($elements) {
 
-  $element = array_pop($elements);
+  // Take the first element.
+  $element = array_shift($elements);
 
   global $stanford_capx_theme_zebra;
   $stanford_capx_theme_zebra = ($stanford_capx_theme_zebra == "even") ? "odd" : "even";
