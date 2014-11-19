@@ -80,18 +80,35 @@ class EntityProcessor extends ProcessorAbstract {
 
   /**
    * Update the entity.
+   *
    * Slightly different from the new entity. If we have an entity we will
    * execute the mapper on it and re-save it.
-   * @param  Entity $entity the entity to be updated
-   * @param  array $data   The data to map into it.
-   * @param  EntityMapper $mapper the entity mapper instance
-   * @return Entity         the updated entity.
+   *
+   * @param object $entity
+   *   The entity to be updated
+   * @param array $data
+   *   The data to map into it.
+   * @param object $mapper
+   *   The entity mapper instance
+   *
+   * @return object
+   *   The updated entity.
    */
   public function updateEntity($entity, $data, $mapper) {
-
+    $entity_info = entity_get_info($entity->type());
     drupal_alter('capx_pre_update_entity', $entity, $data, $mapper);
 
     $entity = $mapper->execute($entity, $data);
+
+    // Nodes have special sauces.
+    if ($entity->type() == "node") {
+      // Set up default values, if required.
+      $node_options = variable_get('node_options_' . $entity->getBundle(), array('status', 'promote'));
+      // Always use the default revision setting.
+      $entity->revision->set(in_array('revision', $node_options));
+    }
+
+    // Save the entity.
     $entity->save();
 
     $entityImporter = $this->getEntityImporter();
@@ -105,14 +122,22 @@ class EntityProcessor extends ProcessorAbstract {
 
   /**
    * New entity.
+   *
    * An existing entity was not found and a new one should be created. Provide
    * some default values, create the entity, map the fields to it, and store
    * some additional data about where it came from.
-   * @param  String $entityType the type of entity being created
-   * @param  String $bundleType the bundle type of the entity being created
-   * @param  array $data       the data to be mapped to the new entity
-   * @param  EntityMapper $mapper     the EntityMapper instance
-   * @return Entity             the new entity after it has been saved.
+   *
+   * @param string $entityType
+   *   The type of entity being created
+   * @param string $bundleType
+   *   The bundle type of the entity being created
+   * @param array $data
+   *   The data to be mapped to the new entity
+   * @param object $mapper
+   *   The EntityMapper instance
+   *
+   * @return object
+   *   The new entity after it has been saved.
    */
   public function newEntity($entityType, $bundleType, $data, $mapper) {
 
