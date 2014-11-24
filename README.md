@@ -2,6 +2,8 @@
 
 Stanford CAP Extensible module builds on some great work. This module provides an interface for administrators to pull information directly from the CAP API into Drupal. This allows profile owners to continue to manage their profile information on the CAP web service and have that information automatically reflected into a Drupal website. 
 
+[![ScreenShot](https://raw.github.com/GabLeRoux/WebMole/master/ressources/WebMole_Youtube_Video.png)](http://youtu.be/vt5fpE0bzSY)
+
 ## What is CAP?
 
 CAP Network is a virtual workspace, originally created by the School of Medicine, to support collaboration among faculty, graduate students, postdocs and staff. In 2013, it was expanded in partnership with various Schools, Institutes, and administrative offices to create the Stanford Profiles website.
