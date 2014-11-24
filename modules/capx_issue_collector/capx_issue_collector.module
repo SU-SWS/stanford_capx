@@ -1,0 +1,14 @@
+<?php
+/**
+ * Provides the markup for the issue collector.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function capx_issue_collector_help($path, $arg) {
+  switch ($path) {
+    case 'capx#issue-collector':
+      return '<p>' . t('No help available.') . '</p>';
+  }
+}
