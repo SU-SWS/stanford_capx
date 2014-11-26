@@ -112,4 +112,4 @@ Type | $.titles.*.type
 
 ###Help
 
-Use the Help tab for information on using and setting up the CAPx module.
+Use the Help tab for quick information and helpful tips on using and setting up the CAPx module.
