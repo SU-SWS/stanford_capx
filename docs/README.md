@@ -37,7 +37,7 @@
 
 1. Click the Mapping tab
 
-####Create new mapper
+####Create new mapping
 
 1. Click Create new mapper
 2. 
@@ -81,7 +81,7 @@ Staff type | $.titles.*.type
 Field of study | $.education.*.fieldOfStudy
 Type | $.titles.*.type
 
-####Edit exisiting mapper
+####Edit exisiting mapping
 
 1.
 
