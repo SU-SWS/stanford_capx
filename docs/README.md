@@ -42,12 +42,10 @@
 1. Click Create new mapper
 2. 
 
-border=1
-Cell 1, row 1
-Cell 2, row 1
--
-Cell 1, row 2
-Cell 2, row 2
+Label | CAPx API
+--- | ---
+Test | Test
+1 | 2
 
 ###Importing
 
