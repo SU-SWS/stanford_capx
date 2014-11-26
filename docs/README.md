@@ -40,7 +40,9 @@
 ####Create new mapper
 
 1. Click Create new mapper
-2.
+2. 
+
+The following table highlights some commonly used settings:
 
 Label | CAPx API
 --- | ---
