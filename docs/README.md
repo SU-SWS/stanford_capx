@@ -40,13 +40,10 @@
 ####Create new mapper
 
 1. Click Create new mapper
-2. 
+2.
 
 Label | CAPx API
 --- | ---
-Test | Test
-1 | 2
-1 | 2
 Title |	$.displayName
 Body | $.bio.html
 Profile picture	| $.profilePhotos.bigger
