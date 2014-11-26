@@ -2,8 +2,8 @@
 
 ##Install Stanford CAPx and Stanford Person modules on your Drupal 7 site
 
-1. Install CAPx module (suggested directory: sites/all/modules/stanford) https://github.com/SU-SWS/stanford_capx
-2. Install Stanford Person module (suggested directory: sites/all/modules/stanford) https://github.com/SU-SWS/stanford_person
+1. Install CAPx module: https://github.com/SU-SWS/stanford_capx
+2. Install Stanford Person module: https://github.com/SU-SWS/stanford_person
 
 ##Enable Stanford CAPx and Stanford Person modules using Drush
 
