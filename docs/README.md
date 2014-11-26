@@ -47,6 +47,40 @@ Label | CAPx API
 Test | Test
 1 | 2
 1 | 2
+Title |	$.displayName
+Body | $.bio.html
+Profile picture	| $.profilePhotos.bigger
+Email | $.primaryContact.email
+Last updated |$.lastModified
+Cohort | $.maintainers.*.title
+Job title short | $.shortTitle.label.text
+Job title long | $.longTitle[0]
+Degrees / education | $.education.*.label.text
+Title and department | $.longTitle[0]
+Fax | $.primaryContact.fax
+CV - file | $.documents.cv
+CV - link | $.documents.cv.url
+Resume - file | $.documents.resume
+Resume - link | $.documents.resume.url
+First name legal | $.names.legal.firstName
+First name preferred | $.names.preferred.firstName
+Last name legal | $.names.legal.lastName
+Last name preferred | $.names.preferred.lastName
+Middle name legal | $.names.legal.middleName
+Middle name preferred | $.names.preferred.middleName
+Graduation year | $.education.*.yearIssued
+Personal info links title | $.internetLinks.*.label.text
+Personal info links url | $.internetLinks.*.url
+Fields of interest | $.professionalInterests.text
+Mailing address | $.primaryContact.address
+Mailing address city | $.primaryContact.city
+Mailing address state | $.primaryContact.state
+Mailing address zip | $.primaryContact.zip
+Office | $.primaryContact.officeName
+Phone | $.primaryContact.phoneNumbers.*
+Staff type | $.titles.*.type
+Field of study | $.education.*.fieldOfStudy
+Type | $.titles.*.type
 
 ###Importing
 
