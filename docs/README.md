@@ -35,12 +35,19 @@
 
 ###Mapping
 
-1. CLick the Mapping tab
+1. Click the Mapping tab
 
 ####Create new mapper
 
 1. Click Create new mapper
 2. 
+
+border=1
+Cell 1, row 1
+Cell 2, row 1
+-
+Cell 1, row 2
+Cell 2, row 2
 
 ###Importing
 
