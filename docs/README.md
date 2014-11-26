@@ -11,9 +11,9 @@
 
 ##Enable Stanford CAPx and Stanford Person modules from the user interface
 
-1. Click Modules and locate the Stanford Person and the Stanford CAPx modules
+1. Click **Modules** and locate the Stanford Person and the Stanford CAPx modules
 2. Check the box next to each of the modules to enable them
-3. Click Save configuration
+3. Click **Save configuration**
 
 ##Configure Stanford CAPx module
 
@@ -21,25 +21,25 @@
 
 ###Connect
 
-1. Click the Connect tab
-2. In the Authorization field, enter your authentication information
-3. In the Advanced field, accept the default values unless it becomes necessary to change them
-4. Click Save connection settings
+1. Click the **Connect** tab
+2. In the **Authorization** field, enter your authentication information
+3. In the **Advanced** field, accept the default values unless it becomes necessary to change them
+4. Click **Save connection settings**
 
 ###Settings
 
-1. Click the Settings tab
-2. In the Organization Codes field, click Sync Now
-3. In the Synchronization settings field, accept the default values unless it becomes necessary to change them
-4. Click Save settings
+1. Click the **Settings** tab
+2. In the **Organization Codes** field, click **Sync Now**
+3. In the **Synchronization settings** field, accept the default values unless it becomes necessary to change them
+4. Click **Save settings**
 
 ###Mapping
 
-1. Click the Mapping tab
+1. Click the **Mapping** tab
 
 ####Create new mapping
 
-1. Click Create new mapper
+1. Click **Create new mapping**
 2. 
 
 The following table highlights some commonly used settings:
@@ -91,12 +91,13 @@ Type | $.titles.*.type
 
 ###Importing
 
-1. Click the Importing tab
+1. Click the **Importing** tab
 
 ####Create new importer
 
-1. Click Create new importer
+1. Click **Create new importer**
 2. In the **Importer name** field, enter a unique name for the Importer
+3. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
 
 ####Edit existing importer
 
