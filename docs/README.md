@@ -23,7 +23,8 @@
 
 1. Click the Connect tab
 2. In the Authorization field, enter your authentication information
-3. Click Save connection settings
+3. In the Advanced field, accept the default values unless it becomes necessary to change them
+4. Click Save connection settings
 
 ###Settings
 
