@@ -96,7 +96,7 @@ Type | $.titles.*.type
 ####Create new importer
 
 1. Click Create new importer
-2. In the *Importer name* field, enter a unique name for the Importer
+2. In the **Importer name** field, enter a unique name for the Importer
 
 ####Edit existing importer
 
