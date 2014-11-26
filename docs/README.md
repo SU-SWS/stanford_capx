@@ -45,7 +45,7 @@ If you do not have an existing content type, it is recommend that you use the St
 1. Click **Create new mapping**
 2. 
 
-The following table highlights some commonly used settings:
+The following table highlights some commonly used settings for the Stanford People content type:
 
 Label | CAPx API Path
 --- | ---
