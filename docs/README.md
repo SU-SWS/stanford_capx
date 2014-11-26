@@ -31,7 +31,9 @@
 1. Click the Settings tab
 2. In the Organization Codes field, click Sync Now
 3. In the Synchronization settings field, accept the default values unless it becomes necessary to change them
-4. Click Save settings ###Mapping 1. Click the Mapping tab 2. Click Create new mapper
+4. Click Save settings
+
+###Mapping 1. Click the Mapping tab 2. Click Create new mapper
 
 ###Importing
 
