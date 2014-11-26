@@ -85,6 +85,26 @@ Type | $.titles.*.type
 
 1.
 
+####Delete mapping
+
+1. 
+
 ###Importing
 
+1. Click the Importing tab
+
+####Create new importer
+
+1. Click Create new importer
+
+####Edit existing importer
+
+1.
+
+####Delete importer
+
+1.
+
 ###Help
+
+Use the Help tab for information on using and setting up the CAPx module.
