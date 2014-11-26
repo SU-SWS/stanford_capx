@@ -35,8 +35,12 @@
 
 ###Mapping
 
-1. Click the Mapping tab
-2. Click Create new mapper
+1. CLick the Mapping tab
+
+####Create new mapper
+
+1. Click Create new mapper
+2. 
 
 ###Importing
 
