@@ -44,7 +44,7 @@
 
 The following table highlights some commonly used settings:
 
-Label | CAPx API
+Label | CAPx API Path
 --- | ---
 Title |	$.displayName
 Body | $.bio.html
