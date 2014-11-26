@@ -79,6 +79,10 @@ Staff type | $.titles.*.type
 Field of study | $.education.*.fieldOfStudy
 Type | $.titles.*.type
 
+####Edit exisiting mapper
+
+1.
+
 ###Importing
 
 ###Help
