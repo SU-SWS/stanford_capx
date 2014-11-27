@@ -85,17 +85,9 @@ function stanford_capx_admin_config_settings() {
 
   // Organizations
   // ---------------------------------------------------------------------------
-  $form = array();
-  $form['orggroup'] = array(
-    '#type' => "fieldset",
-    '#title' => t("Organizations"),
-    '#description' => t("Organization specific actions. Before you are able to start using organizations you have to sync them with the CAP API server."),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
 
-  $form['orggroup']['theactions']['#markup'] = "<p>" . t("Sync organization data with CAP API: ") . l(t('Sync Now'), 'admin/config/capx/organizations/sync', array('class' => array('btn button'), 'query' => array('destination' => current_path()))) . "</p>";
-  $output['content']["orgs"] = $form;
+  $form = drupal_get_form("stanford_capx_config_settings_data_sync_form");
+  $output['content']["orgsform"] = $form;
 
   // Settings form
   // ---------------------------------------------------------------------------
@@ -107,6 +99,41 @@ function stanford_capx_admin_config_settings() {
 }
 
 /**
+ * [stanford_capx_config_settings_data_sync_form description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_config_settings_data_sync_form($form, $form_state) {
+  $form['orggroup'] = array(
+    '#type' => "fieldset",
+    '#title' => t("Organizations & Schema"),
+    '#description' => t("The CAPx module needs some information from the CAP API in order to function properly. Below are actions that require communication with the CAP API server and you must be connected before you can run these tasks."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  // Organizations.
+  $form['orggroup']['orgcodeinfo']['#markup'] = "<h3>Organizations</h3>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("Organization codes come from the CAP API and are saved to a taxonomy. This taxonomy powers the organization code autocomplete in the import section.") . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("Last sync: @date", array("@date" => variable_get('capx_last_orgs_sync', 'never'))) . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("View all organization codes: !link", array("!link" => l(t('Organization taxonomy'), 'admin/structure/taxonomy/capx_organizations'))) . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . l(t('Get organization data'), 'admin/config/capx/organizations/sync', array("attributes" => array('class' => array('btn button')), 'query' => array('destination' => current_path()))) . "</p>";
+
+  // Schema.
+  $form['orggroup']['schemainfo']['#markup'] = "<br /><h3>Schema Information</h3>";
+  $form['orggroup']['schemainfo']['#markup'] .= "<p>" . t("The CAP API provides a schema of the information available. The CAPx module needs this in order to power the data browser that is found on a mapping page.") . "</p>";
+  $form['orggroup']['schemainfo']['#markup'] .= "<p>" . t("Last sync: @date", array("@date" => variable_get('capx_last_schema_sync', 'never'))) . "</p>";
+  $form['orggroup']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Get schema information',
+    '#op' => 'submit',
+  );
+  $form['#submit'][] = "stanford_capx_schema_refresh";
+  return $form;
+}
+
+/**
  * Callback url and utility function for running the organizations sync.
  * @return mixed
  *   redirects back to page user was on.
@@ -114,6 +141,7 @@ function stanford_capx_admin_config_settings() {
 function stanford_capx_organizations_sync() {
   try {
     watchdog('stanford_capx', 'Organization codes updated', array(), WATCHDOG_INFO);
+    variable_set("capx_last_orgs_sync", format_date(time()));
     \CAPx\Drupal\Organizations\Orgs::syncOrganizations(TRUE);
   }
   catch(\Exception $e) {
@@ -141,7 +169,7 @@ function stanford_capx_admin_config_help() {
   $content .= "<ol><li>";
   $content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Connect"), "admin/config/capx/connect")));
   $content .= "</li><li>";
-  $content .= t("!mapping - Create a Mapper that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/mapper")));
+  $content .= t("!mapping - Create a mapping that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/mapper")));
   $content .= "</li><li>";
   $content .= t("!import - Choose which profiles you would like to import.", array("!import" => l(t("Import"), "admin/config/capx/importer")));
   $content .= "</li></ol>";
@@ -153,9 +181,9 @@ function stanford_capx_admin_config_help() {
   $content .= "<p>&nbsp;</p>";
 
   $content .= "<h2>" . t("CAP data - Choosing fields") . "</h2>";
-  $content .= "<p>" . t("If you need help determining which fields you need in your Mapper, you can use the !caplink. The schema displays all fields in CAP and where they are nested. Yes, it is a ton of data, we know...", array("!caplink" => l(t("CAP Data Schema"), "admin/config/capx/data-browser"))) . "</p>";
+  $content .= "<p>" . t("If you need help determining which fields you need in your mapping, you can use the !caplink. The schema displays all fields in CAP and where they are nested. Yes, it is a ton of data, we know...", array("!caplink" => l(t("CAP Data Schema"), "admin/config/capx/data-browser"))) . "</p>";
   $content .= "<p><strong>" . t("Common fields: ") . "</strong>";
-  $content .= t("A list of common fields can be found on the sidebar of any !mappingpage.", array("!mappingpage" => l(t("mapper page"), "admin/config/capx/mapper/new"))) . "</p>";
+  $content .= t("A list of common fields can be found on the sidebar of any !mappingpage.", array("!mappingpage" => l(t("mapping page"), "admin/config/capx/mapper/new"))) . "</p>";
   $content .= "<p>&nbsp;</p>";
 
   $content .= "<h2>" . t("Resources for developers") . "</h2>";
@@ -192,7 +220,7 @@ function stanford_capx_admin_config_mapper() {
 
   // Body content.
   $output['content']['body']['#markup'] = "<p>" . t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields") . ".</p>";
-  $output['content']['body']['#markup'] .= "<p><b>" . l(t('Create new mapper'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn'))) . "</b></p>";
+  $output['content']['body']['#markup'] .= "<p><b>" . l(t('Create new mapping'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn'))) . "</b></p>";
 
   // The mapper view.
   $output['content']['mapper_view']['#markup'] = views_embed_view('capx_mappers');
@@ -235,7 +263,7 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
 
   if (!$mapper) {
-    throw new Exception(t("Could not load a mapper with provided machine name. Please check url."));
+    throw new Exception(t("Could not load a mapping with provided machine name. Please check url."));
   }
 
   // Management Menu.

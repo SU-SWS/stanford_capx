@@ -153,7 +153,7 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
   drupal_set_message(t('Configuration options were saved.'));
 
-  // Username and Pass
+  // Username and Pass.
   if (!empty($form_state['values']['stanford_capx_username'])
   && !empty($form_state['values']['stanford_capx_password'])) {
 
@@ -164,10 +164,14 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
   }
 
-  // Endpoints
+  // Endpoints.
   variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
   variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
 
+  // In order to get here we have to have a valid connection. Lets get the org codes
+  // and schema.
+  stanford_capx_schema_refresh();
+  stanford_capx_organizations_sync();
 }
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -194,9 +198,14 @@ function stanford_capx_mapper_form($form, &$form_state, $mapper = NULL) {
 
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Save mapper',
+    '#value' => 'Save mapping',
   );
 
+  if (isset($mapper)) {
+    $form['actions']['delete'] = array(
+      '#markup' => l(t('Delete'), 'admin/config/capx/mapper/delete/' . $mapper->getMachineName(), array("attributes" => array("class" => array("button")))),
+   );
+  }
   $form['actions']['cancel'] = array(
     '#markup' => l(t('Cancel'), 'admin/config/capx/mapper'),
   );
@@ -213,7 +222,7 @@ function stanford_capx_mapper_form($form, &$form_state, $mapper = NULL) {
 function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state, $mapper = NULL) {
 
   $form['naming'] = array(
-    '#title' => t('Mapper title'),
+    '#title' => t('Mapping title'),
     '#type' => 'fieldset',
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
@@ -233,7 +242,7 @@ function stanford_capx_mapper_form_get_machine_name_form($form, &$form_state, $m
     '#default_value' => isset($mapper->machine_name) ? $mapper->machine_name : '',
     '#size' => 64,
     '#maxlength' => 64,
-    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('A unique name for the mapper. It must only contain lowercase letters, numbers and hyphens.'),
+    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('A unique name for the mapping. It must only contain lowercase letters, numbers and hyphens.'),
     '#machine_name' => array(
       'exists' => 'stanford_capx_mapper_machine_name_exits',
       'source' => array('naming','title'),
@@ -605,7 +614,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist = array();
   $property_keys = array_keys($properties);
 
-  // Blocks / Beans
+  // Blocks / Beans.
   $blacklist['bean'][] = "bid";
   $blacklist['bean'][] = "vid";
   $blacklist['bean'][] = "delta";
@@ -626,7 +635,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['field_collection_item'][] = "url";
   $blacklist['field_collection_item'][] = "host_entity";
 
-  // Node
+  // Nodes.
   $blacklist['node'][] = "nid";
   $blacklist['node'][] = "vid";
   $blacklist['node'][] = "is_new";
@@ -646,6 +655,10 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['node'][] = "comments";
   $blacklist['node'][] = "comment_count";
   $blacklist['node'][] = "comment_count_new";
+  $blacklist['node'][] = "feed_nid";
+  $blacklist['node'][] = "uuid";
+  $blacklist['node'][] = "vuuid";
+  $blacklist['node'][] = "log";
   $blacklist['node'][] = "body"; // body is not a property!
 
   // Terms.
@@ -945,11 +958,11 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   // New vs Edit.
   if (!empty($mapper->is_new)) {
-    drupal_set_message(t('Congratulations, Your mapper has been created.'), 'status', FALSE);
+    drupal_set_message(t('Congratulations, Your mapping has been created.'), 'status', FALSE);
   }
   else {
     CAPx::invalidateEtags("mapper", $mapper);
-    drupal_set_message(t("Your mapper has been updated."), 'status', FALSE);
+    drupal_set_message(t("Your mapping has been updated."), 'status', FALSE);
   }
 
   // Do the save.
@@ -1003,11 +1016,15 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_name) {
   $form = array();
   $mapper = capx_cfe_load_by_machine_name($machine_name, 'mapper');
+  $description = t('This action cannot be undone.');
+  $name = 'confirm_mapper_delete';
+  $path = "admin/config/capx/mapper";
 
   if (!$mapper) {
-    throw new Exception("Could not load a mapper with provided machine name. Please check url.");
+    throw new Exception("Could not load a mapping with provided machine name. Please check url.");
   }
 
+  $question = "Are you sure you want to delete " . $mapper->title . "?";
   $importers = CAPxImporter::loadImportersByMapper($mapper);
   $items = array();
 
@@ -1017,22 +1034,21 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
 
   if (count($items)) {
     $list = array(
-      'title' => 'This mapper is being used by these importers:',
+      'title' => 'This mapping is being used by these importers:',
       'items' => $items,
     );
     $form['importers'] = array(
       '#markup' => theme('item_list', $list),
     );
+    $description = t("You cannot delete this mapper until it is no longer being used by an importer. Please change the importer mapping option or delete the importer before proceeding.");
   }
 
   $form['machine-name'] = array(
     '#type' => 'hidden',
     '#value' => $mapper->machine_name,
   );
-  $question = "Are you sure you want to delete " . $mapper->title . "?";
-  $path = "admin/config/capx/mapper";
-  $description = t('This action cannot be undone.');
-  $name = 'confirm_mapper_delete';
+
+
   $form = confirm_form($form, $question, $path, $description, 'Yes, please delete', 'Cancel', $name);
 
   if (count($items)) {
@@ -1051,7 +1067,7 @@ function stanford_capx_admin_config_mapper_delete($form, $form_state, $machine_n
 function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   capx_cfe_delete($mapper);
-  drupal_set_message(t('Mapper was deleted.'), 'status');
+  drupal_set_message(t('Mapping was deleted.'), 'status');
   drupal_goto('admin/config/capx/mapper');
 }
 
@@ -1116,7 +1132,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $mappers = CAPxMapper::loadAllMappers();
 
   if (!count($mappers)) {
-    drupal_set_message(t("No mappers found. Please !maplink before proceeding with this importer.", array("!maplink" => l(t("create a mapper"), "admin/config/capx/mapper/new"))), "error");
+    drupal_set_message(t("No mappings found. Please !maplink before proceeding with this importer.", array("!maplink" => l(t("create a mapping"), "admin/config/capx/mapper/new"))), "error");
   }
 
   foreach ($mappers as $mapper) {
@@ -1170,14 +1186,15 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   // -–-–-–-–-–-–-–-–-–-–-
 
   $form['cron'] = array(
-    '#title' => t('Sync options'),
+    '#title' => t('Automatic syncronization options (CRON)'),
+    '#description' => t("The CAPx module is set up to provide automatic syncronization of your profiles. Below are a number of controls to adjust how often they are updated. These options require cron to be configured. For more information about setting up and configuring cron please see the !docs", array("!docs" => l(t("drupal documenation."), "https://www.drupal.org/cron"))),
     '#type' => 'fieldset',
     '#collapsed' => !empty($importer),
     '#collapsible' => TRUE,
   );
 
   $form['cron']['cron_option'] = array(
-    '#title' => t('Sync'),
+    '#title' => t('Interval'),
     '#description' => t('Select an interval on how often this importer should syncronize with the CAP server. This setting is dependant on !cron.', array('!cron' => l(t('cron configuration'), 'admin/config/system/cron'))),
     '#type' => 'select',
     '#options' => CAPxImporter::getCronOptions(),
@@ -1267,11 +1284,11 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   // -–-–-–-–-–-–-–-–-–-–-
 
   $form['groups'] = array(
-    '#title' => t('Add groups'),
+    '#title' => t('Add groups and individuals'),
+    '#description' => t("You can add any combination of groups or individuals. The following options are additive. They will combine together and import all individuals within those options. If a person or profile exists in more than one of the options their profile will not be duplicated. Only one profile per person per importer can exist. You do not have to worry about duplicates."),
     '#type' => 'fieldset',
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
-    '#description' => t(''),
   );
 
   $link = l(t('Stanford University Org Code Hierarchy'), 'http://www.stanford.edu/dept/pres-provost/budget/org/orgchart/');
@@ -1299,15 +1316,15 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#default_value' => isset($importer->workgroup) ? $importer->workgroup : '',
   );
 
-  $form['individuals'] = array(
-    '#title' => t('Add individuals'),
-    '#type' => 'fieldset',
-    '#collapsed' => FALSE,
-    '#collapsible' => FALSE,
-    '#description' => t(''),
-  );
+  // $form['individuals'] = array(
+  //   '#title' => t('Add individuals'),
+  //   '#type' => 'fieldset',
+  //   '#collapsed' => FALSE,
+  //   '#collapsible' => FALSE,
+  //   '#description' => t(''),
+  // );
 
-  $form['individuals']['sunet_id'] = array(
+  $form['groups']['sunet_id'] = array(
     '#type' => 'textarea',
     '#title' => t('SUNet IDs'),
     '#description' => t('Enter SUNet IDs for the profiles you wish to import. Enter multiple SUNet IDs by separating them with a comma.'),
@@ -1319,6 +1336,13 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#type' => 'submit',
     '#value' => t('Save'),
   );
+
+  if (isset($importer)) {
+     $form['actions']['delete'] = array(
+      '#markup' => l(t('Delete'), 'admin/config/capx/importer/delete/' . $importer->getMachineName(), array("attributes" => array("class" => array("button")))),
+   );
+  }
+
 
   $form['actions']['saveandimport'] = array(
     '#type' => 'button',
@@ -1503,7 +1527,7 @@ function stanford_capx_admin_config_importer_delete($form, &$form_state, $machin
   $form['profile_action'] = array(
     '#type' => 'select',
     '#title' => t('What would you like to do with the items that are associated with this importer?'),
-    '#description' => t('Perform an action on all of the items that have been imported by this importer.'),
+//    '#description' => t('Perform an action on all of the items that have been imported by this importer.'),
     '#options' => array(
       'nothing' => t('Do nothing and leave the items as they are'),
       'delete' => t('Delete all of the items'),
@@ -1897,7 +1921,9 @@ function stanford_capx_config_settings_form($form, &$form_state) {
     '#default_value' => variable_get('stanford_capx_default_field_format', 'plain_text'),
   );
 
-  return system_settings_form($form);
+  $form = system_settings_form($form);
+  $form['actions']['submit']['#value'] = t("Save settings");
+  return $form;
 }
 
 /**

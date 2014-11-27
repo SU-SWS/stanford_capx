@@ -12,14 +12,14 @@ function stanford_capx_views_default_views() {
   $view->description = '';
   $view->tag = 'default';
   $view->base_table = 'capx_cfe';
-  $view->human_name = 'Mappers';
+  $view->human_name = 'Mappings';
   $view->core = 7;
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Manage Mappers';
+  $handler->display->display_options['title'] = 'Manage Mappings';
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -57,14 +57,6 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
   );
-  /* No results behavior: Global: Text area */
-  $handler->display->display_options['empty']['area']['id'] = 'area';
-  $handler->display->display_options['empty']['area']['table'] = 'views';
-  $handler->display->display_options['empty']['area']['field'] = 'area';
-  $handler->display->display_options['empty']['area']['label'] = 'Sorry';
-  $handler->display->display_options['empty']['area']['empty'] = TRUE;
-  $handler->display->display_options['empty']['area']['content'] = 'There are no available mappers. Click the create mapper link above to get started.';
-  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   /* Field: Configuration Entity: Configuration Settings */
   $handler->display->display_options['fields']['settings_2']['id'] = 'settings_2';
   $handler->display->display_options['fields']['settings_2']['table'] = 'capx_cfe';
@@ -116,7 +108,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
   $handler->display->display_options['fields']['nothing_2']['field'] = 'nothing';
-  $handler->display->display_options['fields']['nothing_2']['label'] = 'Operations';
+  $handler->display->display_options['fields']['nothing_2']['label'] = 'Actions';
   $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[mapper_edit_link] | [mapper_delete_link] ';
   /* Sort criterion: Configuration Entity: Title */
   $handler->display->display_options['sorts']['title']['id'] = 'title';
@@ -134,7 +126,7 @@ function stanford_capx_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'mappers_manage_block');
-  $handler->display->display_options['block_description'] = 'Manage Mappers Table';
+  $handler->display->display_options['block_description'] = 'Manage Mappings Table';
 
   // Add view to return array.
   $views['capx_mappers'] = $view;
@@ -207,14 +199,6 @@ function stanford_capx_views_default_views() {
       'empty_column' => 0,
     ),
   );
-  /* No results behavior: Global: Text area */
-  $handler->display->display_options['empty']['area']['id'] = 'area';
-  $handler->display->display_options['empty']['area']['table'] = 'views';
-  $handler->display->display_options['empty']['area']['field'] = 'area';
-  $handler->display->display_options['empty']['area']['label'] = 'Sorry';
-  $handler->display->display_options['empty']['area']['empty'] = TRUE;
-  $handler->display->display_options['empty']['area']['content'] = 'Sorry, there are no importers available. To get started click on the create new importer link above.';
-  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   /* Field: Configuration Entity: Machine name */
   $handler->display->display_options['fields']['machine_name']['id'] = 'machine_name';
   $handler->display->display_options['fields']['machine_name']['table'] = 'capx_cfe';
@@ -230,7 +214,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['settings']['id'] = 'settings';
   $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['settings']['field'] = 'settings';
-  $handler->display->display_options['fields']['settings']['label'] = 'Mapper Name';
+  $handler->display->display_options['fields']['settings']['label'] = 'Mapping Name';
   $handler->display->display_options['fields']['settings']['format'] = 'mapper';
   $handler->display->display_options['fields']['settings']['mapper'] = 0;
   /* Field: Configuration Entity: Meta Data */
@@ -286,7 +270,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
   $handler->display->display_options['fields']['nothing_2']['field'] = 'nothing';
-  $handler->display->display_options['fields']['nothing_2']['label'] = 'Operations';
+  $handler->display->display_options['fields']['nothing_2']['label'] = 'Actions';
   $handler->display->display_options['fields']['nothing_2']['alter']['text'] = '[importer_edit_link] | [importer_delete_link] | [importer_sync_profiles] | [importer_orphan_profiles]';
   /* Filter criterion: Configuration Entity: type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
@@ -385,7 +369,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['settings']['id'] = 'settings';
   $handler->display->display_options['fields']['settings']['table'] = 'capx_cfe';
   $handler->display->display_options['fields']['settings']['field'] = 'settings';
-  $handler->display->display_options['fields']['settings']['label'] = 'Mapper';
+  $handler->display->display_options['fields']['settings']['label'] = 'Mapping';
   $handler->display->display_options['fields']['settings']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['settings']['alter']['path'] = 'admin/config/capx/mapper/edit/[settings]';
   $handler->display->display_options['fields']['settings']['format'] = 'mapper';
@@ -417,7 +401,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
   $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
-  $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
+  $handler->display->display_options['fields']['nothing']['label'] = 'Actions';
   $handler->display->display_options['fields']['nothing']['alter']['text'] = '[importer_sync_profiles]';
   /* Sort criterion: Configuration Entity: Title */
   $handler->display->display_options['sorts']['title']['id'] = 'title';
@@ -588,7 +572,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['empty']['area']['table'] = 'views';
   $handler->display->display_options['empty']['area']['field'] = 'area';
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
-  $handler->display->display_options['empty']['area']['content'] = '<p>Sorry, but there are no profiles available. Please create a mapper and an importer to import profiles</p>';
+  $handler->display->display_options['empty']['area']['content'] = '<p>Sorry, but there are no profiles available. Please create a mapping and an importer to import profiles.</p>';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   /* Relationship: CAPx profile: CAPx Profile Node Information */
   $handler->display->display_options['relationships']['node']['id'] = 'node';
@@ -701,7 +685,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['nothing']['id'] = 'nothing';
   $handler->display->display_options['fields']['nothing']['table'] = 'views';
   $handler->display->display_options['fields']['nothing']['field'] = 'nothing';
-  $handler->display->display_options['fields']['nothing']['label'] = 'Operations';
+  $handler->display->display_options['fields']['nothing']['label'] = 'Actions';
   $handler->display->display_options['fields']['nothing']['alter']['text'] = '[edit_node]';
   if (module_exists("bean")) {
     $handler->display->display_options['fields']['nothing']['alter']['text'] .= "[edit_link]";

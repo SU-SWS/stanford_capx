@@ -27,7 +27,7 @@ function stanford_capx_views_data() {
   $data['capx_cfe']['table']['base'] = array(
     'field' => 'cfid', // This is the identifier field for the view.
     'title' => t('CAPx Configuration Entity'),
-    'help' => t('CAPx Configuration Entity contains the settings for the mapper and importer entities.'),
+    'help' => t('CAPx Configuration Entity contains the settings for the mapping and importer entities.'),
     'weight' => -10,
   );
 
@@ -128,8 +128,8 @@ function stanford_capx_views_data() {
 
   // Mapper edit link.
   $data['capx_cfe']['mapper_edit_link'] = array(
-    'title' => t('Mapper edit link'),
-    'help' => t('Edit link for mappers'),
+    'title' => t('Mapping edit link'),
+    'help' => t('Edit link for mappings'),
     'field' => array(
       'handler' => 'views_handler_field_mapper_edit_link',
     ),
@@ -137,8 +137,8 @@ function stanford_capx_views_data() {
 
   // Mapper delete link.
   $data['capx_cfe']['mapper_delete_link'] = array(
-    'title' => t('Mapper delete link'),
-    'help' => t('Delete link for mappers'),
+    'title' => t('Mapping delete link'),
+    'help' => t('Delete link for mappings'),
     'field' => array(
       'handler' => 'views_handler_field_mapper_delete_link',
     ),

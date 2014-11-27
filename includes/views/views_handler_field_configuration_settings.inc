@@ -26,7 +26,7 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    $form['format']['#options']['mapper'] = t('Mapper link');
+    $form['format']['#options']['mapper'] = t('Mapping link');
     $form['format']['#options']['bundle_title'] = t('Bundle title');
     $form['format']['#options']['bundle_machine'] = t('Bundle machine name');
 
@@ -57,7 +57,7 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
         }
       }
       else {
-        return t('Mapper not found');
+        return t('Mapping not found');
       }
     }
 
@@ -78,7 +78,7 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
         }
       }
       else {
-        return t('Mapper not found');
+        return t('Mapping not found');
       }
     }
 
@@ -97,7 +97,7 @@ class views_handler_field_configuration_settings extends views_handler_field_ser
         }
       }
       else {
-        return t('Mapper not found');
+        return t('Mapping not found');
       }
     }
 

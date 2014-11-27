@@ -257,7 +257,7 @@ class EntityMapper extends MapperAbstract {
               '%bundle' => $bundle,
               '!mapper' => l(check_plain($mapper->label()), 'admin/config/capx/mapper/edit/' . $mapper->getMachineName()),
             );
-            $message = t('Field %field was removed from the %entity_type bundle %bundle, but is still used in !mapper. You should check configuration of the specified mapper!');
+            $message = t('Field %field was removed from the %entity_type bundle %bundle, but is still used in !mapper. You should check configuration of the specified mapping!');
             watchdog('stanford_capx_admin_messages', $message, $message_vars, WATCHDOG_ERROR);
             $messages[$message_key] = array(
               'text' => $message,
@@ -337,7 +337,7 @@ class EntityMapper extends MapperAbstract {
           '%entity_type' => $entity_info['label'],
           '%bundle' => $bundle,
         );
-        $message_text = t('Invalid bundle setting on %mapper. The bundle %bundle is no longer available and should either be restored, or the mapper %mapper should be deleted.');
+        $message_text = t('Invalid bundle setting on %mapper. The bundle %bundle is no longer available and should either be restored, or the mapping %mapper should be deleted.');
         watchdog('stanford_capx_mapper_issue', $message_text, $message_vars, WATCHDOG_ERROR);
       }
       else {
@@ -353,7 +353,7 @@ class EntityMapper extends MapperAbstract {
         '%entity_type' => $entity_type,
         '%bundle' => $bundle,
       );
-      $message_text = t('Invalid entity setting on %mapper. The entity %entity_type is no longer available. Please restore the entity type or remove the mapper.');
+      $message_text = t('Invalid entity setting on %mapper. The entity %entity_type is no longer available. Please restore the entity type or remove the mapping.');
       watchdog('stanford_capx_mapper_issue', $message_text, $message_vars, WATCHDOG_ERROR);
     }
 
@@ -368,7 +368,7 @@ class EntityMapper extends MapperAbstract {
 
       $message_vars['!importers'] = implode(', ', $importer_links);
       $message_text .= ' ';
-      $message_text .= t('The following importers are using an invalid mapper. Please update or delete the mapper settings: !importers.');
+      $message_text .= t('The following importers are using an invalid mapping. Please update or delete the mapping settings: !importers.');
 
       $messages = variable_get('stanford_capx_admin_messages', array());
       $messages[$message_key] = array(

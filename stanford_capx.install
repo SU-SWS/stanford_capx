@@ -14,6 +14,8 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_api_auth_uri');
   variable_del('stanford_capx_admin_messages');
   variable_del('stanford_capx_token');
+  variable_det("capx_last_orgs_sync");
+  variable_det("capx_last_schema_sync");
 }
 
 /**

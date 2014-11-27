@@ -271,7 +271,7 @@ class EntityImporter implements ImporterInterface {
     }
     else {
       drupal_set_message(t("No profiles found. Please check importer settings and connection then try again."), "warning");
-      drupal_goto(drupal_get_destination());
+      drupal_goto("admin/config/capx/importer/edit/" . $this->getMachineName());
     }
 
   }

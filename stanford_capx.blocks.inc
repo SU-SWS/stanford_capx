@@ -42,7 +42,7 @@ function stanford_capx_block_info() {
   );
 
   $blocks['mapper_in_use'] = array(
-    'info' => t('Mapper In Use'),
+    'info' => t('Mapping In Use'),
     'cache' => DRUPAL_CACHE_PER_PAGE,
     'properties' => array('administrative' => 1),
     'visibility' => BLOCK_VISIBILITY_LISTED,
@@ -85,8 +85,8 @@ function stanford_capx_block_view($delta = '') {
       break;
 
     case "mapper_in_use":
-      $block['subject'] = t('Mapper In Use');
-      $block['title'] = t('Mapper In Use');
+      $block['subject'] = t('Mapping In Use');
+      $block['title'] = t('Mapping In Use');
       $block['content'] = stanford_capx_mapper_in_use_block();
       break;
 
@@ -167,7 +167,7 @@ function stanford_capx_connection_status_block() {
 
 /**
  * Data browser launch block content callback.
- * Creates the blocks contents for the mapper edit/new page.
+ * Creates the blocks contents for the mapping edit/new page.
  * @return [type] [description]
  */
 function stanford_capx_data_browser_launch_block() {
@@ -187,6 +187,8 @@ function stanford_capx_data_browser_launch_block() {
   $output .= "<p>" . $browser_link . "</p>";
 
   $output .= "<p>Here are some commonly used settings:</p>";
+  $header = array('Label', 'CAP API path');
+
   $rows = array();
   $rows[] = array('Title', '$.displayName');
   $rows[] = array('Body', '$.bio.html');
@@ -226,7 +228,7 @@ function stanford_capx_data_browser_launch_block() {
   $rows[] = array('Staff type', '$.titles.*.type');
   $rows[] = array('Field of study', '$.education.*.fieldOfStudy');
   $rows[] = array('Type', '$.titles.*.type');
-  $output .= theme('table', array('rows' => $rows));
+  $output .= theme('table', array('rows' => $rows, 'header' => $header));
 
   return $output;
 }
@@ -310,9 +312,9 @@ function stanford_capx_mapper_in_use_block() {
   }
 
   $output .= "<p>";
-  $output .= t("WARNING: Any changes you make to this mapper will update existing content on your next CAP sync.");
+  $output .= t("WARNING: Any changes you make to this mapping will update existing content on your next CAP sync.");
   $output .= "</p><p>";
-  $output .= t("This Mapper is currently used by: ");
+  $output .= t("This mapping is currently used by: ");
 
   $porters = array();
   foreach ($importers as $k => $importer) {
