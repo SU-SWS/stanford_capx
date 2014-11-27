@@ -4,6 +4,18 @@
  */
 
 /**
+ * Implements hook_install().
+ */
+function stanford_capx_install() {
+  // Take our views and save them to the database.
+  module_load_include("inc", "stanford_capx", "stanford_capx.views_default");
+  $views = stanford_capx_views_default_views();
+  foreach ($views as $view) {
+    $view->save();
+  }
+}
+
+/**
  * Implements hook_uninstall().
  */
 function stanford_capx_uninstall() {
@@ -14,8 +26,8 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_api_auth_uri');
   variable_del('stanford_capx_admin_messages');
   variable_del('stanford_capx_token');
-  variable_det("capx_last_orgs_sync");
-  variable_det("capx_last_schema_sync");
+  variable_del("capx_last_orgs_sync");
+  variable_del("capx_last_schema_sync");
 }
 
 /**

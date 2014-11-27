@@ -87,12 +87,10 @@ function stanford_capx_node_access($node, $op, $account) {
 }
 
 /**
- * Implements hook_views_api().
+ * Implments hook_views_api().
  */
 function stanford_capx_views_api() {
-  return array(
-    'api' => 3,
-  );
+  return array("version" => "3.0");
 }
 
 /**
