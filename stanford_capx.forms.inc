@@ -54,7 +54,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
 
   $form['auth']['stanford_capx_password'] = array(
     '#type' => 'password',
-    '#title' => t('Authz secret:'),
+    '#title' => t('Password:'),
   );
 
   $form['advanced'] = array(
