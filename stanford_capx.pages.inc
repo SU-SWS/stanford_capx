@@ -189,17 +189,15 @@ function stanford_capx_admin_config_help() {
   $content .= "<h2>" . t("Resources for developers") . "</h2>";
   $content .= "<p>" . t("Want to get involved in the development of the CAPx module? Check out the resources below:") . "</p>";
   $content .= "<ol><li>";
-  $content .= l(t("CAPx Module UI documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= l(t("CAPx module documentation"), "https://github.com/SU-SWS/stanford_capx/tree/7.x-1.x/docs");
   $content .= "</li><li>";
-  $content .= l(t("CAPx Module API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= l(t("CAPx GitHub repository"), "http://www.github.com/SU-SWS/stanford_capx");
   $content .= "</li><li>";
-  $content .= l(t("CAPx GitHub Repository"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= l(t("CAPx issue queue"), "https://github.com/SU-SWS/stanford_capx/issues");
+  // $content .= "</li><li>";
+  // $content .= l(t("CAP API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
   $content .= "</li><li>";
-  $content .= l(t("CAPx Issue Queue"), "http://www.github.com/SU-SWS/stanford_capx");
-  $content .= "</li><li>";
-  $content .= l(t("CAPx Contribution help documentation"), "http://www.github.com/SU-SWS/stanford_capx");
-  $content .= "</li><li>";
-  $content .= l(t("CAP API documentation"), "http://www.github.com/SU-SWS/stanford_capx");
+  $content .= l(t("Working group Jira project"), "https://stanfordits.atlassian.net/");
   $content .= "</li></ol>";
 
   $output['content']['textcontent']['#markup'] = $content;
