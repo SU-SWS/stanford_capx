@@ -13,20 +13,30 @@ Combining a profile directory with a social networking backend, CAP makes it eas
 
 ## Installation
 
-Install this module like any other Drupal module then visit (NEEDS URL TO CONFIG PAGE). 
+Install this module like [any other Drupal module](https://www.drupal.org/documentation/install/modules-themes/modules-7).
 
 ## Authentication
 
-Todo... write about how you gain access to the CAP API.
+Before you get started you will need to have authentication credentials. To get authentication credentials, [file a HelpSU request](https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP&dtemplate=CAP-OAuth-Info) to Administrative Applications/CAP Stanford Profiles.
+
+## Configuration
+
+For detailed documentation on the configuration and usage of this module, please see the [Docs section](./docs/).
 
 ## Developer
 
 [GitHub](https://github.com/SU-SWS/stanford_capx) page.
-Collaboration and bug reports are welcome. Please file bug reports on the github issues page. Please see ( THIS URL TO COLLABORATION INSTRUCTIONS ) for how to contribute to the project.
+Collaboration and bug reports are welcome. Please file bug reports on the github issues page. You are also welcome to suggest new functionality in the way of a pull request. 
+
+Also included in this package is a module called: capx_issue_collector. If you enable this module you will have a 'report feedback' button added to the bottom right hand corner of your website. This will allow you to post feedback directly to our Jira instance. 
 
 ## Credits
 
 * Trellon, for the [original CAP module](https://github.com/Stanford/CAP_drupal) and all the problems they solved. A great amount of inspiration and information was used from this module.
-* Kenneth Sharp, for his work on CAP lite and the ability to map information to existing fields on entities. 
-* Zach Chandler, for his vision and direction
-* Stanford Web Services, for putting all the pieces together
+* Trellon, for added support in the development and testing of this module.
+* Kenneth Sharp, for his work on CAP lite and for his contributions to functionality. 
+* Zach Chandler, for his vision and direction.
+* Stanford Web Services, for putting all the pieces together.
+* CAP working group for all of their invaluable feedback and time spent.
+* Brendan Walsh, for seeing the value and backing this project.
+* Darryl Dieckman, for all his hard work and support on the API.
