@@ -38,6 +38,8 @@ Learn more about the [Connect tab >>] (connect.md)
 3. In the **Synchronization settings** field, accept the default values unless it becomes necessary to change them
 4. Click **Save settings**
 
+Learn more about the [Settings tab >>] (settings.md)
+
 ###Mapping
 
 1. Click the **Mapping** tab
@@ -86,6 +88,8 @@ Staff Type | $.titles.*.type
 
 1. 
 
+Learn more about the [Mapping tab >>] (mapping.md)
+
 ###Importing
 
 1. Click the **Importing** tab
@@ -103,6 +107,8 @@ Staff Type | $.titles.*.type
 ####Delete importer
 
 1.
+
+Learn more about the [Importing tab >>] (importing.md)
 
 ###Help
 
