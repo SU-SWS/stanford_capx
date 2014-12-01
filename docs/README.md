@@ -36,7 +36,7 @@ Learn more about the [Connect tab >>] (connect.md)
 ###Settings
 
 1. Click the **Settings** tab
-2. In the **Organization Codes** field, click **Sync Now**
+2. In the **Organization** field, click **Sync Now**
 3. In the **Synchronization settings** field, accept the default values unless it becomes necessary to change them
 4. Click **Save settings**
 
