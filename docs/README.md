@@ -48,8 +48,10 @@ Click the **Mapping** tab
 
 ####Create new mapping
 
-1. Click **Create new mapping**
-2. 
+1. Click **Create new mapper**
+2. Give the new mapper a title
+3. Select which entity type and bundle you would like to map the CAP data into. Select the entity type first. The bundle type will appear automatically.
+4. Complete the field mapping for the entity type and bundle you selected
 
 **Note:** The following table highlights some commonly used settings for the Stanford Person content type:
 
