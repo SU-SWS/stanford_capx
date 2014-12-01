@@ -1918,7 +1918,7 @@ function stanford_capx_config_settings_form($form, &$form_state) {
     '#description' => t('Select text format that would be applied to all fields that have text processing enabled.'),
     '#type' => "select",
     '#options' => $options,
-    '#default_value' => variable_get('stanford_capx_default_field_format', 'plain_text'),
+    '#default_value' => variable_get('stanford_capx_default_field_format', 'filtered_html'),
   );
 
   $form = system_settings_form($form);

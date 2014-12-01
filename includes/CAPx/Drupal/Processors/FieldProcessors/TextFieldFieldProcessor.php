@@ -37,7 +37,7 @@ class TextFieldFieldProcessor extends FieldTypeProcessor {
     $bundle = $entity->getBundle();
     $fieldInstance = field_info_instance($entityType, $fieldName, $bundle);
     $process = isset($fieldInstance['settings']['text_processing']) ? $fieldInstance['settings']['text_processing'] : FALSE;
-    $format = variable_get('stanford_capx_default_field_format', 'plain_text');
+    $format = variable_get('stanford_capx_default_field_format', 'filtered_html');
 
     foreach ($data as $column => $values) {
       foreach ($values as $delta => $value) {
