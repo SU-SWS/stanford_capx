@@ -44,14 +44,13 @@ Learn more about the [Settings tab >>] (settings.md)
 
 ###Mapping
 
-Click the **Mapping** tab
-
 ####Create new mapping
 
-1. Click **Create new mapper**
-2. Give the new mapper a title
-3. Select which entity type and bundle you would like to map the CAP data into. Select the entity type first. The bundle type will appear automatically.
-4. Complete the field mapping for the entity type and bundle you selected
+1. Click the **Mapping** tab
+2. Click **Create new mapper**
+3. Give the new mapper a title
+4. Select which entity type and bundle you would like to map the CAP data into. Select the entity type first. The bundle type will appear automatically.
+5. Complete the field mapping for the entity type and bundle you selected
 
 **Note:** The following table highlights some commonly used settings for the Stanford Person content type (**Entity type:** Node **Bundle:** Person):
 
@@ -87,23 +86,22 @@ Staff Type | $.titles.*.type
 
 ####Edit exisiting mapping
 
-1.
+1. Click the **Mapping** tab
 
 ####Delete mapping
 
-1. 
+1. Click the **Mapping** tab
 
 Learn more about the [Mapping tab >>] (mapping.md)
 
 ###Importing
 
-Click the **Importing** tab
-
 ####Create new importer
 
-1. Click **Create new importer**
-2. In the **Importer name** field, enter a unique name for the Importer
-3. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
+1. Click the **Importing** tab
+2. Click **Create new importer**
+3. In the **Importer name** field, enter a unique name for the Importer
+4. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
 
 ####Edit existing importer
 
