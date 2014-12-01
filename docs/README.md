@@ -22,7 +22,7 @@ Run the following Drush command: % drush en stanford_person stanford_capx -y
 
 ##Configure Stanford CAPx module
 
-1. Navigate to Configuration > CAPx
+Navigate to Configuration > CAPx
 
 ###Connect
 
