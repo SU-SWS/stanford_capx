@@ -10,7 +10,7 @@ If you do not have an existing content type, it is recommend that you use the St
 
 ##Enable Stanford CAPx and Stanford Person modules using Drush
 
-1. Run the following Drush command: % drush en stanford_person stanford_capx -y
+Run the following Drush command: % drush en stanford_person stanford_capx -y
 
 **Note:** Dependencies should be automagically handled.
 
@@ -44,7 +44,7 @@ Learn more about the [Settings tab >>] (settings.md)
 
 ###Mapping
 
-1. Click the **Mapping** tab
+Click the **Mapping** tab
 
 ####Create new mapping
 
@@ -94,7 +94,7 @@ Learn more about the [Mapping tab >>] (mapping.md)
 
 ###Importing
 
-1. Click the **Importing** tab
+Click the **Importing** tab
 
 ####Create new importer
 
