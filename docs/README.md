@@ -87,6 +87,7 @@ Staff Type | $.titles.*.type
 ####Edit exisiting mapping
 
 1. Click the **Mapping** tab
+2. 
 
 ####Delete mapping
 
