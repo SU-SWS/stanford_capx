@@ -28,6 +28,8 @@ If you do not have an existing content type, it is recommend that you use the St
 2. In the **Authorization** field, enter your authentication information
 3. In the **Advanced** field, accept the default values unless it becomes necessary to change them
 4. Click **Save connection settings**
+ 
+Learn more about the [Connect tab >>] (connect.md)
 
 ###Settings
 
