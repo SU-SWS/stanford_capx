@@ -49,7 +49,7 @@ Learn more about the [Settings tab >>] (settings.md)
 1. Click **Create new mapping**
 2. 
 
-**Note:** The following table highlights some commonly used settings for the Stanford People content type:
+**Note:** The following table highlights some commonly used settings for the Stanford Person content type:
 
 Label | CAPx API Path
 --- | ---
