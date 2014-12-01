@@ -2,9 +2,9 @@
 
 ##Install the Stanford CAPx module on your Drupal 7 site
 
-The Stanford CAPx module can be downloaded from GitHub: https://github.com/SU-SWS/stanford_capx
+The [Stanford CAPx module can be downloaded from GitHub >>] (https://github.com/SU-SWS/stanford_capx)
 
-If you do not have an existing content type, it is recommend that you use the Stanford Person content type. You can download the Stanford Person module from GitHub: https://github.com/SU-SWS/stanford_person
+If you do not have an existing content type, it is recommend that you use the Stanford Person content type. You can [download the Stanford Person module from GitHub >>] (https://github.com/SU-SWS/stanford_person)
 
 **This documentation will use the Stanford Person content type as an example.**
 
