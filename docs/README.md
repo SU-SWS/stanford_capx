@@ -10,7 +10,9 @@ If you do not have an existing content type, it is recommend that you use the St
 
 ##Enable Stanford CAPx and Stanford Person modules using Drush
 
-1. Run the following Drush command (dependencies should be automagically handled): % drush en stanford_person stanford_capx -y
+1. Run the following Drush command: % drush en stanford_person stanford_capx -y
+
+**Note:** Dependencies should be automagically handled.
 
 ##Enable Stanford CAPx and Stanford Person modules from the user interface
 
