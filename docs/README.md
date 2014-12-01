@@ -53,7 +53,7 @@ Click the **Mapping** tab
 3. Select which entity type and bundle you would like to map the CAP data into. Select the entity type first. The bundle type will appear automatically.
 4. Complete the field mapping for the entity type and bundle you selected
 
-**Note:** The following table highlights some commonly used settings for the Stanford Person content type:
+**Note:** The following table highlights some commonly used settings for the Stanford Person content type (Node / Person):
 
 Label | CAPx API Path
 --- | ---
