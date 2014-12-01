@@ -72,6 +72,7 @@ Email |	$.primaryContact.email
 Phone |	$.primaryContact.phoneNumbers.*
 Fax |	$.primaryContact.fax
 Office Hours |	
+Office | $.primaryContact.officeName
 Mailing Address | $.primaryContact.address
 Mail Code |	
 Personal Info Links Title | $.internetLinks.*.label.text
