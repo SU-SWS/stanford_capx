@@ -123,6 +123,19 @@ Learn more about the [Mapping tab >>] (mapping.md)
 ####Delete importer
 
 1. Click the **Importing** tab
+2. Click **Delete** in the **Operations** column next to the importer you wish to delete
+3. Select what you would like to do with the items that are associated with the selected importer from the dropdown
+3. If you are sure that you want to delete the importer, click **Yes, please delete the importer**
+
+####Update profiles
+
+1. Click the **Importing** tab
+2. Click **Update profiles now** in the **Operations** column next to the importer you wish to update the profiles for
+
+####Check for orphans
+
+1. Click the **Importing** tab
+2. Click **Check for orphans** in the **Operations** column next to the importer you wish to check for orphans
 
 Learn more about the [Importing tab >>] (importing.md)
 
