@@ -139,6 +139,14 @@ Learn more about the [Mapping tab >>] (mapping.md)
 
 Learn more about the [Importing tab >>] (importing.md)
 
+####View profiles
+
+**Note:** You can only view current profiles for importers that are in use
+
+1. Click the **Importing** tab
+2. Click on the importer you wish to view the profiles for in the **Title** column
+3. Click **View all imported profiles**
+
 ###Help
 
 Use the Help tab for quick information and helpful tips on using and setting up the CAPx module.
