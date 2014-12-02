@@ -88,11 +88,15 @@ Staff Type | $.titles.*.type
 ####Edit exisiting mapping
 
 1. Click the **Mapping** tab
-2. 
+2. Click **Edit** in the **Operations** column next to the mapper that you wish to edit
+3. Edit the necessary items in the **Field Mapping** field. The Mapper Title and Entity Mapping fields cannot be changed
+4. Click **Save mapper**
 
 ####Delete mapping
 
 1. Click the **Mapping** tab
+2. Click **Delete** in the **Operations** column next to the mapper that you wish to delete
+3. If you are sure that you want to delete the mapper, click **Yes, please delete**
 
 Learn more about the [Mapping tab >>] (mapping.md)
 
@@ -104,6 +108,9 @@ Learn more about the [Mapping tab >>] (mapping.md)
 2. Click **Create new importer**
 3. In the **Importer name** field, enter a unique name for the Importer
 4. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
+5. Configure the **Sync Options** as desired
+6. Configure **Add Groups** as desired. The **Organizations** field, will autocomplete as you begin typing the name of the organization you wish to import, whereas you will need to enter the full workgroup name by hand
+7. Configure  **Add Individuals* as desried. You may enter the SUNet IDs for the profiles you wish to import. Multiple SUNet IDs may be entered by separating them with a comma
 
 ####Edit existing importer
 
