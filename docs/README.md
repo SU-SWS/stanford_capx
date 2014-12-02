@@ -111,6 +111,7 @@ Learn more about the [Mapping tab >>] (mapping.md)
 5. Configure the **Sync Options** as desired
 6. Configure **Add Groups** as desired. The **Organizations** field, will autocomplete as you begin typing the name of the organization you wish to import, whereas you will need to enter the full workgroup name by hand
 7. Configure  **Add Individuals** as desried. You may enter the SUNet IDs for the profiles you wish to import. Multiple SUNet IDs may be entered by separating them with a comma
+8. To save the importer, but **not import** now, click **Save**. To save and **import** now, click **Save & Import Now**
 
 ####Edit existing importer
 
