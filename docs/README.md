@@ -110,7 +110,7 @@ Learn more about the [Mapping tab >>] (mapping.md)
 4. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
 5. Configure the **Sync Options** as desired
 6. Configure **Add Groups** as desired. The **Organizations** field, will autocomplete as you begin typing the name of the organization you wish to import, whereas you will need to enter the full workgroup name by hand
-7. Configure  **Add Individuals* as desried. You may enter the SUNet IDs for the profiles you wish to import. Multiple SUNet IDs may be entered by separating them with a comma
+7. Configure  **Add Individuals** as desried. You may enter the SUNet IDs for the profiles you wish to import. Multiple SUNet IDs may be entered by separating them with a comma
 
 ####Edit existing importer
 
