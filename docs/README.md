@@ -88,14 +88,14 @@ Staff Type | $.titles.*.type
 ####Edit exisiting mapping
 
 1. Click the **Mapping** tab
-2. Click **Edit** in the **Operations** column next to the mapper that you wish to edit
+2. Click **Edit** in the **Operations** column next to the mapper you wish to edit
 3. Edit the necessary items in the **Field Mapping** field. The Mapper Title and Entity Mapping fields cannot be changed
 4. Click **Save mapper**
 
 ####Delete mapping
 
 1. Click the **Mapping** tab
-2. Click **Delete** in the **Operations** column next to the mapper that you wish to delete
+2. Click **Delete** in the **Operations** column next to the mapper you wish to delete
 3. If you are sure that you want to delete the mapper, click **Yes, please delete**
 
 Learn more about the [Mapping tab >>] (mapping.md)
@@ -115,11 +115,14 @@ Learn more about the [Mapping tab >>] (mapping.md)
 
 ####Edit existing importer
 
-1.
+1. Click the **Importing** tab
+2. Click **Edit** in the **Operations** column next to the importer you wish to edit
+3. Edit all necessary items. All fields except for the Importer name can be updated
+4. To save the chamges to the importer, but **not import** now, click **Save**. To save the changes to the importer and **import** now, click **Save & Import Now**
 
 ####Delete importer
 
-1.
+1. Click the **Importing** tab
 
 Learn more about the [Importing tab >>] (importing.md)
 
