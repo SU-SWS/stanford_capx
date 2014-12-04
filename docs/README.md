@@ -43,13 +43,13 @@ Learn more about the [Connect tab >>] (connect.md)
 
 Learn more about the [Settings tab >>] (settings.md)
 
-###Mapping
+###Map
 
 ####Create new mapping
 
-1. Click the **Mapping** tab
-2. Click **Create new mapper**
-3. Give the new mapper a title
+1. Click the **Map** tab
+2. Click **Create new mapping**
+3. Give the new mapping a title
 4. Select which entity type and bundle you would like to map the CAP data into. Select the entity type first. The bundle type will appear automatically.
 5. Complete the field mapping for the entity type and bundle you selected
 
@@ -87,24 +87,24 @@ Staff Type | $.titles.*.type
 
 ####Edit exisiting mapping
 
-1. Click the **Mapping** tab
+1. Click the **Map** tab
 2. Click **Edit** in the **Operations** column next to the mapper you wish to edit
 3. Edit the necessary items in the **Field Mapping** field. The Mapper Title and Entity Mapping fields cannot be changed
 4. Click **Save mapper**
 
 ####Delete mapping
 
-1. Click the **Mapping** tab
+1. Click the **Map** tab
 2. Click **Delete** in the **Operations** column next to the mapper you wish to delete
 3. If you are sure that you want to delete the mapper, click **Yes, please delete**
 
 Learn more about the [Mapping tab >>] (mapping.md)
 
-###Importing
+###Import
 
 ####Create new importer
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click **Create new importer**
 3. In the **Importer name** field, enter a unique name for the Importer
 4. In the **Mapping** field, select the mapping from the dropdown that you would like to import this profile data
@@ -115,29 +115,29 @@ Learn more about the [Mapping tab >>] (mapping.md)
 
 ####Edit existing importer
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click **Edit** in the **Operations** column next to the importer you wish to edit
 3. Edit all necessary items. All fields except for the Importer name can be updated
 4. To save the chamges to the importer, but **not import** now, click **Save**. To save the changes to the importer and **import** now, click **Save & Import Now**
 
 ####Delete importer
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click **Delete** in the **Operations** column next to the importer you wish to delete
 3. Select what you would like to do with the items that are associated with the selected importer from the dropdown
 3. If you are sure that you want to delete the importer, click **Yes, please delete the importer**
 
 ####Update profiles
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click **Update profiles now** in the **Operations** column next to the importer you wish to update the profiles for
 
 ####Check for orphans
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click **Check for orphans** in the **Operations** column next to the importer you wish to check for orphans
 
-Learn more about the [Importing tab >>] (importing.md)
+Learn more about the [Import tab >>] (importing.md)
 
 ####View profiles
 
