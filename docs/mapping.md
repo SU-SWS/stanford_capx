@@ -1,4 +1,4 @@
-#Mapping
+#Map
 
 ##Entity Mapping
 
