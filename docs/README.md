@@ -2,9 +2,9 @@
 
 ##Install the Stanford CAPx module on your Drupal 7 site
 
-The [Stanford CAPx module can be downloaded from GitHub >>] (https://github.com/SU-SWS/stanford_capx)
+The [Stanford CAPx module can be downloaded from GitHub »] (https://github.com/SU-SWS/stanford_capx)
 
-If you do not have an existing content type, it is recommend that you use the Stanford Person content type. You can [download the Stanford Person module from GitHub >>] (https://github.com/SU-SWS/stanford_person)
+If you do not have an existing content type, it is recommend that you use the Stanford Person content type. You can [download the Stanford Person module from GitHub »] (https://github.com/SU-SWS/stanford_person)
 
 **Important Note:** This documentation will use the Stanford Person content type as an example. If you are not using the Stanford Person content type, disregard the references to it.
 
@@ -32,7 +32,7 @@ Run the following Drush command: % drush en stanford_person stanford_capx -y
 3. In the **Advanced** field, accept the default values unless it becomes necessary to change them
 4. Click **Save connection settings**
  
-Learn more about the [Connect tab >>] (connect.md)
+[Learn more about the Connect tab »] (connect.md)
 
 ###Settings
 
@@ -41,7 +41,7 @@ Learn more about the [Connect tab >>] (connect.md)
 3. In the **Synchronization settings** field, accept the default values unless it becomes necessary to change them
 4. Click **Save configuration**
 
-Learn more about the [Settings tab >>] (settings.md)
+[Learn more about the Settings tab »] (settings.md)
 
 ###Map
 
@@ -98,7 +98,7 @@ Staff Type | $.titles.*.type
 2. Click **Delete** in the **Operations** column next to the mapper you wish to delete
 3. If you are sure that you want to delete the mapper, click **Yes, please delete**
 
-Learn more about the [Map tab >>] (map.md)
+[Learn more about the Map tab »] (map.md)
 
 ###Import
 
@@ -145,7 +145,7 @@ Learn more about the [Map tab >>] (map.md)
 2. Click on the importer you wish to view the profiles for in the **Title** column
 3. Click **View all imported profiles**
 
-Learn more about the [Import tab >>] (import.md)
+[Learn more about the Import tab »] (import.md)
 
 ###Help
 
