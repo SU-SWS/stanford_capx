@@ -98,7 +98,7 @@ Staff Type | $.titles.*.type
 2. Click **Delete** in the **Operations** column next to the mapper you wish to delete
 3. If you are sure that you want to delete the mapper, click **Yes, please delete**
 
-Learn more about the [Mapping tab >>] (mapping.md)
+Learn more about the [Map tab >>] (map.md)
 
 ###Import
 
@@ -137,15 +137,15 @@ Learn more about the [Mapping tab >>] (mapping.md)
 1. Click the **Import** tab
 2. Click **Check for orphans** in the **Operations** column next to the importer you wish to check for orphans
 
-Learn more about the [Import tab >>] (importing.md)
-
 ####View profiles
 
 **Note:** You can only view current profiles for importers that are in use
 
-1. Click the **Importing** tab
+1. Click the **Import** tab
 2. Click on the importer you wish to view the profiles for in the **Title** column
 3. Click **View all imported profiles**
+
+Learn more about the [Import tab >>] (import.md)
 
 ###Help
 
