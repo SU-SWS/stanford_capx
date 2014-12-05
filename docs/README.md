@@ -137,8 +137,6 @@ Staff Type | $.titles.*.type
 1. Click the **Import** tab
 2. Click **Check for orphans** in the **Operations** column next to the importer you wish to check for orphans
 
-[Learn more about the Import tab »] (import.md)
-
 ####View profiles via the Import tab
 
 1. Click the **Import** tab
@@ -147,12 +145,16 @@ Staff Type | $.titles.*.type
 
 **Note:** When viewing proifles via the Import tab, you can only view profiles for importers that are currently in use.
 
+[Learn more about the Import tab »] (import.md)
+
 ###Profiles
 
 ####View profiles
 
 1. Click the **Profiles** page
 2. The title of the profile and what importer it is being populated from can be viewed in the table
+
+]Learn more about the Profiles tab »] (profiles.md)
 
 ###Help
 
