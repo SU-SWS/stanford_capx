@@ -1663,6 +1663,13 @@ function _stanford_capx_entity_form_get_entity(&$form, &$form_state, $form_id) {
  * Adds CAPx info to supported entity forms.
  */
 function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $entity) {
+
+  $capx_info = $entity->capx;
+  $importer = capx_cfe_load_by_machine_name($capx_info['importer'], 'importer');
+  if (!$importer) {
+    return;
+  }
+
   // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
@@ -1683,15 +1690,12 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
     ),
   );
 
-  $capx_info = $entity->capx;
-
   $form['capx_vertical_tab']['last_update'] = array(
     '#prefix' => '<p class="last-update"><span class="label">' . t('Last update:') . '</span><span class="info">',
     '#markup' => format_date($capx_info['last_sync'], 'full'),
     '#suffix' => '</span></p>',
   );
 
-  $importer = capx_cfe_load_by_machine_name($capx_info['importer'], 'importer');
   $importer_label = entity_label('capx_cfe', $importer);
   $importer_path = 'admin/config/capx/importer/edit/' . $capx_info['importer'];
   $mapper = capx_cfe_load_by_machine_name($importer->mapper, 'mapper');
