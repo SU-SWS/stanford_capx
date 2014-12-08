@@ -12,7 +12,7 @@ Before you get started you will need to have authentication credentials. To get 
 
 **Endpoint** and **Authentication URI** are the two locations where you communicate with CAP.
 
-**Note:** this section is mainly for development use only.
+**Note:** This section is mainly for development use only.
 
 ###Endpoint
 
