@@ -1,5 +1,7 @@
 #Import
 
+The **Import tab** is where you can overview existing impoters on your site, perform actions, and create new importers.
+
 ##Sync Options
 
 ###Sync
