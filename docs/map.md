@@ -7,3 +7,5 @@ The **Map** tab gives you an overview of all of the existing mappings on the sit
 ##Field Mapping
 
 ##CAP API Path Values
+
+##Data Schema
