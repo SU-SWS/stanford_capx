@@ -154,7 +154,7 @@ Staff Type | $.titles.*.type
 1. Click the **Profiles** page
 2. The title of the profile and what importer it is being populated from can be viewed in the table
 
-*Note:* The profiles displayed on this page are only profiles inported from the CAPx module.
+**Note:** The profiles displayed on this page are only profiles inported from the CAPx module.
 
 [Learn more about the Profiles tab »] (profiles.md)
 
