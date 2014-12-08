@@ -2,34 +2,20 @@
 
 The **Import tab** is where you can overview existing impoters on your site, perform actions, and create new importers.
 
-##Sync Options
-
-###Sync
-
-###At hour of the day
-
 ###Action to perform on orphaned profiles
 
-##Add Groups
+Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. You can choose to leave orphans unchanged or to delete them.
 
-###Organization(s)
+##Add Groups and Individuals
 
-###Include child organizations
+Each grouping is additive. You can combine any and all of the options that are available. You can add more than one organization, workgroup, and SUNet ID by using a comma to separate each.
 
-###Workgroup
+**Note:** If a person or profile exists in more than one of the options their profile will not be duplicated. Only one profile per person per importer can exist. However, duplicate profiles may occur if the same person or profile is associated with more than one importer.
 
-##Add Individuals
+##Actions Column
 
-##Deleting an importer
+Clicking the **Update profiles now** link will update all of the profiles attached to the importer. The importer will run regardless of any setting on the cron setting for that importer. This action does not check for orphans.
 
-###What would you like to do with the items that are associated with this importer?
+Clicking the **Check for orphans** link will execute a process that will identify and mark profiles as orphans from an importer. Orphan profiles are profiles that no longer exist in the CAP API or the importer settings. Any new orphan will have an action applied to them based on the settings in the importer configuration.
 
-####Do nothing and leave the items as they are
-
-####Delete all of the items
-
-####Unpublish the items
-
-##Orphans
-
-###Check for orphans
+**Note:** Orphans can be found on the **Profiles** tab.
