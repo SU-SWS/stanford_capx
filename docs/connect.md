@@ -5,7 +5,3 @@ The connect tab is where you add your username and password to connect to the CA
 ##Authorization
 
 ##Advanced
-
-###Endpoint
-
-###Authentication URI
