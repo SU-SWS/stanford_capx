@@ -1296,7 +1296,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $form['groups']['organization'] = array(
     '#type' => 'textfield',
     '#title' => t('Organization(s)'),
-    '#description' => t('Please select the name of the organization you wish to import. Learn more about !orgchart.', array('!orgchart' => $link)),
+    '#description' => t('Please select the name(s) of the organization(s) you wish to import. Enter multiple organizations by separating them with a comma ",".') . "<br />" . t('Learn more about !orgchart.', array('!orgchart' => $link)),
     '#default_value' => isset($importer->organization) ? $importer->organization : '',
     '#autocomplete_path' => 'admin/config/capx/autocomplete/orgs', // @todo: this.
   );
@@ -1312,7 +1312,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   $form['groups']['workgroup'] = array(
     '#type' => 'textfield',
     '#title' => t('Workgroup'),
-    '#description' => t('Enter the name of the workgroup you wish to import. You can learn more about workgroups at Stanford, and get propernames for import, at the !managerlink.', array('!managerlink' => $link)),
+    '#description' => t('Enter the name(s) of the workgroup(s) you wish to import. Enter multiple organizations by separating them with a comma ",".') . "<br />" . t('You can learn more about workgroups at Stanford, and get propernames for import, at the !managerlink.', array('!managerlink' => $link)),
     '#default_value' => isset($importer->workgroup) ? $importer->workgroup : '',
   );
 
