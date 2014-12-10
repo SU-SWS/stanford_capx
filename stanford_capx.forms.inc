@@ -1711,13 +1711,6 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
     '#suffix' => '</span></p>',
   );
 
-  $status = empty($capx_info['sync']) ? t('Not receiving updates from CAP.') : t('Receiving updates from CAP.');
-  $form['capx_vertical_tab']['status'] = array(
-    '#prefix' => '<p class="status"><span class="label">' . t('Status:') . '</span><span class="info">',
-    '#markup' => $status,
-    '#suffix' => '</span></p>',
-  );
-
   // Sync now button.
   if (user_access('administer capx')) {
     $path = 'admin/config/capx/profile-update/' . $capx_info['profile_id'] . '/' . $capx_info['importer'];
@@ -1729,12 +1722,21 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
         'destination' => $_GET['q'],
         ),
       );
-    $form['capx_vertical_tab']['update']['#markup'] = l(t('Update this profile from CAP'), $path, $options);
+    $form['capx_vertical_tab']['update']['#markup'] = "<p>" . l(t('Update this profile from CAP'), $path, $options) . "<br />";
+    $form['capx_vertical_tab']['update']['#markup'] .= t("Clicking on the above button will update this profile with date from the CAP API wether or not sync is enabled or disabled") . "</p>";
   }
+
+  $status = empty($capx_info['sync']) ? t('Not receiving updates from CAP.') : t('Receiving updates from CAP.');
+  $form['capx_vertical_tab']['status'] = array(
+    '#prefix' => '<p class="status"><span class="label">' . t('Status:') . '</span><span class="info">',
+    '#markup' => $status,
+    '#suffix' => '</span></p>',
+  );
+
 
   if (user_access('administer capx')) {
     $sync = empty($entity->capx['sync']) ? TRUE : FALSE;
-    $button_text = $sync ? t('Enable updates from CAP for this profile') : t('Disable updates from CAP for this profile');
+    $button_text = $sync ? t('Enable automatic updates from CAP for this profile') : t('Disable automatic updates from CAP for this profile');
     $path = 'admin/config/capx/profile-sync/' . $entity->capx['id'] . '/';
     $path .= $sync ? 'enable' : 'disable';
     $options = array(
@@ -1745,7 +1747,8 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
         'destination' => check_plain($_GET['q']),
       ),
     );
-    $form['capx_vertical_tab']['disable_sync']['#markup'] = l($button_text, $path, $options);
+    $form['capx_vertical_tab']['disable_sync']['#markup'] = "<p>" . l($button_text, $path, $options) . "<br />";
+    $form['capx_vertical_tab']['disable_sync']['#markup'] .= t("Disabling automatic updates from the CAP API will release the locked fields and allow you to edit them. Please be aware that enabling or re-syncing with the API could overwrite these changes.") . "</p>";
   }
 }
 
@@ -1753,6 +1756,12 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
  * Disable all fields that have mapped data.
  */
 function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $entity_type, $entity) {
+
+  // Only proceed if the sync is enabled.
+  if (!$entity->capx['sync']) {
+    return;
+  }
+
   $importer = CAPxImporter::loadImporter($entity->capx['importer']);
   $mapper = CAPxMapper::loadMapper($importer->mapper);
 
