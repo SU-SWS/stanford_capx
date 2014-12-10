@@ -376,7 +376,7 @@ function stanford_capx_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_boolean',
+      'handler' => 'views_handler_filter_boolean_operator',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
