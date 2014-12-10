@@ -285,6 +285,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
 
   $form['entity-mapping']['entity-type'] = array(
     '#type' => 'select',
+    '#title' => t("Select entity type"),
     '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
     '#options' => $entity_options,
     '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
@@ -370,8 +371,10 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       ),
     );
 
-    $properties = $entity_info['properties'];
-    $properties = stanford_capx_filter_properties($entity_machine_name, $properties);
+    $properties = isset($entity_info['properties']) ? $entity_info['properties'] : array();
+    if (!empty($properties)) {
+      $properties = stanford_capx_filter_properties($entity_machine_name, $properties);
+    }
 
     foreach ($properties as $property_machine_name => $prop_info) {
 

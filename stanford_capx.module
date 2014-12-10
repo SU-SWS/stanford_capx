@@ -38,6 +38,9 @@ $CAP_RESTRICTED_ENTITY_TYPES = array(
   'comment',
   'taxonomy_vocabulary',
   'field_collection_item',
+  'redirect',
+  'wysiwyg_profile',
+  'menu_link',
 );
 
 global $CAP_RESTRICTED_FIELD_PROPERTIES;
