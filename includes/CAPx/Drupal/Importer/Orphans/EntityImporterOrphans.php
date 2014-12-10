@@ -172,6 +172,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
       'init_message' => t('Profile information orphan lookup is starting.'),
       'progress_message' => t('Profile orphans in progress. @current of @total completed.'),
       'error_message' => t('Profile information could not be processed. Please try again.'),
+      'finished' => 'stanford_capx_orphan_check_batch_finished',
     );
 
     $chunk = array_chunk($profiles, $limit);

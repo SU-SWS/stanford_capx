@@ -382,6 +382,22 @@ function stanford_capx_importer_batch_finished($success, $results, $operations) 
   }
 }
 
+/**
+ * Batch finished callback.
+ * @param  [type] $success    [description]
+ * @param  [type] $results    [description]
+ * @param  [type] $operations [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_orphan_check_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t("Check for orphans completed."), "status");
+  }
+  else {
+    drupal_set_message(t("Check for orphans failed. Please try again."), "error");
+  }
+}
+
 // END CRON AND BATCH
 // /////////////////////////////////////////////////////////////////////////////
 
