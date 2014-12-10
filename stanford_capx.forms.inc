@@ -880,7 +880,7 @@ function stanford_capx_mapper_form_validate_element_set_messages() {
       ));
 
     drupal_set_message(
-      t('The following selectors did not match an element in the profile schema. Try using the !databrowser to find a valid selector.!warnings',
+      t('The following selectors did not match an element in the profile schema but may be valid. If you know the selector is valid please disregard this message. Try using the !databrowser to find a valid selector.!warnings',
         array(
           '!warnings' => $field_warnings_list,
           '!databrowser' => $browser_link,
@@ -1986,6 +1986,7 @@ function _stanford_capx_valid_jsonpaths() {
     // '$.documents.cv',
     // '$.documents.resume',
     // '$.affiliations',
+    '$.profileID',
   );
 }
 
