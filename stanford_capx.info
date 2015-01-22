@@ -3,6 +3,7 @@ description = Provides the ability to import profiles into existing entity types
 core = 7.x
 package = Stanford CAPx
 project = stanford_capx
+version = 7.x-1.0
 
 dependencies[] = entity
 dependencies[] = date
@@ -21,3 +22,6 @@ files[] = includes/views/views_handler_field_importer_edit_link.inc
 files[] = includes/views/views_handler_field_importer_sync_profiles.inc
 files[] = includes/views/views_handler_field_importer_orphan_profiles.inc
 files[] = includes/views/views_handler_field_capx_profile_id.inc
+
+project status url = https://github.com/SU-SWS/stanford_capx
+
