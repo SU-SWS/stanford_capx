@@ -175,7 +175,7 @@ function stanford_capx_admin_config_help() {
   $content .= "</li></ol>";
   $content .= "<p>&nbsp;</p>";
 
-  $content .= "<h2>" . t("Autentication credentials") . "</h2>";
+  $content .= "<h2>" . t("Authentication credentials") . "</h2>";
   $content .= "<p>" . t("Authentication credentials allow you to connect to the CAP API and import content into your website.") . "</p>";
   $content .= "<p>" . t("To get authentication credentials, file a !helpsu to Administrative Applications/CAP Stanford Profiles.", array("!helpsu" => l(t("HelpSU request"), "https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP&dtemplate=CAP-OAuth-Info"))) . "</p>";
   $content .= "<p>&nbsp;</p>";
