@@ -12,7 +12,7 @@ The **Schema Information** provided by the CAP API tells your website what profi
 
 If you are not seeing the information you are looking for, click on the **Get schema information** button to sync the latest information from the CAP API to your site.
 
-##Syncronization Settings
+##Synchronization Settings
 
 ###Batch, or cron, processing limit
 

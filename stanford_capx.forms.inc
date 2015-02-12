@@ -1189,8 +1189,8 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
   // -–-–-–-–-–-–-–-–-–-–-
 
   $form['cron'] = array(
-    '#title' => t('Automatic syncronization options (CRON)'),
-    '#description' => t("The CAPx module is set up to provide automatic syncronization of your profiles. Below are a number of controls to adjust how often they are updated. These options require cron to be configured. For more information about setting up and configuring cron please see the !docs", array("!docs" => l(t("drupal documenation."), "https://www.drupal.org/cron"))),
+    '#title' => t('Automatic synchronization options (CRON)'),
+    '#description' => t("The CAPx module is set up to provide automatic synchronization of your profiles. Below are a number of controls to adjust how often they are updated. These options require cron to be configured. For more information about setting up and configuring cron please see the !docs", array("!docs" => l(t("drupal documenation."), "https://www.drupal.org/cron"))),
     '#type' => 'fieldset',
     '#collapsed' => !empty($importer),
     '#collapsible' => TRUE,
@@ -1910,8 +1910,8 @@ function stanford_capx_config_settings_form($form, &$form_state) {
 
   $form['variables'] = array(
     '#type' => 'fieldset',
-    '#title' => t("Syncronization settings"),
-    '#description' => t("Settings for update and syncronization actions with the CAP API."),
+    '#title' => t("Synchronization settings"),
+    '#description' => t("Settings for update and synchronization actions with the CAP API."),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
