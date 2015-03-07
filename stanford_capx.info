@@ -3,7 +3,7 @@ description = Provides the ability to import profiles into existing entity types
 core = 7.x
 package = Stanford CAPx
 project = stanford_capx
-version = 7.x-1.0
+version = 7.x-1.1
 
 dependencies[] = entity
 dependencies[] = date
