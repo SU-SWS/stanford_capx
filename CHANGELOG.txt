@@ -1,0 +1,10 @@
+Stanford CAPx x.x-x.x, xxxx-xx-xx
+---------------------------------
+
+Stanford CAPx 7.x-1.1, 2015-03-06
+---------------------------------
+By jbickar: 
+  -Fixed typos in labels
+  -Added LICENSE.txt
+  -Added CHANGELOG.txt
+
