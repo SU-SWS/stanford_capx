@@ -137,6 +137,9 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
     if (isset($auth_test->token)) {
       $token = $auth_test->token;
       $end_test = CAPxConnection::testApiConnection($token, $endpoint);
+      if (!$end_test->status) {
+        form_set_error("stanford_capx_api_base_url", t("Could not connect to API endpoint."));
+      }
     }
 
   }
