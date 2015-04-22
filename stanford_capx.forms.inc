@@ -1601,6 +1601,12 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
 
     case "nothing":
     default:
+
+      // Remove the entries from the capx tables.
+      db_delete("capx_profiles")
+        ->condition("importer", $machine_name)
+        ->execute();
+
       drupal_set_message(t("All @type were left unchanged.", array("@type" => $type)), "status");
       break;
   }
