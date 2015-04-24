@@ -137,6 +137,9 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
     if (isset($auth_test->token)) {
       $token = $auth_test->token;
       $end_test = CAPxConnection::testApiConnection($token, $endpoint);
+      if (!$end_test->status) {
+        form_set_error("stanford_capx_api_base_url", t("Could not connect to API endpoint."));
+      }
     }
 
   }
@@ -1598,6 +1601,12 @@ function stanford_capx_admin_config_importer_delete_submit($form, $form_state) {
 
     case "nothing":
     default:
+
+      // Remove the entries from the capx tables.
+      db_delete("capx_profiles")
+        ->condition("importer", $machine_name)
+        ->execute();
+
       drupal_set_message(t("All @type were left unchanged.", array("@type" => $type)), "status");
       break;
   }
