@@ -61,6 +61,7 @@ class EntityMapper extends MapperAbstract {
       $fieldInfoField = field_info_field($fieldName);
       if ($fieldInfoField) {
         $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
+
         if ($fieldInfoInstance) {
           $info = array();
 
@@ -95,6 +96,11 @@ class EntityMapper extends MapperAbstract {
               watchdog('stanford_capx_jsonpath', $message, $message_vars);
               continue;
             }
+          }
+
+          // If there is no data to map just carry on.
+          if (empty($info)) {
+            continue;
           }
 
           // Widgets can change the way the data needs to be parsed. Provide
