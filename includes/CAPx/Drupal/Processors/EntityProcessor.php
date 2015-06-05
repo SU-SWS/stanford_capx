@@ -11,10 +11,11 @@ use CAPx\Drupal\Util\CAPx;
 
 class EntityProcessor extends ProcessorAbstract {
 
-  /**
-   * Wrapped Drupal entity to be processed.
-   */
+  // Wrapped Drupal entity to be processed.
   protected $entity;
+
+  // Skip etag check.
+  protected $force = FALSE;
 
   /**
    * Process entity.
@@ -57,7 +58,7 @@ class EntityProcessor extends ProcessorAbstract {
       // Check to see if the etag has changed. We can avoid processing a profile
       // if the etag is unchanged.
 
-      if ($this->isETagDifferent()) {
+      if ($this->isETagDifferent() || $this->skipEtagCheck()) {
         $entity = entity_metadata_wrapper($entityType, $entity);
         $entity = $this->updateEntity($entity, $data, $mapper);
         $this->setStatus(3, 'Etag expired. Profile was updated.');
@@ -201,6 +202,19 @@ class EntityProcessor extends ProcessorAbstract {
   protected function getEntity() {
     return $this->entity;
   }
+
+  /**
+   * [skipEtagCheck description]
+   * @param  boolean $bool [description]
+   * @return [type]        [description]
+   */
+  public function skipEtagCheck($bool = NULL) {
+    if (is_bool($bool)) {
+      $this->force = $bool;
+    }
+    return $this->force;
+  }
+
 
 
 }

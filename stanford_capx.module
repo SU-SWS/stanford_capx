@@ -638,9 +638,12 @@ function stanford_capx_profile_update($profile_id, $importer) {
 
   $processor = new EntityProcessor($mapper, $profile);
   $processor->setEntityImporter($importer);
+  $processor->skipEtagCheck(TRUE);
   $processor->execute(TRUE);
 
   $message = $processor->getStatusMessage();
+
+  drupal_set_message($message);
 
   // Log some information.
   watchdog('stanford_capx_profile_force_update', check_plain($message) . " | " . check_plain($profile['displayName']), array(), WATCHDOG_INFO);

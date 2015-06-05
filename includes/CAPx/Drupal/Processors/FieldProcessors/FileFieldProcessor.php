@@ -162,8 +162,10 @@ class FileFieldProcessor extends FieldTypeProcessor {
    */
   public function getFileName($data) {
 
+    $salt = time();
+
     $extension = $this->getExtentionByType($data['contentType']);
-    $filename = md5($data['url']) . $extension;
+    $filename = md5($data['url'] . $salt) . $extension;
 
     return $filename;
   }
