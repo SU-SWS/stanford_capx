@@ -4,7 +4,7 @@ The **connect** tab is where you add your username and password to connect to th
 
 ##Authorization
 
-Before you get started you will need to have authentication credentials. To get authentication credentials,[file a HelpSU request] (https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP&dtemplate=CAP-OAuth-Info) to Administrative Applications/CAP Stanford Profiles.
+Before you get started you will need to have authentication credentials. To get authentication credentials,[file a HelpSU request] (https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP_API&dtemplate=CAP-OAuth-Info) to Administrative Applications/CAP Stanford Profiles.
 
 **Note:** Client ID and Password is specifically for the CAPx module. This is not your SUNet ID or Drupal username and password.
 
