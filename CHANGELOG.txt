@@ -1,9 +1,23 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-1.2, 2015-07-06
+---------------------------------
+Changes since 7.x-1.1:
+By sheamck:
+  - Test endpoint and return error on connect form submission
+  - Remove capx_profiles records for entities that were left unchanged by
+    a deleted importer so that node edit form does not error out
+  - Fix for images where 1x1 blank image was being returned.
+  - Skip unmapped fields was missing a continue where data was empty
+  - Created a force update function for the update single profile where it
+    skips etag check and set files to have a new name when they are saved
+  - Changed issue collector to go to new Jira project
+  - Updated HELPSU request url
+
 Stanford CAPx 7.x-1.1, 2015-03-06
 ---------------------------------
-By jbickar: 
+By jbickar:
   -Fixed typos in labels
   -Added LICENSE.txt
   -Added CHANGELOG.txt
