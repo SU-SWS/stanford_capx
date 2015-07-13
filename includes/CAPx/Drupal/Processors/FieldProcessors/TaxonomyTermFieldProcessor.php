@@ -70,7 +70,14 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
         if (is_bool($value)) {
           $termName = trim($key);
         }
-        $return[$column][] = $this->ensureTerm($termName, $vocabulary);
+
+        $ensured = $this->ensureTerm($termName, $vocabulary);
+
+        if (is_bool($value) && !$value) {
+          continue;
+        }
+
+        $return[$column][] = $ensured;
       }
 
     }
