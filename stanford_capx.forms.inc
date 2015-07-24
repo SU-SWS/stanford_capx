@@ -1281,7 +1281,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#description' => t('Orphan profiles are profiles that are removed from the CAP API or from the importer configuration. Unpublished option only works on node entities and all other types will be left unchanged.'),
     '#type' => "select",
     '#options' => $action_options,
-    '#default_value' => $default_action,
+    '#default_value' => (isset($importer->orphan_action) && !empty($importer->orphan_action)) ? $importer->orphan_action : $default_action,
     '#prefix' => '<div id="orphan-action-wrapper">',
     '#suffix' => '</div>',
   );
