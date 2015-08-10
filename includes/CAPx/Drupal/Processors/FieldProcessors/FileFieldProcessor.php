@@ -50,7 +50,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
       return array();
     }
 
-    foreach ($data as $index => $value) {
+    foreach ($data as $value) {
       // Validate we have required data.
       if (empty($value['contentType']) || empty($value['url'])) {
         $this->logIssue(new \Exception(t('Missing required information for field processor.')));
@@ -76,7 +76,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
         $lastImported = $field_values['timestamp'];
         // If the modified timestamp is the same as the servers then we don't need to update anything.
         if ($lastModified <= $lastImported) {
-          $return[$field_values['fid']][] = $field_values['fid'];
+          $return['fid'][] = $field_values['fid'];
           continue;
         }
       }
