@@ -216,7 +216,6 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     $this->fieldName = $name;
   }
 
-
   /**
    * Setter function
    * @param string $type The field type.
