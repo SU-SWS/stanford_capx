@@ -101,6 +101,18 @@ class EntityProcessor extends ProcessorAbstract {
 
     $entity = $mapper->execute($entity, $data);
 
+    // There is a possiblility that a field or property had an error while being
+    // processed. These errors are stored for us to get later so that no one
+    // field stops the processing of an entity. If there was an error somewhere
+    // the eTag should be invalidated so that this entity gets updates on the
+    // next import run.
+    $errors = $mapper->getErrors();
+
+    if (!empty($errors)) {
+      // If there was an error on the field mapping set the etag to errors.
+      $data['meta']['etag'] = "errors";
+    }
+
     // Nodes have special sauces.
     if ($entity->type() == "node") {
       // Set up default values, if required.

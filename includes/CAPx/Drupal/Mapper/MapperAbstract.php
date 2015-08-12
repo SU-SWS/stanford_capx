@@ -23,6 +23,9 @@ abstract class MapperAbstract implements MapperInterface {
   // Importer machine name this mapper is attached to.
   protected $importer;
 
+  // Error storage so they can be fetched after everything has run.
+  protected $errors = array();
+
 
   /**
    * Merges default configuration options with the passed in set.
@@ -168,6 +171,8 @@ abstract class MapperAbstract implements MapperInterface {
    *
    * @return bool
    *  Mapper status.
+   *
+   * @todo finish this.
    */
   public function valid($importer) {
     return TRUE;
@@ -190,5 +195,26 @@ abstract class MapperAbstract implements MapperInterface {
   public function setImporter($importer) {
     $this->importer = $importer;
   }
+
+  /**
+   * Adds an error to the storage array.
+   * @param mixed $error
+   *   Could be anything really. Most likely an exception object.
+   */
+  protected function setError($error) {
+    $this->errors[] = $error;
+  }
+
+  /**
+   * Returns and array of error or false if none.
+   * @return [type] [description]
+   */
+  public function getErrors() {
+    if (!empty($this->errors)) {
+      return $this->errors;
+    }
+    return FALSE;
+  }
+
 
 }
