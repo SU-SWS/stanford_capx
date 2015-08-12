@@ -148,8 +148,15 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   protected function makeRequest($endpoint, $params = array(), $extraOptions = NULL) {
     $response = $this->makeRawRequest($endpoint, $params, $extraOptions);
 
-    // JSON decode a valid response.
-    return $response ? $response->json() : $response;
+    try {
+      $json = $response->json();
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+
+    // JSON decoded valid response.
+    return $json;
   }
 
   /**
