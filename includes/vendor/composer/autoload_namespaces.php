@@ -9,6 +9,4 @@ return array(
     'phpDocumentor' => array($vendorDir . '/phpdocumentor/reflection-docblock/src'),
     'Prophecy\\' => array($vendorDir . '/phpspec/prophecy/src'),
     'Peekmo\\JsonPath' => array($vendorDir . '/peekmo/jsonpath/src'),
-    'Guzzle\\Tests' => array($vendorDir . '/guzzlehttp/guzzle/tests'),
-    'Guzzle' => array($vendorDir . '/guzzlehttp/guzzle/src'),
 );

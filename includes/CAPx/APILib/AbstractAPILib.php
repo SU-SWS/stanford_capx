@@ -8,7 +8,7 @@
 
 namespace CAPx\APILib;
 use CAPx\APILib\AbstractAPILibInterface;
-use \Guzzle\Http\Client as GuzzleClient;
+use GuzzleHttp\Client as GuzzleClient;
 
 abstract class AbstractAPILib implements AbstractAPILibInterface {
 
@@ -29,7 +29,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
    * @param array $options
    *   An array of HTTP options to use with the HTTP client.
    */
-  public function __construct(GuzzleClient $client, $options = null) {
+  public function __construct($client, $options = null) {
 
     // Inject the client.
     $this->setClient($client);
@@ -148,8 +148,13 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
   protected function makeRequest($endpoint, $params = array(), $extraOptions = NULL) {
     $response = $this->makeRawRequest($endpoint, $params, $extraOptions);
 
+    if (!$response) {
+      return FALSE;
+    }
+
     try {
-      $json = $response->json();
+      $body = $response->getBody();
+      $json = drupal_json_decode($body->getContents());
     }
     catch (\Exception $e) {
       return FALSE;
@@ -193,8 +198,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     // Build and make the request.
     try {
 
-      $request = $client->get($endpoint, $params, $options);
-      $response = $request->send();
+      $response = $client->get($endpoint, $options);
 
       // Store the last response for later use.
       $this->setLastResponse($response);
@@ -204,11 +208,9 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
 
     }
     catch(\Exception $e) {
-      // drupal_set_message(check_plain($e->getMessage()), 'error');
+      $code = $e->getCode();
       watchdog('AbstractAPILib', check_plain($e->getMessage()), array(), WATCHDOG_DEBUG);
     }
-
-
 
     // @todo: Handle non-valid response codes.
     switch ($code) {

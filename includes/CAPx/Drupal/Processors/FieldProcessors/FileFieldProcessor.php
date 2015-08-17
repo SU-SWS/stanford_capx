@@ -147,7 +147,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
     $client = new \CAPx\APILib\HTTPClient();
     $guzzle = $client->getHttpClient();
     try {
-      $response = $guzzle->get($data['url'])->send();
+      $response = $guzzle->get($data['url']);
     }
     catch (\Exception $e) {
       $this->logIssue($e);
@@ -157,7 +157,7 @@ class FileFieldProcessor extends FieldTypeProcessor {
       $this->logIssue(new \Exception(t('Could not fetch file from URL: @url', array('@url' => $data['url']))));
     }
     else {
-      $file = $response->getBody(TRUE);
+      $file = $response->getBody();
     }
 
     return $file;
