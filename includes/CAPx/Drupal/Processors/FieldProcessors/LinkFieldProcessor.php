@@ -15,7 +15,6 @@ class LinkFieldProcessor extends FieldTypeProcessor {
    */
   public function put($data) {
     $data = $this->prepareData($data);
-
     parent::put($data);
   }
 

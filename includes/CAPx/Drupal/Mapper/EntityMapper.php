@@ -31,12 +31,35 @@ class EntityMapper extends MapperAbstract {
     $this->setEntity($entity);
 
     // Mappy map.
-    $this->mapFields($data);
-    $this->mapProperties($data);
-    // Field Collections are special. Special means more code. They get their
-    // own mapProcess even though they are sort of a field.
-    $this->mapFieldCollections($data);
+    // Each of the mapping functions will go through all of their values and
+    // throw one error if there was a problem somewhere in the loop. The error
+    // is logged to watchdog so handle any errors in each of these by throwing
+    // only one error up a level.
 
+    try {
+      $this->mapFields($data);
+    }
+    catch (\Exception $e) {
+      $this->setError($e);
+    }
+
+    try {
+      $this->mapProperties($data);
+    }
+    catch (\Exception $e) {
+      $this->setError($e);
+    }
+
+    try {
+      // Field Collections are special. Special means more code. They get their
+      // own mapProcess even though they are sort of a field.
+      $this->mapFieldCollections($data);
+    }
+    catch (\Exception $e) {
+      $this->setError($e);
+    }
+
+    // Even if there were errors we should have an entity by this point.
     return $entity;
   }
 
@@ -54,6 +77,7 @@ class EntityMapper extends MapperAbstract {
 
     $config = $this->getConfig();
     $entity = $this->getEntity();
+    $error = FALSE;
 
     // Loop through each field and run a field processor on it.
     foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
@@ -88,6 +112,7 @@ class EntityMapper extends MapperAbstract {
               $info[$key] = $this->getRemoteDataByJsonPath($data, $dataPath);
             }
             catch (\Exception $e) {
+              $error = TRUE;
               $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
               $message_vars = array(
                 '@path' => $dataPath,
@@ -109,8 +134,15 @@ class EntityMapper extends MapperAbstract {
           $field = $fieldInfoField['type'];
 
           // Create a new field processor and let it do its magic.
-          $fieldProcessor = new FieldProcessor($entity, $fieldName);
-          $fieldProcessor->field($field)->widget($widget)->put($info);
+          try {
+            $fieldProcessor = new FieldProcessor($entity, $fieldName);
+            $fieldProcessor->field($field)->widget($widget)->put($info);
+          }
+          catch (\Exception $e) {
+            // IF there was an exception we want to carry on processing but let
+            // the entity mapper know. Throw an error after everything.
+            $error = TRUE;
+          }
 
           // Allow altering of an entity after this process.
           drupal_alter('capx_post_map_field', $entity, $fieldName);
@@ -120,6 +152,12 @@ class EntityMapper extends MapperAbstract {
 
     // Set the entity again for changes.
     $this->setEntity($entity);
+
+    // If there was an error we should let the previous function know.
+    if ($error) {
+      throw new \Exception("Error Processing Fields.");
+    }
+
   }
 
   /**
@@ -136,6 +174,7 @@ class EntityMapper extends MapperAbstract {
 
     $config = $this->getConfig();
     $entity = $this->getEntity();
+    $error = FALSE;
 
     // Loop through each property and run a property processor on it.
     foreach ($config['properties'] as $propertyName => $remoteDataPath) {
@@ -143,6 +182,7 @@ class EntityMapper extends MapperAbstract {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }
       catch(\Exception $e) {
+        $error = TRUE;
         $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
         $message_vars = array(
           '@path' => $remoteDataPath,
@@ -153,12 +193,24 @@ class EntityMapper extends MapperAbstract {
       }
 
       // Let the property processor do its magic.
-      $propertyProcessor = new PropertyProcessor($entity, $propertyName);
-      $propertyProcessor->put($info);
+      try {
+        $propertyProcessor = new PropertyProcessor($entity, $propertyName);
+        $propertyProcessor->put($info);
+      }
+      catch (\Exception $e) {
+        // We want to continue even if there is an error so set this flag and
+        // throw again later.
+        $error = TRUE;
+      }
     }
 
     // Set the entity again for changes.
     $this->setEntity($entity);
+
+    // If there was an error we should let the previous function know.
+    if ($error) {
+      throw new \Exception("Error Processing Fields.");
+    }
   }
 
   /**

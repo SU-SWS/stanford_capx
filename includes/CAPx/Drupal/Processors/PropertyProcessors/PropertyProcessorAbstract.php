@@ -92,17 +92,21 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
    *
    * @param \Exception $e
    *   Optional.
+   * @param  bool $invalidateEtag
+   *   Optionally invalidate the eTag. Defaults to TRUE.
    */
-  public function logIssue(\Exception $e = NULL) {
-    $entity = $this->getEntity();
+  public function logIssue(\Exception $e = NULL, $invalidateETag = TRUE) {
+
     // BEAN is returning its delta when using this.
     // $entityId = $entity->getIdentifier();
 
+    $entity = $this->getEntity();
     $entityType = $entity->type();
     $entityRaw = $entity->raw();
     list($entityId, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
 
     $logText = 'There was an issue setting property value for %propery on %type id: %profileId.';
+
     if (isset($e)) {
       $logText .= ' ';
       $logText .= get_class($e);
@@ -119,6 +123,13 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
       ),
       WATCHDOG_ERROR
     );
+
+    // Now throw $e so that the mapper knows something went wrong.
+    if (isset($e)) {
+      throw $e;
+    }
+
   }
+
 
 }
