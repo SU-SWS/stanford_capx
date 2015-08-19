@@ -23,7 +23,7 @@
  */
 
 namespace CAPx\APILib;
-use \Guzzle\Http\Client as GuzzleClient;
+use GuzzleHttp\Client as GuzzleClient;
 
 class HTTPClient {
 
@@ -43,7 +43,7 @@ class HTTPClient {
    * Live... live!
    */
   public function __construct() {
-    $client = new GuzzleClient();
+    $client = new GuzzleClient(['defaults' => ['auth' => 'oauth']]);
     $this->setHttpClient($client);
   }
 

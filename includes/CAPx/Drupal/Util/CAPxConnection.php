@@ -18,6 +18,11 @@ class CAPxConnection {
    */
   public static function testConnection() {
     $auth = CAPxConnection::testAuthConnection();
+
+    if ($auth->status && !empty($auth->token)) {
+      variable_set('stanford_capx_token', $auth->token);
+    }
+
     $api  = CAPxConnection::testApiConnection();
 
     if ($auth->status && $api->status) {

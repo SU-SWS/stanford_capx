@@ -21,6 +21,6 @@ interface AbstractAPILibInterface {
    * @param GuzzleClient $client
    *   A GuzzleClient object
    */
-  public function __construct(GuzzleClient $client);
+  public function __construct($client);
 
 }

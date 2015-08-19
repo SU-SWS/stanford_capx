@@ -23,7 +23,9 @@
 namespace CAPx\APILib\AuthLib;
 
 use CAPx\APILib\AbstractAPILib as APILib;
-use \Guzzle\Http\Client as GuzzleClient;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Subscriber\Oauth\Oauth1;
 
 class AuthLib extends APILib {
 
@@ -127,38 +129,29 @@ class AuthLib extends APILib {
     $code = null;
 
     try {
-
-      // Contact the server.
-      $request = $client->get($endpoint, array(), array('query' => $parameters));
-
-      // Set the username and password. Any will allow for a number of different
-      // authentication methods and will automagically find the right one.
-      $request->setAuth($username, $password, 'any');
-
-      // Make the call and save the response.
-      $response = $request->send();
-
-      // Store the last response for later use.
-      $this->setLastResponse($response);
-
-      // Validate response code.
-      $code = $response->getStatusCode();
-
+      $response = $client->get($endpoint, ['query' => $parameters, 'auth' => [$username, $password]]);
     }
     catch(\Exception $e) {
       // drupal_set_message(check_plain($e->getMessage()), 'error');
       watchdog('AuthLib', check_plain($e->getMessage()), array(), WATCHDOG_DEBUG);
     }
 
+    $code = $response->getStatusCode();
+    $this->setLastResponse($response);
+
     // @todo: handle non 200 responses with error logging.
     switch ($code) {
       case '200':
         try {
-          $json = $response->json();
+          $body = $response->getBody();
+          $json = drupal_json_decode($body->getContents());
+          if (empty($json)) {
+            throw new \Exception("Could not get JSON from body.");
+          }
           $this->setAuthApiToken($json['access_token']);
           $this->setAuthApiTokenExpires($json['expires_in']);
         }
-        catch(\Guzzle\Common\Exception\RuntimeException $e) {
+        catch(\Exception $e) {
           drupal_set_message('Could not parse json response. Please check endpoint configuration.', 'error', FALSE);
           return $this;
         }
