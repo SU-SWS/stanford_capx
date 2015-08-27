@@ -31,6 +31,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#title' => t('Connection Status'),
     '#collapsible' => TRUE,
   );
+
   $form['status']['status'] = array(
     '#markup' => stanford_capx_connection_status_block(),
   );
@@ -41,6 +42,7 @@ function stanford_capx_forms_connect_form($form, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => $connection->status,
   );
+
   $form['auth']['description'] = array(
     '#markup' => t('Please enter your authentication information for the CAP API.'),
   );
@@ -379,7 +381,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       $properties = stanford_capx_filter_properties($entity_machine_name, $properties);
     }
 
-    foreach ($properties as $property_machine_name => $prop_info) {
+    foreach($properties as $property_machine_name => $prop_info) {
 
       $form['field-mapping'][$property_container][$property_machine_name] = array(
         '#type' => 'container',

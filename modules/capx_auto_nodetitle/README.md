@@ -4,7 +4,7 @@
 Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama)
 [Changelog.txt](CHANGELOG.txt)
 
-This module enables support for the auto_nodetitle contrib module by removing the title requirement on the mapper and hiding the option.
+This module enables support for the auto_nodetitle contrib module by removing the title requirement on the mapper.
 
 Installation
 ---
