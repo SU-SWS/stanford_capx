@@ -25,7 +25,7 @@ class UserProcessor extends EntityProcessor {
 
     drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
 
-    // Create an empty entity
+    // Create an empty entity.
     $entity = entity_create($entityType, $properties);
 
     // Wrap it up baby!
@@ -35,7 +35,7 @@ class UserProcessor extends EntityProcessor {
 
     drupal_alter('capx_post_entity_create', $entity);
 
-    // Write a new record
+    // Write a new record.
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
     CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
