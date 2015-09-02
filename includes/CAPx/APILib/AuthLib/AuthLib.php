@@ -134,7 +134,9 @@ class AuthLib extends APILib {
     catch(\Exception $e) {
       // drupal_set_message(check_plain($e->getMessage()), 'error');
       watchdog('AuthLib', check_plain($e->getMessage()), array(), WATCHDOG_DEBUG);
+      return $this;
     }
+
 
     $code = $response->getStatusCode();
     $this->setLastResponse($response);
