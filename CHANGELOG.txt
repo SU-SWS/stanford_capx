@@ -1,9 +1,25 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-1.2, 2015-09-10
+---------------------------------
+
+- Upgraded HTTP Client from Guzzle 3.7.4 -> 6.0.2
+- User entities when created from CAP now get a random password assigned to them.
+- Fixed permission issues with the profiles list view
+- Created new module capx_auto_nodetitle module to allow and integrate mapping with content types that use the auto_nodetitle contrib module.
+- New capx_auto_nodetitle module allows for better mapping with stanford_person
+- Performance improvement with the handling of files from the CAP API. Now files don't have to be downloaded to check to see if they have changed.
+- Performance improvement with the handling of files on the Drupal side of things where previously, copies of the file were made on each profile update and now they are updated in place.
+- Updates to profiles that produce errors are now marked an invalidated so that the next time an automatic sync happens the profile tries to get updates again. Previously, if there was an error in a profile the error was logged and the profile stayed put until a change happened on the CAP API side of things or a forced update happened.
+- Fixed a bug where non-mapped fields were losing their data.
+- Fixed a bug where updated profile images were being updated but the automatic thumnails (imagecache) were not.
+- Changed the Jira project the issue collector module goes in to so that goes straight into the backlog.
+- And a number of other smaller bug fixes and performance improvements.
+
 Stanford CAPx 7.x-1.1, 2015-03-06
 ---------------------------------
-By jbickar: 
+By jbickar:
   -Fixed typos in labels
   -Added LICENSE.txt
   -Added CHANGELOG.txt
