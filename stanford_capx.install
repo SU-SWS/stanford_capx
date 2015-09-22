@@ -6,14 +6,7 @@
 /**
  * Implements hook_install().
  */
-function stanford_capx_install() {
-  // Take our views and save them to the database.
-  module_load_include("inc", "stanford_capx", "stanford_capx.views_default");
-  $views = stanford_capx_views_default_views();
-  foreach ($views as $view) {
-    $view->save();
-  }
-}
+function stanford_capx_install() {}
 
 /**
  * Implements hook_uninstall().
@@ -255,7 +248,6 @@ function stanford_capx_requirements($phase) {
   $requirements = array();
 
   switch ($phase) {
-    case 'install':
     case 'runtime':
       // Ensure the modules' private files directory exists and is writable.
       if (!variable_get('file_private_path', FALSE)) {
