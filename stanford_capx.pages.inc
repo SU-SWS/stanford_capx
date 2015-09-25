@@ -80,7 +80,7 @@ function stanford_capx_admin_config_settings() {
 
   $has_orgs = \CAPx\Drupal\Organizations\Orgs::checkOrgs();
   if (!$has_orgs) {
-    drupal_set_message(t('The organization codes are not available. You should sync with the API now.'), 'warning');
+    drupal_set_message(t('The organization codes are not available. You should sync with the API now.'), 'warning', FALSE);
   }
 
   // Organizations
