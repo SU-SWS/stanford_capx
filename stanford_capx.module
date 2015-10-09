@@ -281,6 +281,15 @@ function stanford_capx_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_flush_caches().
+ */
+function stanford_capx_flush_caches() {
+  // Sort of hacky but this works...
+  variable_del("stanford_capx_admin_messages");
+  return array();
+}
+
 // Cron
 // /////////////////////////////////////////////////////////////////////////////
 
