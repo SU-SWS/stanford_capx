@@ -97,15 +97,21 @@ abstract class MapperAbstract implements MapperInterface {
   public function addConfig($settings) {
 
     $config = $this->getConfig();
-    $mapper = $this->getMapper();
+//    $mapper = $this->getMapper();
 
     $settings['fieldCollections'] = array();
 
     if (isset($settings['collections'])) {
       foreach ($settings['collections'] as $fieldName => $fields) {
+
+        $mapper = new \stdClass();
+        $mapper->settings = array();
+        $mapper->settings['entity_type'] = "field_collection_item";
         $mapper->settings['bundle_type'] = $fieldName;
         $mapper->settings['fields'] = $fields;
         $mapper->settings['properties'] = array();
+        $mapper->settings['collections'] = array();
+
         $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($mapper);
         $settings['fieldCollections'][$fieldName]->addConfig($mapper->settings);
       }
