@@ -54,7 +54,7 @@ class CAPxMapper {
 
     $mapperConfig = self::loadMapper($key);
     if (empty($mapperConfig)) {
-      watchdog('stanford_capx_mapper_issue', 'Impossible to load mapping confiruration with %key key.', array('%key' => $key));
+      watchdog('stanford_capx_mapper_issue', 'Impossible to load mapping configuration with %key key.', array('%key' => $key));
     }
     else {
       $mapper = new EntityMapper($mapperConfig);
