@@ -338,7 +338,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     '#tree' => TRUE,
   );
 
-  $form['field-mapping']['help']['#markup'] = "<p>" . t("Using the fields below you are able to pull in data from the CAP API into your site. You do not have to input a setting for every field. Only use the fields that you want. The fields that you are importing data from the CAP API into will be locked and can only be changed by chaning the data on the CAP website.") . "</p>";
+  $form['field-mapping']['help']['#markup'] = "<p>" . t("Using the fields below you are able to pull in data from the CAP API into your site. You do not have to input a setting for every field. Only use the fields that you want. The fields that you are importing data from the CAP API into will be locked and can only be changed by changing the data on the CAP website.") . "</p>";
   $form['field-mapping']['help']['#markup'] .= "<p>" . t('Use the data browser to find the information you would like to map into the various different properties and fields below. You will need to use JSONPath syntax. For more information on JSONPath please read the documentation. ') . l('JSONPath Documentation →', 'http://goessner.net/articles/JsonPath/', array('attributes' => array('target' => '_blank'))) . "</p>";
 
 
