@@ -6,6 +6,7 @@ project = stanford_capx
 version = 7.x-1.2-php54
 
 dependencies[] = entity
+dependencies[] = block
 dependencies[] = date
 dependencies[] = date_api
 dependencies[] = encrypt (>= 2.0-beta3)
