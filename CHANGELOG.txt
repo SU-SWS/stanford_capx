@@ -1,6 +1,17 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-1.3-php54, 2015-10-19
+---------------------------------
+
+- Guzzle downgraded to 5.3 to support PHP 5.4
+- Support for auto_nodetitle
+- Create random password and set more default values for user creation
+- Removed filename salting and added timestamp check
+- Added Protection for bad json responses
+- No more duplication of files 
+- Importer checks timestamps before downloading files
+
 Stanford CAPx 7.x-1.2, 2015-09-10
 ---------------------------------
 
