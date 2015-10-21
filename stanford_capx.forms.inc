@@ -525,7 +525,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         $collection_container = $entity_machine_name . "-" . $bundle_machine_name . "-collections";
 
         // Fieldset for all fields on this entity -> bundle -> collection field
-        $form['field-mapping'][$collection_container] = array(
+        $form['field-mapping'][$collection_container][$field_machine_name] = array(
           '#type' => 'fieldset',
           '#title' => t('@name Field Collection', array("@name" => $field_machine_name)),
           '#description' => t(''),
