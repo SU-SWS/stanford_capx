@@ -943,19 +943,19 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $collections = @$values['field-mapping'][$entity . "-" . $bundle . "-collections"];
 
   // If there are field collections check to see if they are any values in them.
-  // if (!empty($collections)) {
-  //   foreach ($collections as $collection => $fields) {
-  //     foreach ($fields as $field_name => $values) {
-  //       $value = array_pop($values);
-  //       if (empty($value)) {
-  //         unset($collections[$collection][$field_name]);
-  //       }
-  //     }
-  //     if (empty($collections[$collection])) {
-  //       unset($collections[$collection]);
-  //     }
-  //   }
-  // }
+  if (!empty($collections)) {
+    foreach ($collections as $collection => $fields) {
+      foreach ($fields as $field_name => $values) {
+        $value = array_pop($values);
+        if (empty($value)) {
+          unset($collections[$collection][$field_name]);
+        }
+      }
+      if (empty($collections[$collection])) {
+        unset($collections[$collection]);
+      }
+    }
+  }
 
   // We have values!
   if (!empty($collections)) {
@@ -1009,7 +1009,10 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
       }
     }
   }
-  variable_set('stanford_capx_admin_messages', $messages);
+
+  if (!empty($messages)) {
+    variable_set('stanford_capx_admin_messages', $messages);
+  }
 
   // Are we sure we want this?
   drupal_goto('admin/config/capx/mapper');
@@ -1470,7 +1473,11 @@ function stanford_capx_importer_form_submit($form, &$form_state) {
       }
     }
   }
-  variable_set('stanford_capx_admin_messages', $messages);
+
+  if (!empty($messages)) {
+    variable_set('stanford_capx_admin_messages', $messages);
+  }
+
 }
 
 /**
