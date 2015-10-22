@@ -73,7 +73,10 @@ function capx_auto_nodetitle_mapper_form_alter_validate($form, &$form_state) {
     $removed_messages[] = $errors[$name];
     unset($errors[$name]);
   }
-  $_SESSION['messages']['error'] = array_diff($_SESSION['messages']['error'], $removed_messages);
+
+  if (!empty($removed_messages)) {
+    $_SESSION['messages']['error'] = array_diff($_SESSION['messages']['error'], $removed_messages);
+  }
 
   // Ok we are on a node look up the bundle ant settings in the variable table.
   $setting = variable_get("ant_" . $bundle_type, 0);
