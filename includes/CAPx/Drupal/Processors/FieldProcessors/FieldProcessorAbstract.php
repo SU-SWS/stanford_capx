@@ -126,7 +126,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
     }
 
     // If no key value was specified then assume the column key.
-    if (isset($data[0][0])) {
+    if (isset($data[0][0]) && is_array(($data[0][0]))) {
       foreach ($data[0] as $int => $value) {
         $return[$int][$columnKey] = $value;
       }
