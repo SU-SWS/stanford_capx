@@ -19,6 +19,18 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
   }
 
   /**
+   * @inheritdoc
+   */
+  public function repackageJsonDataForDrupal($data, $fieldInfo) {
+    $data = parent::repackageJsonDataForDrupal($data, $fieldInfo);
+    foreach ($data as $k => $v) {
+      $data[$k] = $v['tid'];
+    }
+    return $data;
+  }
+
+
+  /**
    * Prepares CAP API data to feet to Drupal field.
    *
    * @param array $data
@@ -109,7 +121,7 @@ class TaxonomyTermFieldProcessor extends FieldTypeProcessor {
       taxonomy_term_save($term);
     }
 
-    return $term->tid;
+    return $term;
   }
 
 }
