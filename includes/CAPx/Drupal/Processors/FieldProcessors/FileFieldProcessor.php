@@ -22,13 +22,15 @@ class FileFieldProcessor extends FieldTypeProcessor {
    * @see FieldProcessorAbstract::put()
    */
   public function put($data) {
-    $data = $this->process($data);
+    $processed = $this->process($data);
 
-    // Only put data if available...
-    if (!empty($data)) {
-      parent::put($data);
+    // If data was passed in but nothing came out of processing then something went wrong and we don't want to update
+    // the field.
+    if (!empty($data) && empty($processed)) {
+      return;
     }
 
+    parent::put($processed);
   }
 
   /**
