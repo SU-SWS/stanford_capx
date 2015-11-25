@@ -76,12 +76,13 @@ class FileFieldProcessor extends FieldTypeProcessor {
       // The filename never changes when the file is modified but there are timestamps available.
       // Check the local entity's timestamp against the one from the API in order to determine if the file has changed.
       $field_values = $entity->{$this->fieldName}->raw();
-      if (isset($field_values['timestamp'])) {
+
+      if (isset($field_values['timestamp']) && isset($value['lastModified'])) {
         // Timestamp from API.
         $lastModified = strtotime($value['lastModified']);
         // Local timestamp.
         $lastImported = $field_values['timestamp'];
-        // If the modified timestamp is the same as the servers then we don't need to update anything.
+        // If the modified timestamp is the same as the server's then we don't need to update anything.
         if ($lastModified <= $lastImported) {
           $return['fid'][] = $field_values['fid'];
           continue;
