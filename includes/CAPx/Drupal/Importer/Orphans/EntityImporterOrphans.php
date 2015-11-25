@@ -407,6 +407,19 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
         );
 
         drupal_write_record('capx_profiles', $record, $keys);
+
+        $options = $importer->getOptions();
+
+        // If the action was to unpublish let's re-publish the node.
+        if ($options['orphan_action'] == "unpublish") {
+          // Wrap it up.
+          $profile = entity_metadata_wrapper($entityType, $profile);
+          $profile->status->set(1);
+          $profile->save();
+        }
+
+        // Log the adoption.
+        watchdog('EntityImporterOrphans', "%title was adopted and is no longer an orphan in the importer %importername.", array("%title" => $profile->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
       }
 
     }
