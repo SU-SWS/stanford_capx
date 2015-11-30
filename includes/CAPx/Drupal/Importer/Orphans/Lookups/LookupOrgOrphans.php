@@ -82,6 +82,7 @@ class LookupOrgOrphans implements LookupInterface {
         // If the org code itself is in the list.
         if (in_array($org->tid, $keyTids)) {
           $found = TRUE;
+          break;
         }
 
         // Check if any of the parents orgs codes match one in the keyTids.
@@ -93,6 +94,7 @@ class LookupOrgOrphans implements LookupInterface {
           foreach ($parents as $parentTerm) {
             if (in_array($parentTerm->tid, $keyTids)) {
               $found = TRUE;
+              break;
             }
           }
         }

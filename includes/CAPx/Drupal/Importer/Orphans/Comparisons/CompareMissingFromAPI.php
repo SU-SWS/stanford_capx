@@ -26,7 +26,7 @@ class CompareMissingFromAPI implements ComparisonInterface {
 
     // No need to compare to anything. They are missing from the API.
     $orphaner->processOrphans($orphans['missing']);
-    unset($orphans['missing']);
+    // unset($orphans['missing']);
     return $orphans;
   }
 
