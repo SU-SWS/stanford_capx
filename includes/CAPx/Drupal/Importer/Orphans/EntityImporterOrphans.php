@@ -139,6 +139,11 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // Options. So we can just take one and run the process on that.
     $orphaned = array_pop($orphans);
 
+    // Small patch up fix.
+    if (isset($orphans["missing"])) {
+      $orphaned = array_merge($orphaned, $orphans["missing"]);
+    }
+
     $this->processOrphans($orphaned, $importer);
     $this->processAdopted($profiles, $orphaned);
 
