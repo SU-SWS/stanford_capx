@@ -25,7 +25,7 @@ function stanford_capx_admin_config_data_browser() {
   $output['refresh'] = drupal_get_form('stanford_capx_admin_config_data_browser_refresh');
 
   // Provide a place to render the tree.
-  $output['content']['#markup'] = '<div id="capx-schema"></div>';
+  $output['content']['#markup'] = '<div class="capx-schema-controls"></div><div id="capx-schema"></div>';
 
   // Load the CAP profile schema json.
   $schema = stanford_capx_schema_load('json');
@@ -35,7 +35,9 @@ function stanford_capx_admin_config_data_browser() {
   // @TODO: Cache this?
 
   // Attach the default jsTree CSS.
-  $output['#attached']['css'] = array($base . '/js/jqTree/jqtree.css');
+  $output['#attached']['css'] = array();
+  $output["#attached"]["css"][] = $base . '/js/jqTree/jqtree.css';
+  $output["#attached"]["css"][] = $base . '/css/stanford_capx.docs.css';
 
   // Attach libs, js & render the formatted array to Drupal.settings.
   $output['#attached']['js'] = array(
