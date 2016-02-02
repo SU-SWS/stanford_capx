@@ -234,19 +234,19 @@ function stanford_capx_admin_config_mapper() {
 function stanford_capx_admin_config_mapper_new() {
   $output = array();
 
+  // Add some css.
+  $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
+
   // Management Menu.
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
 
-  // Add some css.
-  $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
+  // Get and render the mapper form.
+  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form');
 
   // Data browser block.
   $block = block_load('stanford_capx', 'data_browser_launch');
   $output['content']['data_browser'] = _block_get_renderable_array(_block_render_blocks(array($block)));
-
-  // Get and render the mapper form.
-  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form');
 
   return $output;
 }

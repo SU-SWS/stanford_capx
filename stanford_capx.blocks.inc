@@ -228,7 +228,7 @@ function stanford_capx_data_browser_launch_block() {
   $rows[] = array('Staff type', '$.titles.*.type');
   $rows[] = array('Field of study', '$.education.*.fieldOfStudy');
   $rows[] = array('Type', '$.titles.*.type');
-  $output .= theme('table', array('rows' => $rows, 'header' => $header));
+  $output .= theme('table', array('rows' => $rows, 'header' => $header, 'sticky' => FALSE));
 
   return $output;
 }
