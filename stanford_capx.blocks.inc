@@ -194,9 +194,10 @@ function stanford_capx_data_browser_launch_block() {
   $rows[] = array('Body', '$.bio.html');
   $rows[] = array('Profile picture', '$.profilePhotos.bigger');
   $rows[] = array('Email', '$.primaryContact.email');
-  $rows[] = array('Last updated', '$.lastModified');
+  $rows[] = array('Profiles URL', '$.meta.links[1].href');
   $rows[] = array('-------------', "--------------");
-  $rows[] = array('Cohort', '$.maintainers.*.title');
+  // $rows[] = array('Cohort', '$.maintainers.*.title');
+  $rows[] = array('Affiliations', '$.affiliations');
   $rows[] = array('Job title short', '$.shortTitle.label.text');
   $rows[] = array('Job title long', '$.longTitle[0]');
   // $rows[] = array('Dissertation title', '');

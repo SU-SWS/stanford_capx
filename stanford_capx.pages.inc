@@ -258,8 +258,11 @@ function stanford_capx_admin_config_mapper_new() {
  */
 function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $output = array();
-  $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
 
+  // Add some css.
+  $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
+
+  $mapper = capx_cfe_load_by_machine_name($mapper_machine_name, 'mapper');
   if (!$mapper) {
     throw new Exception(t("Could not load a mapping with provided machine name. Please check url."));
   }
@@ -268,20 +271,16 @@ function stanford_capx_admin_config_mapper_edit($mapper_machine_name) {
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
 
-  // Add some css.
-  // drupal_add_css(drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css");
-  $output['#attached']['css'][] = drupal_get_path('module', 'stanford_capx') . "/css/stanford_capx.admin.css";
-
-  // Data browser block.
+  // In use block.
   $block = block_load('stanford_capx', 'mapper_in_use');
   $output['content']['mapper_in_use'] = _block_get_renderable_array(_block_render_blocks(array($block)));
+
+  // Render form.
+  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form', $mapper);
 
   // Data browser block.
   $block = block_load('stanford_capx', 'data_browser_launch');
   $output['content']['data_browser_launch'] = _block_get_renderable_array(_block_render_blocks(array($block)));
-
-  // Render form.
-  $output['content']['mapper_form'] = drupal_get_form('stanford_capx_mapper_form', $mapper);
 
   return $output;
 }

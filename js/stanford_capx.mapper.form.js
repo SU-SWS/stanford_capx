@@ -8,12 +8,12 @@ Drupal.behaviors.yourvariablehere = {
      * @return {[type]} [description]
      */
     var doHeight = function() {
-      var maxH = Math.round($(window).height() * 0.8);;
+      var maxH = Math.round($(window).height() * 0.7) - 30;
       var block = $("#block-stanford-capx-data-browser-launch");
 
       // If it is floating we can go a bit bigger.
       if (block.hasClass("is-floating")) {
-        maxH = Math.round($(window).height() * 0.95);
+        maxH = Math.round($(window).height() * 0.95) - 30;
       }
 
       block.css("height", maxH + "px");
@@ -22,14 +22,33 @@ Drupal.behaviors.yourvariablehere = {
 
     // Set this variable with the height of your sidebar + header.
     // ------------------------------------------------------------------------.
-    var offsetPixels = 200;
+    var theformraw = $("#stanford-capx-mapper-form")[0];
+    var thepageraw = $("html")[0];
+    var offsetForm = theformraw.getBoundingClientRect().top;
+    var offsetPage = thepageraw.getBoundingClientRect().top;
+
+    if (offsetForm < 0) {
+      offsetForm *= -1;
+    }
+
+    var offsetPixels = offsetPage + offsetForm;
+
+    if (offsetPixels < 0) {
+      offsetPixels *= -1;
+    }
 
     $(window).scroll(function() {
-      if ($(window).scrollTop() > offsetPixels) {
+
+      var scrollTop = $(window).scrollTop() + 30;
+
+      if (scrollTop > offsetPixels) {
         var block = $("#block-stanford-capx-data-browser-launch");
+        var new_position = Math.round(scrollTop - offsetPixels);
+
         block.css({
             "position": "relative",
-            "top": Math.round($(window).scrollTop() - offsetPixels) + 30 + "px"
+            "top": new_position + "px",
+            "right": 0
           });
 
         if (!block.hasClass("is-floating")) {

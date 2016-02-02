@@ -1,3 +1,7 @@
+.form-item .description {
+  white-space: normal;
+}
+
 #block-stanford-capx-mapper-in-use,
 #block-stanford-capx-importer-in-use {
   background: #FFC;
