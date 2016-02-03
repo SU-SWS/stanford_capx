@@ -329,6 +329,10 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
   $field_collections = array();
   global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
+  // Add some styles and javascript
+  $form["#attached"]["css"][] = drupal_get_path("module", "stanford_capx") . "/css/stanford_capx.mapper.form.css";
+  $form["#attached"]["js"][] = drupal_get_path("module", "stanford_capx") . "/js/stanford_capx.mapper.form.js";
+
   $form['field-mapping'] = array(
     '#type' => 'fieldset',
     '#title' => t('Field Mapping'),
