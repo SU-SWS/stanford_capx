@@ -208,13 +208,16 @@ class EntityImporter implements ImporterInterface {
         case "orgCodes":
           $children = $options['child_orgs'];
         case "privGroups":
-        case "uids":
-
           // Set the results to one per page.
           $httpOptions = $client->setLimit(1);
 
           // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
+          break;
+        case "uids":
+          $index = array_search("uids", $options["types"]);
+          $results = array();
+          $results['totalCount'] = count($options["values"][$index]);
           break;
       }
 
@@ -305,12 +308,15 @@ class EntityImporter implements ImporterInterface {
         case "orgCodes":
           $children = $options['child_orgs'];
         case "privGroups":
-        case "uids":
-
           // Set the results to one per page.
           $httpOptions = $client->setLimit(1);
           // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
+          break;
+        case "uids":
+          $index = array_search("uids", $options["types"]);
+          $results = array();
+          $results['totalCount'] = count($options["values"][$index]);
           break;
       }
 
