@@ -1,6 +1,24 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-1.3, 2016-02-05
+---------------------------------
+
+- Bugfix: Removed hook_install views save and install time check for private files dir.
+- Bugfix: Reduced duplicate warning messages.
+- Bugfix: Fix UI for field collection mapping where it was only showing one.
+- Added variable cache clear.
+- Added block module as a dependency.
+- Removed empty error messages caused by the new autonodetitle module.
+- Bugfix: Fixes to taxonomy term saving.
+- BASIC-1639: protection against images that were unable to be saved to disk.
+- Publish orphans that were automatically unpublished.
+- Bugfix: Fixes for orphans that are not on the API any more.
+- CAPX-167: Expand and collapse all for the data browser.
+- CAPX-113: Floating scrollable mapping sidebar.
+- CAPX-113: Fixes for page offset and updates to data browser quick links.
+- CAPX-89: Skip API call to count the sunet ids as we already have them.
+
 Stanford CAPx 7.x-1.2, 2015-09-10
 ---------------------------------
 
