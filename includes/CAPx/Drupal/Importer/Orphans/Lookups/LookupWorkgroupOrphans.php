@@ -42,9 +42,19 @@ class LookupWorkgroupOrphans implements LookupInterface {
     // workgroup directly. Unfortunately, that means that we need to make
     // another request to the server for each work group.
 
-    $client->setLimit(99999);
+    // Setting limit of items per call to use the batch limit variable
+    // so we don't overload the service.
+    $limit = variable_get('stanford_capx_batch_limit', 100);
+    $client->setLimit($limit);
     $response = $client->api('profile')->search("privGroups", $groups);
     $results = $response['values'];
+
+    // Pull every existing page from CAPx one by one and merge to the results.
+    for ($page = 2; $page <= $response['totalPages']; $page++) {
+      $client->setPage($page);
+      $response = $client->api('profile')->search("privGroups", $groups);
+      $results = array_merge($results, $response['values']);
+    }
 
     drupal_alter('capx_orphan_profile_results', $results);
 
