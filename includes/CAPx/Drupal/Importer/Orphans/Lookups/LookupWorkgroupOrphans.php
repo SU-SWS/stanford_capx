@@ -42,8 +42,10 @@ class LookupWorkgroupOrphans implements LookupInterface {
     // workgroup directly. Unfortunately, that means that we need to make
     // another request to the server for each work group.
 
-    // Setting limit of items per call to 100 so we don't overload the service.
-    $client->setLimit(100);
+    // Setting limit of items per call to use the batch limit variable
+    // so we don't overload the service.
+    $limit = variable_get('stanford_capx_batch_limit', 100);
+    $client->setLimit($limit);
     $response = $client->api('profile')->search("privGroups", $groups);
     $results = $response['values'];
 
