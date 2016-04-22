@@ -32,6 +32,7 @@ class LookupMissingFromSunetList implements LookupInterface {
     $profiles = $orphaner->getProfiles();
     $orphans = $orphaner->getOrphans();
     $ids = explode(",", $options['sunet_id']);
+    $ids = array_map('trim', $ids);
     $found = array();
 
     $sunetIds = array();
@@ -42,7 +43,8 @@ class LookupMissingFromSunetList implements LookupInterface {
     // Loop through the profiles looking for ids. If we cannot find one in the
     // list of ids then we have an orphan.
     foreach ($profiles as $index => $profileId) {
-      if (!in_array($sunetIds[$profileId], $ids)) {
+      $sunet = $sunetIds[$profileId];
+      if (!in_array($sunet, $ids)) {
         $found[$sunetIds[$profileId]] = $profileId;
       }
     }

@@ -86,9 +86,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     // If the action is set to do nothing to orphaned profiles, do nothing.
     $options = $this->getImporterOptions();
-    if ($options['orphan_action'] == 'nothing') {
-      return;
-    }
+    $action = $options['orphan_action'];
 
     $importer =  $this->getImporter();
     $options = $this->getImporterOptions();
@@ -144,7 +142,11 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
       $orphaned = array_merge($orphaned, $orphans["missing"]);
     }
 
-    $this->processOrphans($orphaned, $importer);
+    if ($action !== "nothing") {
+      $this->processOrphans($orphaned, $importer);
+    }
+
+    // Always want to do this in case the action has changed.
     $this->processAdopted($profiles, $orphaned);
 
   }
@@ -393,6 +395,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     foreach ($profiles as $id) {
       $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+      $profileWrapped = entity_metadata_wrapper($entityType, $profile);
 
       if (CAPx::profileIsOrphan($profile) && !in_array($id, $orphans)) {
         // Profile is not an orphan. Lets enable it again.
@@ -417,14 +420,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
         // If the action was to unpublish let's re-publish the node.
         if ($options['orphan_action'] == "unpublish") {
-          // Wrap it up.
-          $profile = entity_metadata_wrapper($entityType, $profile);
-          $profile->status->set(1);
-          $profile->save();
+          $profileWrapped->status->set(1);
+          $profileWrapped->save();
         }
 
         // Log the adoption.
-        watchdog('EntityImporterOrphans', "%title was adopted and is no longer an orphan in the importer %importername.", array("%title" => $profile->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
+        watchdog('EntityImporterOrphans', "%title was adopted and is no longer an orphan in the importer %importername.", array("%title" => $profileWrapped->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
       }
 
     }
