@@ -34,6 +34,7 @@ class CompareWorkgroupsSunet implements ComparisonInterface {
     }
 
     $sunetOptions = explode(",", $options['sunet_id']);
+    $sunetOptions = array_map('trim', $sunetOptions);
 
     foreach ($orphans['privGroups'] as $index => $profileId) {
       if (in_array($sunetIds[$profileId], $sunetOptions)) {
