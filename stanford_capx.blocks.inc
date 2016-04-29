@@ -218,6 +218,7 @@ function stanford_capx_data_browser_launch_block() {
   $rows[] = array('Graduation year', '$.education.*.yearIssued');
   $rows[] = array('Personal info links title', '$.internetLinks.*.label.text');
   $rows[] = array('Personal info links url', '$.internetLinks.*.url');
+  $rows[] = array('Lab website url', '$.internetLinks.[?(@.type="Lab Site")].url');
   $rows[] = array('Fields of interest', '$.professionalInterests.text');
   $rows[] = array('Mailing address', '$.primaryContact.address');
   $rows[] = array('Mailing address city', '$.primaryContact.city');
