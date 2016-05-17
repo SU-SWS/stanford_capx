@@ -319,6 +319,9 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
 
 /**
  * [stanford_capx_mapper_form_get_field_mapping_form description]
+ *
+ * @todo: Refactor this stupidly long function.
+ *
  * @param  [type] $form       [description]
  * @param  [type] $form_state [description]
  * @return [type]             [description]
@@ -327,6 +330,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
   $entity_types = capx_entity_get_info();
   $field_collections = array();
+  $references = array();
   global $CAP_RESTRICTED_FIELD_PROPERTIES;
 
   // Add some styles and javascript
@@ -430,6 +434,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       continue;
     }
 
+    // Bundles.
     foreach ($entity_info['bundles'] as $bundle_machine_name => $bundle_info) {
 
       // Skip bundles that dont match a loaded mapper.
@@ -455,6 +460,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         ),
       );
 
+      // Loop through all the fields on this entity / bundle.
       foreach ($fields as $field_machine_name => $field_info) {
 
         // Field collections need their own fieldset and fields.
@@ -463,6 +469,13 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
           continue;
         }
 
+        // Entity References are special and need special handling.
+        if (strpos($field_info['type'], 'list<node>') !== FALSE) {
+          $references[$entity_machine_name][$bundle_machine_name][$field_machine_name] = $field_info;
+          continue;
+        }
+
+        // Get field base and instance information.
         $field_info_field = field_info_field($field_machine_name);
         $field_instance_info = field_info_instance($entity_machine_name, $field_machine_name, $bundle_machine_name);
 
@@ -475,43 +488,8 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
           '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
         );
 
-        // Do not give all options for the file field. File field processor
-        // will take care of most.
-        if ($field_info_field['type'] == "file" || $field_info_field['type'] == "image") {
-          $form['field-mapping'][$field_container][$field_machine_name][0] = array(
-            '#type' => 'textfield',
-            '#title' => t('File Information'),
-            '#description' => t('In your JSON Path selector please pass in the whole array of image information. eg: $.profilePhotos.bigger'),
-            '#default_value' => @$mapper->fields[$field_machine_name][0],
-          );
-
-          if ($field_instance_info['required']) {
-            $form['field-mapping'][$field_container][$field_machine_name]['#attributes']['class'][] = "required";
-          }
-
-          continue;
-        }
-
-        // Relation module doesn't have this column key set.
-        if (!isset($field_info_field['columns'])) {
-          continue;
-        }
-
-        foreach ($field_info_field['columns'] as $column_key => $column_info) {
-          if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
-
-            $form['field-mapping'][$field_container][$field_machine_name][$column_key] = array(
-              '#type' => 'textfield',
-              '#title' => t("@var", array("@var" => $column_key)),
-              '#description' => !empty($column_info['description']) ? t("@var", array("@var" => $column_info['description'])) : "",
-              '#default_value' => isset($mapper->fields[$field_machine_name][$column_key]) ? $mapper->fields[$field_machine_name][$column_key] : "",
-            );
-
-            if ($field_instance_info['required']) {
-              $form['field-mapping'][$field_container][$field_machine_name]['#attributes']['class'][] = "required";
-            }
-          }
-        }
+        // Get this forms fields for the entity/bundle fields.
+        stanford_capx_mapper_form_get_fields_fields($form['field-mapping'][$field_container][$field_machine_name], $form_state, $field_info_field, $field_instance_info, $field_machine_name, $mapper);
 
       }
 
@@ -528,7 +506,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         $instances = field_info_instances('field_collection_item', $field_machine_name);
         $collection_container = $entity_machine_name . "-" . $bundle_machine_name . "-collections";
 
-        // Fieldset for all fields on this entity -> bundle -> collection field
+        // Fieldset for all fields on this entity -> bundle -> collection field.
         $form['field-mapping'][$collection_container][$field_machine_name] = array(
           '#type' => 'fieldset',
           '#title' => t('@name Field Collection', array("@name" => $field_machine_name)),
@@ -556,34 +534,57 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
             '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
           );
 
-          // Do not give all options for the file field. File field processor
-          // will take care of most.
-          if ($fc_field_info['type'] == "file" || $fc_field_info['type'] == "image") {
-            $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][0] = array(
-              '#type' => 'textfield',
-              '#title' => t('File Info'),
-              '#description' => t('In your JSON Path selector please pass in the whole array of image information. eg: $.profilePhotos.bigger'),
-              '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][0],
-            );
-            continue;
-          }
+          // Run through the field.
+          stanford_capx_mapper_form_get_fields_fields($form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name], $form_state, $fc_field_info, $instance_info, $field_machine_name, $mapper);
 
-          foreach ($fc_field_info['columns'] as $column_key => $column_info) {
-            if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
-              $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key] = array(
-                '#type' => 'textfield',
-                '#title' => t("@var", array("@var" => $column_key)),
-                '#description' => t(@$column_info['description']),
-                '#default_value' => @$mapper->collections[$field_machine_name][$fc_field_name][$column_key],
-              );
-
-              if ($instance_info['required']) {
-                $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name][$column_key]["#attributes"]["class"] = "required";
-              }
-
-            }
-          }
         }
+
+      }
+    }
+  }
+
+  // ENTITY REFERENCES
+  // ----------------------------------------------------------------------
+
+  foreach ($references as $entity_machine_name => $bundles) {
+    foreach ($bundles as $bundle_machine_name => $fields) {
+
+      // Create the container.
+      $reference_container = $entity_machine_name . "-" . $bundle_machine_name . "-references";
+
+      // Fieldset for all fields on this entity -> bundle -> reference field.
+      $form['field-mapping'][$reference_container] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Entity References', array("@name" => $field_machine_name)),
+        '#description' => t(''),
+        '#collapsed' => TRUE,
+        '#collapsible' => TRUE,
+        '#states' => array(
+          'visible' => array(
+            'select[name="entity-type"]' => array('value' => $entity_machine_name),
+            'select[name="bundle-' . $entity_machine_name . '"]' => array('value' => $bundle_machine_name),
+          ),
+        ),
+      );
+
+      // Now loop through the fields.
+      foreach ($fields as $field_machine_name => $field_info) {
+
+        // Get field base and instance information.
+        $field_info_field = field_info_field($field_machine_name);
+        $field_instance_info = field_info_instance($entity_machine_name, $field_machine_name, $bundle_machine_name);
+
+        $form['field-mapping'][$reference_container][$field_machine_name] = array(
+          '#type' => 'container',
+          '#title' => t("@var", array("@var" => $field_instance_info['label'])),
+          '#description' => t("@var", array("@var" => $field_instance_info['description'])),
+          '#field_info' => $field_info_field,
+          '#field_instance_info' => $field_instance_info,
+          '#theme_wrappers' => array('stanford_capx_columns_to_the_right'),
+        );
+
+        // Get this forms fields for the entity/bundle fields.
+        stanford_capx_mapper_form_get_fields_fields($form['field-mapping'][$reference_container][$field_machine_name], $form_state, $field_info_field, $field_instance_info, $field_machine_name, $mapper);
 
       }
     }
@@ -591,6 +592,92 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
 
   return $form;
 }
+
+/**
+ * [stanford_capx_mapper_form_get_fields_fields description]
+ * @param  [type] $form             [description]
+ * @param  [type] $form_state       [description]
+ * @param  [type] $field_info_field [description]
+ * @param  [type] $field_container  [description]
+ * @param  [type] $mapper           [description]
+ * @return [type]                   [description]
+ */
+function stanford_capx_mapper_form_get_fields_fields(&$form_tree, &$form_state, $field_info_field, $field_instance_info, $field_machine_name, $mapper) {
+
+  global $CAP_RESTRICTED_FIELD_PROPERTIES;
+
+  // Relation module doesn't have this column key set.
+  if (!isset($field_info_field['columns'])) {
+    return;
+  }
+
+  // FILE FIELD
+  // ---------------------------------------------------------------------------
+  // Do not give all options for the file field. File field processor
+  // will take care of most.
+  if ($field_info_field['type'] == "file" || $field_info_field['type'] == "image") {
+    $form_tree[0] = array(
+      '#type' => 'textfield',
+      '#title' => t('File Information'),
+      '#description' => t('In your JSON Path selector please pass in the whole array of image information. eg: $.profilePhotos.bigger'),
+      '#default_value' => @$mapper->fields[$field_machine_name][0],
+    );
+
+    if ($field_instance_info['required']) {
+      $form_tree['#attributes']['class'][] = "required";
+    }
+    return;
+  }
+
+  // ENTITY REFERENCE FIELDS
+  // ---------------------------------------------------------------------------
+  if ($field_info_field['type'] == "entityreference") {
+
+    $importers = CAPxImporter::getAllEntityImporters();
+    $options = array('none' => t("- None -"));
+    $options += array_map('stanford_capx_key_name_array_map', $importers);
+
+    $form_tree[0] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#title' => t("Referencing Importer"),
+      '#description' => t("Select the importer with the reference you would like to attach this item to."),
+      '#default_value' => $mapper->references[$field_machine_name][0],
+    );
+
+    return;
+  }
+
+
+  // ALL OTHER FIELDS
+  // ---------------------------------------------------------------------------
+
+  foreach ($field_info_field['columns'] as $column_key => $column_info) {
+    if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
+      $form_tree[$column_key] = array(
+        '#type' => 'textfield',
+        '#title' => t("@var", array("@var" => $column_key)),
+        '#description' => !empty($column_info['description']) ? t("@var", array("@var" => $column_info['description'])) : "",
+        '#default_value' => isset($mapper->fields[$field_machine_name][$column_key]) ? $mapper->fields[$field_machine_name][$column_key] : "",
+      );
+      if ($field_instance_info['required']) {
+        $form_tree['#attributes']['class'][] = "required";
+      }
+    }
+  }
+
+}
+
+/**
+ * [stanford_capx_key_name_array_map description]
+ * @param  [type] $keys      [description]
+ * @param  [type] $importers [description]
+ * @return [type]            [description]
+ */
+function stanford_capx_key_name_array_map($importer) {
+  return $importer->getImporter()->title;
+}
+
 
 /**
  * [stanford_capx_mapper_machine_name_exits description]
@@ -747,7 +834,7 @@ function stanford_capx_mapper_form_validate($form, $form_state) {
   }
 
   // Set the error messages after everything has been looped through.
-  stanford_capx_mapper_form_validate_element_set_messages();
+  // stanford_capx_mapper_form_validate_element_set_messages();
 
   // Ensure all required fields were posted. Because of the way the form works
   // we cannot place a required on to each of the form element fields as there
@@ -874,32 +961,32 @@ function stanford_capx_mapper_form_validate_element($element, $parents = array()
 /**
  * Sets the message for the element validation.
  */
-function stanford_capx_mapper_form_validate_element_set_messages() {
-  $form_error = &drupal_static("stanford_capx_mapper_form_validate_element_error", FALSE);
-  $form_field_warnings = &drupal_static("stanford_capx_mapper_form_validate_element_warnings", FALSE);
+// function stanford_capx_mapper_form_validate_element_set_messages() {
+//   $form_error = &drupal_static("stanford_capx_mapper_form_validate_element_error", FALSE);
+//   $form_field_warnings = &drupal_static("stanford_capx_mapper_form_validate_element_warnings", FALSE);
 
-  // Set the error message once when the recursive calls have finished.
-  if ($form_error) {
-    $field_warnings_list = theme('item_list', array(
-      'title' => '',
-      'items' => $form_field_warnings,
-      'type' => 'ul',
-      'attributes' => array()
-    ));
-    $browser_link = l(t('Data Browser'),
-      'admin/config/capx/data-browser', array(
-        'attributes' => array('target' => '_blank')
-      ));
+//   // Set the error message once when the recursive calls have finished.
+//   if ($form_error) {
+//     $field_warnings_list = theme('item_list', array(
+//       'title' => '',
+//       'items' => $form_field_warnings,
+//       'type' => 'ul',
+//       'attributes' => array()
+//     ));
+//     $browser_link = l(t('Data Browser'),
+//       'admin/config/capx/data-browser', array(
+//         'attributes' => array('target' => '_blank')
+//       ));
 
-    drupal_set_message(
-      t('The following selectors did not match an element in the profile schema but may be valid. If you know the selector is valid please disregard this message. Try using the !databrowser to find a valid selector.!warnings',
-        array(
-          '!warnings' => $field_warnings_list,
-          '!databrowser' => $browser_link,
-        )
-      ), 'warning');
-  }
-}
+//     drupal_set_message(
+//       t('The following selectors did not match an element in the profile schema but may be valid. If you know the selector is valid please disregard this message. Try using the !databrowser to find a valid selector.!warnings',
+//         array(
+//           '!warnings' => $field_warnings_list,
+//           '!databrowser' => $browser_link,
+//         )
+//       ), 'warning');
+//   }
+// }
 
 /**
  * Submit handler for the mapper form. Create and save the mapper entity.
@@ -924,6 +1011,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $settings['fields'] = array();
   $settings['properties'] = array();
   $settings['collections'] = array();
+  $settings['references'] = array();
 
   $entity = $values['entity-type'];
   $bundle = $values['bundle-' . $entity];
@@ -941,6 +1029,13 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $fields = @$values['field-mapping'][$entity . "-" . $bundle . "-fields"];
   if (!empty($fields)) {
     $settings['fields'] = $fields;
+  }
+
+  // If there are collections...
+  $references = @$values['field-mapping'][$entity . "-" . $bundle . "-references"];
+  // We have values!
+  if (!empty($references)) {
+    $settings['references'] = $references;
   }
 
   // If there are collections...

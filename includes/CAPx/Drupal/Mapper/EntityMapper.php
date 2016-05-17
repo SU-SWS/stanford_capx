@@ -36,6 +36,7 @@ class EntityMapper extends MapperAbstract {
     // is logged to watchdog so handle any errors in each of these by throwing
     // only one error up a level.
 
+    // FIELDS.
     try {
       $this->mapFields($data);
     }
@@ -43,6 +44,7 @@ class EntityMapper extends MapperAbstract {
       $this->setError($e);
     }
 
+    // PROPERTIES.
     try {
       $this->mapProperties($data);
     }
@@ -50,10 +52,19 @@ class EntityMapper extends MapperAbstract {
       $this->setError($e);
     }
 
+    // FIELD COLLECTIONS.
     try {
       // Field Collections are special. Special means more code. They get their
       // own mapProcess even though they are sort of a field.
       $this->mapFieldCollections($data);
+    }
+    catch (\Exception $e) {
+      $this->setError($e);
+    }
+
+    // REFERENCES.
+    try {
+      $this->mapReferences();
     }
     catch (\Exception $e) {
       $this->setError($e);
@@ -181,7 +192,7 @@ class EntityMapper extends MapperAbstract {
       try {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }
-      catch(\Exception $e) {
+      catch (\Exception $e) {
         $error = TRUE;
         $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
         $message_vars = array(
@@ -228,7 +239,7 @@ class EntityMapper extends MapperAbstract {
     try {
       $collections = $this->getConfigSetting('fieldCollections');
     }
-    catch(\Exception $e) {
+    catch (\Exception $e) {
       // No collections. Just return.
       return;
     }
@@ -260,6 +271,30 @@ class EntityMapper extends MapperAbstract {
 
     // Set the entity again for changes.
     $this->setEntity($entity);
+  }
+
+  /**
+   * Process entity reference fields uniquely.
+   *
+   * Reference fields are a special field and need to be handled differently.
+   * Allow for the ability to look for an item to attach to from the API
+   * that has already been imported.
+   *
+   */
+  public function mapReferences() {
+
+    try {
+      $references = $this->getConfigSetting('references');
+    }
+    catch (\Exception $e) {
+      // No references. Just return.
+      return;
+    }
+
+    foreach ($references as $fieldName => $importer_machine_name) {
+
+    }
+
   }
 
   /**

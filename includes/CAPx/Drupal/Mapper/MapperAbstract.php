@@ -97,8 +97,6 @@ abstract class MapperAbstract implements MapperInterface {
   public function addConfig($settings) {
 
     $config = $this->getConfig();
-//    $mapper = $this->getMapper();
-
     $settings['fieldCollections'] = array();
 
     if (isset($settings['collections'])) {
