@@ -7,8 +7,11 @@
 namespace CAPx\Drupal\Mapper;
 
 use CAPx\Drupal\Processors\FieldProcessors\FieldProcessor;
+use CAPx\Drupal\Processors\FieldProcessors\EntityReferenceFieldProcessor;
 use CAPx\Drupal\Processors\PropertyProcessors\PropertyProcessor;
 use CAPx\Drupal\Processors\FieldCollectionProcessor;
+use CAPx\Drupal\Processors\EntityReferenceProcessor;
+use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 
@@ -291,10 +294,36 @@ class EntityMapper extends MapperAbstract {
       return;
     }
 
-    foreach ($references as $fieldName => $importer_machine_name) {
+    // Nothing to do here.
+    if (empty($references)) {
+      return;
+    }
+
+    $entity = $this->getEntity();
+
+    // Loop through each reference field and try to match up with another
+    // entity from another importer.
+    foreach ($references as $fieldName => $values) {
+      $target = array_pop($values);
+      $processor = new EntityReferenceProcessor($entity, $this->getImporter(), $target);
+      $referenceEntity = $processor->execute();
+
+      // No possible references available. End here.
+      if (empty($referenceEntity)) {
+        continue;
+      }
+
+      // wrap it up.
+      $referenceEntity = entity_metadata_wrapper($this->getEntityType(), $referenceEntity);
+
+      // Map the reference.
+      $entityReferenceFieldProcessor = new EntityReferenceFieldProcessor($entity, $fieldName);
+      $entityReferenceFieldProcessor->put($referenceEntity);
 
     }
 
+    // Set the entity to apply any changes this function may have had.
+    $this->setEntity($entity);
   }
 
   /**

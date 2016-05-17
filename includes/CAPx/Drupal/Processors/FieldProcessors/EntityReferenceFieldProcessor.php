@@ -6,29 +6,39 @@
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
 
-class EntityReferenceFieldProcessor extends FieldTypeProcessor {
+class EntityReferenceFieldProcessor {
+
+  protected $entity;
+  protected $fieldName;
+
+  public function __construct($entity, $fieldName) {
+    $this->entity = $entity;
+    $this->fieldName = $fieldName;
+  }
 
   /**
    * Default implementation of put.
-   *
-   * @see FieldProcessorAbstract::put()
    */
-  public function put($data) {
-    $data = $this->findProfileID($data);
-    parent::put($data);
+  public function put($relatedEntity) {
+    $id = $relatedEntity->getIdentifier();
+    $entity = $this->entity;
+    $field = $entity->{$this->fieldName};
+
+    // Metadata wrapper is smarter than plain field info.
+    switch (get_class($field)) {
+      // Structure wrapper assumes we providing multiple columns.
+      case 'EntityStructureWrapper':
+      case 'EntityListWrapper':
+        $field->set(array($id));
+        break;
+
+      // Value wrapper assumes we providing single value.
+      case 'EntityDrupalWrapper':
+      case 'EntityValueWrapper':
+        $field->set($id);
+        break;
+    }
   }
 
-  /**
-   * Prepares CAP API data to feet to Drupal field.
-   *
-   * @param array $data
-   *   CAP API field data.
-   *
-   * @return array
-   *   Prepared data.
-   */
-  public function findProfileID($data) {
-    return 82;
-  }
 
 }
