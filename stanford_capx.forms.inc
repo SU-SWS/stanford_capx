@@ -314,6 +314,25 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
 
   }
 
+  $form['entity-mapping']['multiple-entities'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Create multiple entities"),
+    '#description' => t('By default, a mapper will create one entity per person. If you wanted to import a persons publications you would need multiple entities per person. Check this box for multiple.'),
+    '#default_value' => isset($mapper->multiple) ? $mapper->multiple : FALSE,
+  );
+
+  $form['entity-mapping']['subquery'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Multiple entity creation sub query"),
+    '#description' => t('Which part of the schema will you be using to create multiple entities. Ie: for publications enter: $.publications'),
+    '#default_value' => isset($mapper->subquery) ? $mapper->subquery : '',
+    '#states' => array(
+      'visible' => array(
+        ':input[name="multiple-entities"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
   return $form;
 }
 
@@ -1018,6 +1037,8 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
 
   $settings['entity_type'] = $entity;
   $settings['bundle_type'] = $bundle;
+  $settings['multiple'] = $values['multiple-entities'];
+  $settings['subquery'] = $values['subquery'];
 
   // If there are properties...
   $properties = @$values['field-mapping'][$entity . "-properties"];
