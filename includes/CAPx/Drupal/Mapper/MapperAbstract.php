@@ -52,10 +52,93 @@ abstract class MapperAbstract implements MapperInterface {
       throw new \Exception("Path cannot be empty", 1);
     }
 
+    // Wildcard paths need to have index association maintained. JSONPath does
+    // not provide much help in this and we need to do funny things.
+    if (strpos($path, "*")) {
+      $parsed = $this->getRemoteDataWithWildcard($data, $path);
+    }
+    // No wildcard, just get stuff.
+    else {
+      $parsed = $this->getRemoteDataRegular($data, $path);
+    }
+
+    return $parsed;
+
+  }
+
+  /**
+   * Returns an array of data that matched the given path.
+   *
+   * @param $data
+   * @param $path
+   * @return array
+   */
+  protected function getRemoteDataRegular($data, $path) {
     $jsonParser = new JsonParser($data);
     $parsed = $jsonParser->get($path);
     return $parsed;
+  }
 
+  /**
+   * Returns an array of data that matched the given path with empty strings
+   * for missing leaf items.
+   * @param $data
+   * @param $path
+   */
+  protected function getRemoteDataWithWildcard($data, $path) {
+
+    // To maintain index association over wildcards we need to return an empty
+    // result on a missing leaf. JSONPATH does not provide a nice way of doing
+    // this out of the box at this point in time so we are going to have to
+    // break up the requests in to parts.
+
+    $pathParts = explode("*", $path);
+    $lastPart = array_pop($pathParts);
+    $countQuery = implode("*", $pathParts);
+    $countQuery .= "*";
+
+    $jsonParser = new JsonParser($data);
+    $results = $jsonParser->get($path);
+    $wildResults = $jsonParser->get($countQuery);
+
+    // If the number of results matches the number of wildcards then we have no
+    // Missing items. Just return the results.
+    if (count($results) == count($wildResults)) {
+      return $results;
+    }
+
+    // Darn, we have a mismatch in wildcards and leafs. Find out who is missing
+    // and add an empty value for them in the return array.
+    $parsed = array();
+    $tmpData = $data;
+
+    // Iterate over each of the wild card queries and evaluate the expression.
+    foreach ($pathParts as $i => $part) {
+
+      // Tack on the wildcard character to the end of the first expression.
+      if ($i == 0) {
+        $part .= "*";
+      }
+      else {
+        $part = "$.*" . $part . "*";
+      }
+
+      $jsonParser = new JsonParser($tmpData);
+      $tmpData = $jsonParser->get($part);
+    }
+
+    foreach ($tmpData as $values) {
+      $jsonParser = new JsonParser($values);
+      $result = $jsonParser->get("$" . $lastPart);
+      if ($result) {
+        $parsed[] = array_pop($result);
+      }
+      else {
+        $parsed[] = "";
+      }
+    }
+
+    return $parsed;
   }
 
   /**
@@ -109,6 +192,8 @@ abstract class MapperAbstract implements MapperInterface {
         $mapper->settings['fields'] = $fields;
         $mapper->settings['properties'] = array();
         $mapper->settings['collections'] = array();
+        $mapper->settings['multiple'] = FALSE;
+        $mapper->settings['subquery'] = '';
 
         $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($mapper);
         $settings['fieldCollections'][$fieldName]->addConfig($mapper->settings);
@@ -218,6 +303,15 @@ abstract class MapperAbstract implements MapperInterface {
       return $this->errors;
     }
     return FALSE;
+  }
+
+  /**
+   * [getMultipleEntityCount description]
+   * @return [type] [description]
+   */
+  public function getMultipleEntityCountBySubquery($data) {
+    $result = $this->getRemoteDataByJsonPath($data, $this->getConfigSetting("subquery"));
+    return count($result);
   }
 
 

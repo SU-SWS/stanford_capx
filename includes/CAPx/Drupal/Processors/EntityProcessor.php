@@ -31,8 +31,65 @@ class EntityProcessor extends ProcessorAbstract {
    *   The new or updated wrapped entity.
    */
   public function execute($force = FALSE) {
-    $data = $this->getData();
+
+    try {
+      $multi = $this->getMapper()->getConfigSetting('multiple');
+    }
+    catch (\Exception $e) {
+      $multi = FALSE;
+    }
+
+    // Sometimes we need to create one, other times we need moar.
+    if (!empty($multi) && $multi == 1) {
+      $entity = $this->executeMultiple($force);
+    }
+    else {
+      $entity = $this->executeSingle($force);
+    }
+
+    return $entity;
+  }
+
+  /**
+   * Process the execution and creation of multiple entities per profile.
+   * @param  [type] $force [description]
+   * @return [type]        [description]
+   */
+  protected function executeMultiple($force) {
+
     $mapper = $this->getMapper();
+    $data = $this->getData();
+    $numEntities = $mapper->getMultipleEntityCountBySubquery($data);
+
+    // @todo: Remove old ones if they exist.
+    if ($numEntities <= 0) {
+      return;
+    }
+
+    $entityImporter = $this->getEntityImporter();
+    $importerMachineName = $entityImporter->getMachineName();
+    $entityType = $mapper->getEntityType();
+    $bundleType = $mapper->getBundleType();
+
+    $i = 0;
+    while ($i < $numEntities) {
+      $mapper->setIndex($i);
+      $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
+      $this->setStatus(1, 'Created new entity.');
+      $i++;
+    }
+
+  }
+
+
+  /**
+   * Process the execution and creation of a single entity per profile response.
+   * @param  [type] $force [description]
+   * @return [type]        [description]
+   */
+  protected function executeSingle($force) {
+    $mapper = $this->getMapper();
+    $data = $this->getData();
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
 

@@ -36,12 +36,13 @@ class EntityReferenceProcessor {
 
     // Get the profile ID of this entity as the profile id will be the same
     // for other importers and entity/bundle types.
-    $profile_id = CAPx::getProfileIdByEntity($this->entity);
+
+    $profile_id = $this->entity->value()->capx['profileId'];
 
     // Did not find one. It could be that is hasn't been created yet and may
     // take another cycle or two to come up.
     if (!$profile_id) {
-      return array();
+      throw new \Exception('Could not find profileId. Did something change in the API?');
     }
 
     $match = db_select("capx_profiles", 'capx')

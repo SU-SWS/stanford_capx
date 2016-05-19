@@ -17,6 +17,8 @@ use CAPx\Drupal\Util\CAPxImporter;
 
 class EntityMapper extends MapperAbstract {
 
+  protected $index;
+
   /**
    * Execute starts the mapping process.
    *
@@ -29,6 +31,11 @@ class EntityMapper extends MapperAbstract {
    *   A fully saved or updated entity.
    */
   public function execute($entity, $data) {
+
+    // Always attach the profileId to the entity
+    $raw = $entity->value();
+    $raw->capx['profileId'] = $data['profileId'];
+    $entity->set($raw);
 
     // Store this for later.
     $this->setEntity($entity);
@@ -142,6 +149,12 @@ class EntityMapper extends MapperAbstract {
             continue;
           }
 
+          // If we are running a multiple entity mapping we only want part of
+          // the result.
+          if ($this->isMultiple()) {
+            $info = $this->getMultipleIndexInfoResultField($info);
+          }
+
           // Widgets can change the way the data needs to be parsed. Provide
           // that to the FieldProcessor.
           $widget = $fieldInfoInstance['widget']['type'];
@@ -204,6 +217,12 @@ class EntityMapper extends MapperAbstract {
         );
         watchdog('stanford_capx_jsonpath', $message, $message_vars);
         continue;
+      }
+
+      // If we are running a multiple entity mapping we only want part of
+      // the result.
+      if ($this->isMultiple()) {
+        $info = $this->getMultipleIndexInfoResultProperty($info);
       }
 
       // Let the property processor do its magic.
@@ -522,6 +541,75 @@ class EntityMapper extends MapperAbstract {
     }
 
     return $affected;
+  }
+
+  /**
+   * Boolean to whether or not this is a multiple import or not.
+   * @return boolean [description]
+   */
+  protected function isMultiple() {
+    try {
+      return $this->getConfigSetting("multiple");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * [getIndex description]
+   * @return [type] [description]
+   */
+  protected function getIndex() {
+    return $this->index;
+  }
+
+  /**
+   * [setIndex description]
+   * @param [type] $i [description]
+   */
+  public function setIndex($i) {
+    if (is_int($i) && $i >= 0) {
+      $this->index = $i;
+    }
+    else {
+      throw new \Exception("Could not set index. Invalid option.");
+
+    }
+  }
+
+  /**
+   * [getMultipleIndexInfoResult description]
+   * @param  [type] $info [description]
+   * @return [type]       [description]
+   */
+  protected function getMultipleIndexInfoResultField($info) {
+    $index = $this->getIndex();
+    $keys = array_keys($info);
+    $ret = array();
+
+    foreach ($keys as $key) {
+      if (isset($info[$key][$index])) {
+        $ret[$key] = array($info[$key][$index]);
+      }
+    }
+
+    return !empty($ret) ? $ret : $info;
+  }
+
+  /**
+   * @param $info
+   * @return array
+   */
+  protected function getMultipleIndexInfoResultProperty($info) {
+    $index = $this->getIndex();
+
+    // If an index value exists:
+    if (isset($info[$index])) {
+      return array($info[$index]);
+    }
+
+    return $info;
   }
 
 }
