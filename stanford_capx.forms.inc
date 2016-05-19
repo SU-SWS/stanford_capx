@@ -333,6 +333,18 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
     ),
   );
 
+  $form['entity-mapping']['guuid-query'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Unique ID of entity"),
+    '#description' => t('Do the entities you are creating have a unique id? For example, publications have a publicationId at $.publications.*.publicationId. If this is provided then CAPx can update the entity in place. If there is no unique ID available then the CAPx module will delete and re-import the entities each time there is a change to the profile.'),
+    '#default_value' => isset($mapper->guuidquery) ? $mapper->guuidquery : '',
+    '#states' => array(
+      'visible' => array(
+        ':input[name="multiple-entities"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
   return $form;
 }
 
@@ -1039,6 +1051,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $settings['bundle_type'] = $bundle;
   $settings['multiple'] = $values['multiple-entities'];
   $settings['subquery'] = $values['subquery'];
+  $settings['guuidquery'] = $values['guuid-query'];
 
   // If there are properties...
   $properties = @$values['field-mapping'][$entity . "-properties"];

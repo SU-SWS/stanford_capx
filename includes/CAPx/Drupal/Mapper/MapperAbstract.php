@@ -194,6 +194,7 @@ abstract class MapperAbstract implements MapperInterface {
         $mapper->settings['collections'] = array();
         $mapper->settings['multiple'] = FALSE;
         $mapper->settings['subquery'] = '';
+        $mapper->settings['guuidquery'] = '';
 
         $settings['fieldCollections'][$fieldName] = new FieldCollectionMapper($mapper);
         $settings['fieldCollections'][$fieldName]->addConfig($mapper->settings);

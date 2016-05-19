@@ -15,7 +15,7 @@ class EntityProcessor extends ProcessorAbstract {
   protected $entity;
 
   // Skip etag check.
-  protected $force = FALSE;
+  protected $force;
 
   /**
    * Process entity.
@@ -32,6 +32,9 @@ class EntityProcessor extends ProcessorAbstract {
    */
   public function execute($force = FALSE) {
 
+    // Set this force.
+    $this->force == $force;
+
     try {
       $multi = $this->getMapper()->getConfigSetting('multiple');
     }
@@ -41,10 +44,10 @@ class EntityProcessor extends ProcessorAbstract {
 
     // Sometimes we need to create one, other times we need moar.
     if (!empty($multi) && $multi == 1) {
-      $entity = $this->executeMultiple($force);
+      $entity = $this->executeMultiple();
     }
     else {
-      $entity = $this->executeSingle($force);
+      $entity = $this->executeSingle();
     }
 
     return $entity;
@@ -55,32 +58,105 @@ class EntityProcessor extends ProcessorAbstract {
    * @param  [type] $force [description]
    * @return [type]        [description]
    */
-  protected function executeMultiple($force) {
+  protected function executeMultiple() {
 
     $mapper = $this->getMapper();
     $data = $this->getData();
     $numEntities = $mapper->getMultipleEntityCountBySubquery($data);
 
-    // @todo: Remove old ones if they exist.
+    // Let the Orphan cron runs take care of the clean up. We just need to stop.
     if ($numEntities <= 0) {
       return;
     }
 
+    // Time to loop through our results and either update or create entities.
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
+    // Check to see what entities we have for this profile.
+    $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
+
+    // Looks like we have a whole new batch to create.
+    if (empty($entities)) {
+      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
+      return;
+    }
+
+    // Check if we even need to update. A matching etag will allow us to
+    // avoid a costly update routine.
+    if (!$this->isETagDifferent() && !$this->skipEtagCheck()) {
+      // Nothing to do, same etag and no forceful update.
+      return;
+    }
+
+    // At this point we have saved entities and the etag changed or we are
+    // forcing an update.
+
+    // Strategy: If the user can provide a GUID (fingerprint) then we can try to
+    // update in place. If the user cannot provide a GUID then we go with the
+    // delete everything and replace strategy.
+
+    try {
+      $guuid = $mapper->getConfigSetting("guuidquery");
+    }
+    catch (\Exception $e) {
+      // An older mapper that has not yet been updated.
+      // @todo: Think of a way to update the older mappers with an update hook.
+    }
+
+    // NO GUUID available. Delete all of the existing entities and replace with
+    // new ones.
+    if (empty($guuid)) {
+      $this->mulitpleDeleteEntities($entities);
+      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
+    }
+
+    // GUUID available lets check to see if it matches the numEntities count.
+    $numEntityIDs = count($this->getRemoteDataByJsonPath($data, $guuid));
+
+    // If the total number of ids does not match the total number of entities
+    // default to the delete and replace method.
+    if ($numEntityIDs !== $numEntities) {
+      watchdog('EntityProcessor', "Entity count and GUUID mismatch on: %mapper. Defaulting to delete and replace update method.", array("%mapper" => $mapper->getMachineName()));
+      $this->mulitpleDeleteEntities($entities);
+      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
+    }
+
+    // Ok, we are in good shape at this point. We have results, we have ids, and
+    // now we can update them in place!
+
+
+
+  }
+
+  /**
+   * [multipleCreateNewEntity description]
+   * @param  [type] $numEntities [description]
+   * @param  [type] $entityType  [description]
+   * @param  [type] $data        [description]
+   * @param  [type] $mapper      [description]
+   * @return [type]              [description]
+   */
+  protected function multipleCreateNewEntity($numEntities, $entityType, $data, $mapper) {
     $i = 0;
     while ($i < $numEntities) {
       $mapper->setIndex($i);
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
-      $this->setStatus(1, 'Created new entity.');
       $i++;
     }
-
+    return TRUE;
   }
 
+  /**
+   * Deletes all entities passed to this function.
+   * @param  [type] $entities [description]
+   * @return [type]           [description]
+   */
+  protected function multipleDeleteEntities($entityType, $entities) {
+    entity_delete_multiple($entityType, $entities);
+  }
 
   /**
    * Process the execution and creation of a single entity per profile response.

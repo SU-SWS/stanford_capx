@@ -76,6 +76,12 @@ function stanford_capx_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'fingerprint' => array(
+        'description' => 'fingerprint.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
       'sync' => array(
         'description' => 'Does this profile needs to be synced?',
         'type' => 'int',
@@ -103,7 +109,7 @@ function stanford_capx_schema() {
     ),
   );
 
-  // Configuration Entity
+  // Configuration Entity.
   $schema['capx_cfe'] = array(
     'description' => 'The base table for configuration entities.',
     'fields' => array(
@@ -265,4 +271,25 @@ function stanford_capx_requirements($phase) {
       break;
   }
   return $requirements;
+}
+
+/**
+ * Add the fingerprint field to the capx_profiles table.
+ */
+function stanford_capx_update_7100() {
+
+  $table = "capx_profiles";
+  $field = "fingerprint";
+  $spec = array(
+    'description' => 'fingerprint.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  );
+
+  db_add_field($table, $field, $spec);
+
+
+
 }
