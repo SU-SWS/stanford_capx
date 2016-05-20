@@ -80,7 +80,7 @@ class EntityProcessor extends ProcessorAbstract {
 
     // Looks like we have a whole new batch to create.
     if (empty($entities)) {
-      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
+      $this->multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper);
       return;
     }
 
@@ -99,7 +99,7 @@ class EntityProcessor extends ProcessorAbstract {
     // delete everything and replace strategy.
 
     try {
-      $guuid = $mapper->getConfigSetting("guuidquery");
+      $guuidPath = $mapper->getConfigSetting("guuidquery");
     }
     catch (\Exception $e) {
       // An older mapper that has not yet been updated.
@@ -108,26 +108,26 @@ class EntityProcessor extends ProcessorAbstract {
 
     // NO GUUID available. Delete all of the existing entities and replace with
     // new ones.
-    if (empty($guuid)) {
-      $this->mulitpleDeleteEntities($entities);
-      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
+    if (empty($guuidPath)) {
+      $this->multipleDeleteEntities($entities);
+      $this->multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper);
+      return;
     }
 
     // GUUID available lets check to see if it matches the numEntities count.
-    $numEntityIDs = count($this->getRemoteDataByJsonPath($data, $guuid));
+    $numGUUIDs = count($mapper->getRemoteDataByJsonPath($data, $guuidPath));
 
     // If the total number of ids does not match the total number of entities
     // default to the delete and replace method.
-    if ($numEntityIDs !== $numEntities) {
-      watchdog('EntityProcessor', "Entity count and GUUID mismatch on: %mapper. Defaulting to delete and replace update method.", array("%mapper" => $mapper->getMachineName()));
-      $this->mulitpleDeleteEntities($entities);
-      $this->multipleCreateNewEntity($numEntities, $entityType, $data, $mapper);
-    }
+    // if ($numGUUIDs !== $numEntities) {
+    //   watchdog('EntityProcessor', "Entity count and GUUID mismatch on: %mapper. Defaulting to delete and replace update method.", array("%mapper" => $mapper->getMachineName()));
+    //   $this->multipleDeleteEntities($entities);
+    //   $this->multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper);
+    // }
 
     // Ok, we are in good shape at this point. We have results, we have ids, and
     // now we can update them in place!
-
-
+    $this->multipleUpdateEntities($numEntities, $entityType, $bundleType, $data, $mapper);
 
   }
 
@@ -139,11 +139,13 @@ class EntityProcessor extends ProcessorAbstract {
    * @param  [type] $mapper      [description]
    * @return [type]              [description]
    */
-  protected function multipleCreateNewEntity($numEntities, $entityType, $data, $mapper) {
+  protected function multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper) {
     $i = 0;
     while ($i < $numEntities) {
+      // Setting the index tells the mapper which values to save.
       $mapper->setIndex($i);
-      $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
+      $guuid = $mapper->getGUUID($data, $i);
+      $entity = $this->newEntity($entityType, $bundleType, $data, $mapper, $guuid);
       $i++;
     }
     return TRUE;
@@ -156,6 +158,39 @@ class EntityProcessor extends ProcessorAbstract {
    */
   protected function multipleDeleteEntities($entityType, $entities) {
     entity_delete_multiple($entityType, $entities);
+  }
+
+  /**
+   * Update function for when there are multiple entities being created per
+   * person.
+   * @param  [type] $numEntities [description]
+   * @param  [type] $entityType  [description]
+   * @param  [type] $bundleType  [description]
+   * @param  [type] $data        [description]
+   * @param  [type] $mapper      [description]
+   * @return [type]              [description]
+   */
+  protected function multipleUpdateEntities($numEntities, $entityType, $bundleType, $data, $mapper) {
+    $i = 0;
+    while ($i < $numEntities) {
+      // Setting the index tells the mapper which values to save.
+      $mapper->setIndex($i);
+      $guuid = $mapper->getGUUID($data, $i);
+      $importerMachineName = $this->getEntityImporter()->getMachineName();
+      $profileId = $data['profileId'];
+
+      $entity = CAPx::getEntityIdByGUUID($importerMachineName, $profileId, $guuid);
+      if ($entity) {
+        $entity = entity_metadata_wrapper($entityType, $entity);
+        $entity = $this->updateEntity($entity, $data, $mapper);
+      }
+      else {
+        $entity = $this->newEntity($entityType, $bundleType, $data, $mapper, $guuid);
+      }
+
+      $i++;
+    }
+    return TRUE;
   }
 
   /**
@@ -259,7 +294,8 @@ class EntityProcessor extends ProcessorAbstract {
 
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
-    CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
+    $guuid = $mapper->getGUUID($data, $mapper->getIndex());
+    CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
 
     drupal_alter('capx_post_update_entity', $entity);
 
@@ -281,11 +317,13 @@ class EntityProcessor extends ProcessorAbstract {
    *   The data to be mapped to the new entity
    * @param object $mapper
    *   The EntityMapper instance
+   * @param mixed $guuid
+   *   The
    *
    * @return object
    *   The new entity after it has been saved.
    */
-  public function newEntity($entityType, $bundleType, $data, $mapper) {
+  public function newEntity($entityType, $bundleType, $data, $mapper, $guuid) {
 
     $properties = array(
       'type' => $bundleType,
@@ -324,7 +362,7 @@ class EntityProcessor extends ProcessorAbstract {
     // Write a new record.
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
-    CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName);
+    CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
 
     return $entity;
   }
@@ -370,6 +408,13 @@ class EntityProcessor extends ProcessorAbstract {
     if (is_bool($bool)) {
       $this->force = $bool;
     }
+
+    // Allow a debug force var.
+    $debug = variable_get("stanford_capx_debug_always_force_etag", -1);
+    if ($debug !== -1) {
+      return $debug;
+    }
+
     return $this->force;
   }
 

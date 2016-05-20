@@ -560,7 +560,7 @@ class EntityMapper extends MapperAbstract {
    * [getIndex description]
    * @return [type] [description]
    */
-  protected function getIndex() {
+  public function getIndex() {
     return $this->index;
   }
 

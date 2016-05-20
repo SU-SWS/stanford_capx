@@ -26,7 +26,6 @@ abstract class MapperAbstract implements MapperInterface {
   // Error storage so they can be fetched after everything has run.
   protected $errors = array();
 
-
   /**
    * Merges default configuration options with the passed in set.
    *
@@ -315,5 +314,15 @@ abstract class MapperAbstract implements MapperInterface {
     return count($result);
   }
 
+  /**
+   * [getGUUID description]
+   * @param  [type] $index [description]
+   * @return [type]        [description]
+   */
+  public function getGUUID($data, $index) {
+    $path = $this->getConfigSetting("guuidquery");
+    $guuids = $this->getRemoteDataByJsonPath($data, $path);
+    return $guuids[$index];
+  }
 
 }

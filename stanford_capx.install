@@ -21,6 +21,7 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_token');
   variable_del("capx_last_orgs_sync");
   variable_del("capx_last_schema_sync");
+  variable_det("stanford_capx_debug_always_force_etag");
 }
 
 /**
@@ -76,8 +77,8 @@ function stanford_capx_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'fingerprint' => array(
-        'description' => 'fingerprint.',
+      'guuid' => array(
+        'description' => 'A guuid that is not the profile id. Used for multiple creation.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -274,14 +275,14 @@ function stanford_capx_requirements($phase) {
 }
 
 /**
- * Add the fingerprint field to the capx_profiles table.
+ * Add the guuid field to the capx_profiles table.
  */
 function stanford_capx_update_7100() {
 
   $table = "capx_profiles";
-  $field = "fingerprint";
+  $field = "guuid";
   $spec = array(
-    'description' => 'fingerprint.',
+    'description' => 'A guuid that is not the profile id. Used for multiple creation.',
     'type' => 'varchar',
     'length' => 255,
     'not null' => TRUE,
@@ -289,7 +290,5 @@ function stanford_capx_update_7100() {
   );
 
   db_add_field($table, $field, $spec);
-
-
 
 }
