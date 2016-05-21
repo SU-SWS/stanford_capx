@@ -321,6 +321,9 @@ abstract class MapperAbstract implements MapperInterface {
    */
   public function getGUUID($data, $index) {
     $path = $this->getConfigSetting("guuidquery");
+    if (empty($path)) {
+      return '';
+    }
     $guuids = $this->getRemoteDataByJsonPath($data, $path);
     return $guuids[$index];
   }
