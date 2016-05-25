@@ -420,7 +420,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     }
 
   }
-  
+
   /**
    * Logs that a profile was orphaned.
    *
@@ -613,7 +613,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
 
   }
-  
-  
-  
+
+
+
 }
