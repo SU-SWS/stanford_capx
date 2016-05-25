@@ -547,9 +547,33 @@ class EntityMapper extends MapperAbstract {
    * Boolean to whether or not this is a multiple import or not.
    * @return boolean [description]
    */
-  protected function isMultiple() {
+  public function isMultiple() {
     try {
       return $this->getConfigSetting("multiple");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * get Subquery wrapper
+   */
+  public function getSubquery() {
+    try {
+      return $this->getConfigSetting("subquery");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * get guuid wrapper
+   */
+  public function getGUUIDQuery() {
+    try {
+      return $this->getConfigSetting("guuidquery");
     }
     catch (\Exception $e) {
       return FALSE;
