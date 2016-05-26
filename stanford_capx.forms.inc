@@ -533,7 +533,6 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
   foreach ($field_collections as $entity_machine_name => $bundles) {
     foreach ($bundles as $bundle_machine_name => $fields) {
       foreach ($fields as $field_machine_name => $field_info) {
-
         $instances = field_info_instances('field_collection_item', $field_machine_name);
         $collection_container = $entity_machine_name . "-" . $bundle_machine_name . "-collections";
 
@@ -555,7 +554,6 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         foreach ($instances as $fc_field_name => $instance_info) {
 
           $fc_field_info = field_info_field($fc_field_name);
-
           $form['field-mapping'][$collection_container][$field_machine_name][$fc_field_name] = array(
             '#type' => 'container',
             '#title' => t("@var", array("@var" => $instance_info['label'])),
@@ -654,7 +652,7 @@ function stanford_capx_mapper_form_get_fields_fields(&$form_tree, &$form_state, 
       '#default_value' => @$mapper->fields[$field_machine_name][0],
     );
 
-    if ($field_instance_info['required']) {
+    if ($field_instance_info['required'] && empty($field_instance_info['default_value'])) {
       $form_tree['#attributes']['class'][] = "required";
     }
     return;
@@ -685,13 +683,25 @@ function stanford_capx_mapper_form_get_fields_fields(&$form_tree, &$form_state, 
 
   foreach ($field_info_field['columns'] as $column_key => $column_info) {
     if (!in_array($column_key, $CAP_RESTRICTED_FIELD_PROPERTIES)) {
+
+      // Get the default value for the field. If the field was in a field
+      // collection then we need to adjust.
+      $default_value = isset($mapper->fields[$field_machine_name][$column_key]) ? $mapper->fields[$field_machine_name][$column_key] : "";
+      if (isset($field_info_field['bundles']['field_collection_item']) && !empty($field_info_field['bundles']['field_collection_item'])) {
+        if (!empty($mapper->collections[$field_machine_name][$field_info_field['field_name']][$column_key])) {
+          $default_value = $mapper->collections[$field_machine_name][$field_info_field['field_name']][$column_key];
+        }
+      }
+
       $form_tree[$column_key] = array(
         '#type' => 'textfield',
         '#title' => t("@var", array("@var" => $column_key)),
         '#description' => !empty($column_info['description']) ? t("@var", array("@var" => $column_info['description'])) : "",
-        '#default_value' => isset($mapper->fields[$field_machine_name][$column_key]) ? $mapper->fields[$field_machine_name][$column_key] : "",
+        '#default_value' => $default_value,
       );
-      if ($field_instance_info['required']) {
+
+      // Only require a field if it is required and there is no default value.
+      if ($field_instance_info['required'] && empty($field_instance_info['default_value'])) {
         $form_tree['#attributes']['class'][] = "required";
       }
     }
@@ -896,7 +906,6 @@ function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state
   // Get all the properties of the entity type.
   $entity_info = entity_get_property_info($entity);
   $properties = $entity_info['properties'];
-
   $fields = isset($entity_info['bundles']) ? $entity_info['bundles'][$bundle]['properties'] : array();
 
   // Properties validation.
@@ -910,17 +919,31 @@ function stanford_capx_mapper_form_validate_required_fields(&$form, &$form_state
   // Field validation.
   foreach ($fields as $field_name => $value) {
 
+    // Check if the value is required.
     if (isset($value['required']) && $value['required']) {
 
+      // Check if the value exists.
       if (!isset($form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"][$field_name])) {
         continue;
       }
+
+      // Check if there is a required class on the field as we add this to
+      // bypass the multiple hide/show options and required fields.
+      if (!isset($form['field-mapping'][$entity . "-" . $bundle . "-fields"]['#attributes']['class'])) {
+        continue;
+      }
+
+      // No css class, no need to validate.
+      if (!in_array("required", $form['field-mapping'][$entity . "-" . $bundle . "-fields"]['#attributes']['class'])) {
+        continue;
+      }
+
 
       $columns = $form_state['values']['field-mapping'][$entity . "-" . $bundle . "-fields"][$field_name];
 
       // Loop through the columns and check for values.
       foreach ($columns as $column_name => $value) {
-        if (empty($value) && $column_name != 'summary') {
+        if (empty($value) && $column_name !== 'summary') {
           $element = "field-mapping][" . $entity . "-" . $bundle . "-" . "fields][" . $field_name . "][" . $column_name;
           form_set_error($element, t("@name field is required", array("@name" => $field_name)));
           break;
