@@ -324,7 +324,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
   $form['entity-mapping']['subquery'] = array(
     '#type' => 'textfield',
     '#title' => t("Multiple entity creation sub query"),
-    '#description' => t('Which part of the schema will you be using to create multiple entities. Ie: for publications enter: $.publications'),
+    '#description' => t('Which part of the schema will you be using to create multiple entities. Ie: for publications enter: $.publications.*'),
     '#default_value' => isset($mapper->subquery) ? $mapper->subquery : '',
     '#states' => array(
       'visible' => array(

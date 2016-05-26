@@ -53,7 +53,6 @@ function theme_stanford_capx_columns_to_the_right($elements) {
     $req = "<b>" . t("TRUE") . "</b>";
     $element['#children'] = preg_replace("/\<\/label>/", " <span class=\"form-required\" title=\"" . t("This field is required") . ".\">*</span>$0", $element['#children']);
   }
-  $info .= "<p><b>Required</b>: " . $req . "</p>";
 
   // Set up the rows even though there will only be one.
   $rows = array();
