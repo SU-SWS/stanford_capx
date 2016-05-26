@@ -64,7 +64,7 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
     // In order to get here we have to have a valid connection.
     // Lets get the org codes and schema.
     stanford_capx_schema_refresh();
-    // stanford_capx_organizations_sync();
+    stanford_capx_organizations_sync();
   }
 
 
