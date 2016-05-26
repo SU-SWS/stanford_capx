@@ -21,7 +21,7 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_token');
   variable_del("capx_last_orgs_sync");
   variable_del("capx_last_schema_sync");
-  variable_det("stanford_capx_debug_always_force_etag");
+  variable_del("stanford_capx_debug_always_force_etag");
 }
 
 /**
