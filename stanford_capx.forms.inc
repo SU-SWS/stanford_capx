@@ -67,7 +67,6 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
     stanford_capx_organizations_sync();
   }
 
-
   // Endpoints.
   variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
   variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
