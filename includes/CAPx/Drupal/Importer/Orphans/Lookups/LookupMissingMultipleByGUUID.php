@@ -48,7 +48,7 @@ class LookupMissingMultipleByGUUID implements LookupInterface {
    * @param $profileIDs
    * @param $importerMachineName
    */
-  protected function getLocalGUUIds($profileIDs, $importerMachineName) {
+  protected function getLocalGUUIDs($profileIDs, $importerMachineName) {
     $or = db_or()->condition('profile_id', $profileIDs);
     $results = db_select("capx_profiles", "cxp")
       ->fields('cxp', array('entity_id', 'guuid'))
