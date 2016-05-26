@@ -673,7 +673,7 @@ function stanford_capx_mapper_form_get_fields_fields(&$form_tree, &$form_state, 
       '#options' => $options,
       '#title' => t("Referencing Importer"),
       '#description' => t("Select the importer with the reference you would like to attach this item to."),
-      '#default_value' => $mapper->references[$field_machine_name][0],
+      '#default_value' => isset($mapper->references[$field_machine_name]) ? $mapper->references[$field_machine_name][0] : '',
     );
 
     return;
