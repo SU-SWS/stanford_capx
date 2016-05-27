@@ -12,7 +12,7 @@ use CAPx\Drupal\Util\CAPx;
 class FieldCollectionProcessor extends EntityProcessor {
 
   // The field collection entity
-  protected $fieldCollectionEntity = array();
+  protected $fieldCollectionEntities = array();
   // The parent entity
   protected $parentEntity = null;
 
@@ -27,7 +27,7 @@ class FieldCollectionProcessor extends EntityProcessor {
   public function execute() {
     $data = $this->getData();
     $mapper = $this->getMapper();
-    $entityType = $mapper->getEntityType();
+    $entityType = $mapper->getEntitiesType();
     $bundleType = $mapper->getBundleType();
 
     // Use this funciton to find out how many items we really need to create.
@@ -45,26 +45,25 @@ class FieldCollectionProcessor extends EntityProcessor {
     }
 
     // Return all the things we just created.
-    return $this->getEntity();
+    return $this->getEntities();
   }
-
 
   /**
    * New entity override as FieldCollections have some different defualts.
-   * @see  parent:newEntity();
+   * @see parent:newEntity();
    */
   public function newEntity($entityType, $bundleType, $data, $mapper) {
 
     $properties = array(
       'type' => $bundleType,
-      'uid' => 1, // @TODO - set this to something else
-      'status' => 1, // @TODO - allow this to change
-      'comment' => 0, // Any reason to set otherwise?
+      'uid' => 1, // @TODO - set this to something else.
+      'status' => 1, // @TODO - allow this to change.
+      'comment' => 0, // Any reason to set otherwise?.
       'promote' => 0, // Fogetaboutit.
       'field_name' => $bundleType,
     );
 
-    // Create an empty entity
+    // Create an empty entity.
     $entity = entity_create($entityType, $properties);
 
     $hostEntity = $this->getParentEntity();
@@ -77,7 +76,7 @@ class FieldCollectionProcessor extends EntityProcessor {
   }
 
   /**
-   * Return a multidimensional array of result data
+   * Return a multidimensional array of result data.
    *
    * @param $data
    * @param $mapper
