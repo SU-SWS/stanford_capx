@@ -12,7 +12,7 @@ use CAPx\Drupal\Util\CAPx;
 class FieldCollectionProcessor extends EntityProcessor {
 
   // The field collection entity
-  protected $fieldCollectionEntity = null;
+  protected $fieldCollectionEntity = array();
   // The parent entity
   protected $parentEntity = null;
 
@@ -30,8 +30,22 @@ class FieldCollectionProcessor extends EntityProcessor {
     $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
 
-    $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
-    return $entity;
+    // Use this funciton to find out how many items we really need to create.
+    $dataPile = $this->fetchDataPile($data, $mapper);
+
+    // Loop through an create new field collections based on the number of
+    // results for each field.
+    foreach ($dataPile as $fcData) {
+      $entity = $this->newEntity($entityType, $bundleType, $fcdData, $mapper);
+      drupal_alter('capx_new_fc', $entity);
+      $entity = $mapper->execute($entity, $data);
+      $entity->save();
+      // Storage for something that may need it.
+      $this->addFieldCollectionEntity($entity);
+    }
+
+    // Return all the things we just created.
+    return $this->getEntity();
   }
 
 
@@ -59,24 +73,38 @@ class FieldCollectionProcessor extends EntityProcessor {
 
     // Wrap it up baby!
     $entity = entity_metadata_wrapper($entityType, $entity);
-    $entity = $mapper->execute($entity, $data);
-    $entity->save();
-
-    drupal_alter('capx_new_fc', $entity);
-
-    // Storage for something that may need it.
-    $this->setFieldCollectionEntity($entity);
-
     return $entity;
+  }
+
+  /**
+   * Return a multidimensional array of result data
+   *
+   * @param $data
+   * @param $mapper
+   * @return array
+   */
+  protected function fetchDataPile($data, $mapper) {
+    $pile = array();
+    $pile = array_pad($pile, 10, $data);
+    return $pile;
   }
 
 
   /**
    * Setter function
-   * @param FieldCollectionItem $entity the field collection item to be acted on
+   * @param Array $entities an array of field collection items
    */
-  public function setFieldCollectionEntity($entity) {
-    $this->fieldCollectionEntity = $entity;
+  protected function addFieldCollectionEntity($entity) {
+    $this->fieldCollectionEntity[] = $entity;
+  }
+
+
+  /**
+   * Setter function
+   * @param Array $entities an array of field collection items
+   */
+  public function setFieldCollectionEntity($entities) {
+    $this->fieldCollectionEntity = $entities;
   }
 
   /**
