@@ -26,6 +26,7 @@ use CAPx\Drupal\Importer\Orphans\Lookups\LookupMissingFromAPI;
 use CAPx\Drupal\Importer\Orphans\Lookups\LookupMissingFromSunetList;
 use CAPx\Drupal\Importer\Orphans\Lookups\LookupOrgOrphans;
 use CAPx\Drupal\Importer\Orphans\Lookups\LookupWorkgroupOrphans;
+use CAPx\Drupal\Importer\Orphans\Lookups\LookupMissingMultipleByGUUID;
 
 class CAPxImporter {
 
@@ -155,38 +156,58 @@ class CAPxImporter {
    * @return [type]           [description]
    */
   public static function getEntityOrphanator($importerName, $profiles = array()) {
-    $orphanator = NULL;
 
+    $orphanator = NULL;
     $importer = CAPxImporter::loadEntityImporter($importerName);
 
-    if ($importer) {
-      $lookups = array();
-      $comparisons = array();
+    // If we couldn't load the importer we need to log and error out.
+    if (!$importer) {
+      $vars = array(
+        '%name' => $importerName,
+        '!log' => l(t('log messages'), 'admin/reports/dblog'),
+      );
+      drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
+      return;
+    }
 
-      // Load all the lookups...
-      $lookups[] = new LookupMissingFromAPI();
+    // Track wether this is a multiple entity importer or not. The checks differ
+    // for these types.
+    $mapper = $importer->getMapper();
+    $multiple = $mapper->isMultiple();
+    $lookups = array();
+    $comparisons = array();
+
+    // Load the lookups...
+    $lookups[] = new LookupMissingFromAPI();
+
+    // Only want these if not a multiple import.
+    if (!$multiple) {
       $lookups[] = new LookupMissingFromSunetList();
       $lookups[] = new LookupOrgOrphans();
       $lookups[] = new LookupWorkgroupOrphans();
+    }
 
-      // Load all the comparisons...
-      $comparisons[] = new CompareMissingFromAPI();
+    // Load the comparisons...
+    $comparisons[] = new CompareMissingFromAPI();
+
+    // Only want these if not a multiple import.
+    if (!$multiple) {
       $comparisons[] = new CompareOrgCodesSunet();
       $comparisons[] = new CompareOrgCodesWorkgroups();
       $comparisons[] = new CompareSunetOrgCodes();
       $comparisons[] = new CompareSunetWorkgroups();
       $comparisons[] = new CompareWorkgroupsOrgCodes();
       $comparisons[] = new CompareWorkgroupsSunet();
+    }
 
-      $orphanator = new EntityImporterOrphans($importer, $profiles, $lookups, $comparisons);
+    // For multiple entity importers we need to check not only if the profile
+    // exists but the part of the profile that is being imported still exists.
+    if ($multiple) {
+      $lookups[] = new LookupMissingMultipleByGUUID();
     }
-    else {
-      $vars = array(
-        '%name' => $importerName,
-        '!log' => l(t('log messages'), 'admin/reports/dblog'),
-      );
-      drupal_set_message(t('There was an issue loading the importer with %name machine name. Check !log.', $vars), 'error');
-    }
+
+    // Load it up and send it along the way.
+    $orphanator = new EntityImporterOrphans($importer, $profiles, $lookups, $comparisons);
 
     return $orphanator;
   }
