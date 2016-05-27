@@ -71,14 +71,14 @@ function stanford_capx_permission() {
       'title' => t('Administer CAPx'),
       'description' => t('Administer and configure CAPx settings.'),
     ),
-    'capx administer importers' => array(
-      'title' => t('Administer CAPx Importers'),
-      'description' => t('Administer and configure CAPx importers.'),
-    ),
-    'capx administer mappers' => array(
-      'title' => t('Administer CAPx Mappers'),
-      'description' => t('Administer and configure CAPx mappers.'),
-    ),
+    // 'capx administer importers' => array(
+    //   'title' => t('Administer CAPx Importers'),
+    //   'description' => t('Administer and configure CAPx importers.'),
+    // ),
+    // 'capx administer mappers' => array(
+    //   'title' => t('Administer CAPx Mappers'),
+    //   'description' => t('Administer and configure CAPx mappers.'),
+    // ),
     'capx advanced administrator' => array(
       'title' => t('Administer Advanced CAPx settings'),
       'description' => t('Administer and Ccnfigure CAPx advanced settings.'),
