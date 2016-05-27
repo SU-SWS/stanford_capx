@@ -557,6 +557,15 @@ class EntityMapper extends MapperAbstract {
   }
 
   /**
+   * Sets the multiple config value to passed in.
+   * @param $val bool
+   *   Boolean for multiple or not
+   */
+  public function setIsMultiple($val = TRUE) {
+    $this->config['multiple'] = $val;
+  }
+
+  /**
    * get Subquery wrapper
    */
   public function getSubquery() {

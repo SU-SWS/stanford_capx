@@ -27,25 +27,61 @@ class FieldCollectionProcessor extends EntityProcessor {
   public function execute() {
     $data = $this->getData();
     $mapper = $this->getMapper();
-    $entityType = $mapper->getEntitiesType();
+    $entityType = $mapper->getEntityType();
     $bundleType = $mapper->getBundleType();
-
-    // Use this funciton to find out how many items we really need to create.
-    $dataPile = $this->fetchDataPile($data, $mapper);
+    $parent = $this->getParentEntity();
 
     // Loop through an create new field collections based on the number of
-    // results for each field.
-    foreach ($dataPile as $fcData) {
-      $entity = $this->newEntity($entityType, $bundleType, $fcdData, $mapper);
+    // results for each field. Keep looping through the index of data until
+    // there is no more data to add to the entity. We can accomplish this by
+    // checking to see if the last FC that was created is exactly the same as
+    // the one just created. If they are identical then no new data is available
+    // and the loop should be stopped.
+
+    $mapper->setIsMultiple(true);
+    $lastEntity = NULL;
+
+    $i = 0;
+    $hasValues = TRUE;
+    while($hasValues) {
+      $mapper->setIndex($i);
+      $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
       drupal_alter('capx_new_fc', $entity);
       $entity = $mapper->execute($entity, $data);
+
+      // Here we check to see if anything came out the other end.
+      $hash = md5(serialize($entity));
+      if ($hash == $lastEntity) {
+        $hasValues = FALSE;
+        break;
+      }
+
+      // Not the same. Store the current entity as the last entity before saving
+      // or we will pollute the object with ids.
+      $lastEntity = $hash;
+
+      // Save.
       $entity->save();
+
       // Storage for something that may need it.
       $this->addFieldCollectionEntity($entity);
+
+      // Add to index for next one.
+      $i++;
     }
 
+    // Remove the last two items from the entities array and from the parent
+    // entity as they are full of duplicate or not complete data.
+    $fieldName = $mapper->getBundleType();
+    array_pop($this->fieldCollectionEntities);
+    array_pop($this->fieldCollectionEntities);
+    $rawParent = $parent->raw();
+    array_pop($rawParent->{$fieldName}[LANGUAGE_NONE]);
+    array_pop($rawParent->{$fieldName}[LANGUAGE_NONE]);
+    $parent->set($rawParent);
+
     // Return all the things we just created.
-    return $this->getEntities();
+    return $this->getFieldCollectionEntities();
   }
 
   /**
@@ -76,25 +112,11 @@ class FieldCollectionProcessor extends EntityProcessor {
   }
 
   /**
-   * Return a multidimensional array of result data.
-   *
-   * @param $data
-   * @param $mapper
-   * @return array
-   */
-  protected function fetchDataPile($data, $mapper) {
-    $pile = array();
-    $pile = array_pad($pile, 10, $data);
-    return $pile;
-  }
-
-
-  /**
    * Setter function
    * @param Array $entities an array of field collection items
    */
   protected function addFieldCollectionEntity($entity) {
-    $this->fieldCollectionEntity[] = $entity;
+    $this->fieldCollectionEntities[] = $entity;
   }
 
 
@@ -102,16 +124,16 @@ class FieldCollectionProcessor extends EntityProcessor {
    * Setter function
    * @param Array $entities an array of field collection items
    */
-  public function setFieldCollectionEntity($entities) {
-    $this->fieldCollectionEntity = $entities;
+  public function setFieldCollectionEntities($entities) {
+    $this->fieldCollectionEntities = $entities;
   }
 
   /**
    * Getter function
    * @return FieldCollectionItem the field collection item.
    */
-  public function getFieldCollectionEntity() {
-    return $this->fieldCollectionEntity;
+  public function getFieldCollectionEntities() {
+    return $this->fieldCollectionEntities;
   }
 
   /**
