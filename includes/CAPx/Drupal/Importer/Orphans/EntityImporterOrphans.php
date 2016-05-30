@@ -356,16 +356,16 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
       $profile = entity_metadata_wrapper($entityType, $entity[$entityId]);
 
       switch ($action) {
+        // Any entity can be deleted.
         case 'delete':
           $profile->delete();
           break;
 
+        // Users and nodes can have their status set to 0.
         case 'block':
         case 'unpublish':
           $profile->status->set(0);
           $profile->save();
-
-          // Log that this profile was orphaned.
           $this->logOrphan($profile);
           break;
 

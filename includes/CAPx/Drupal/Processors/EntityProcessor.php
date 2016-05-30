@@ -318,7 +318,7 @@ class EntityProcessor extends ProcessorAbstract {
    * @param object $mapper
    *   The EntityMapper instance
    * @param mixed $guuid
-   *   The
+   *   The genuine unique id for this entity of other than profileId.
    *
    * @return object
    *   The new entity after it has been saved.
