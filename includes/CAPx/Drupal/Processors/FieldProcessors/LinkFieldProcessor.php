@@ -40,7 +40,7 @@ class LinkFieldProcessor extends FieldTypeProcessor {
 
         // If autotruncating is enabled lets do that here. This is to help
         // avoid issues when trying to map data to the API.
-        if (variable_get("stanford_capx_autotruncate_textfields", FALSE)) {
+        if (variable_get("stanford_capx_autotruncate_textfields", TRUE)) {
 
           $maxlength = 2048; // Default for url.
 

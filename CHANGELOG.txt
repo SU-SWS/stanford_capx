@@ -12,10 +12,10 @@ Stanford CAPx 7.x-2.0, 2016-05-27
 - Added several new permissions for more granular control over the
 - Removed superfluous required text on field mapping
 - Required fields with a default value are no longer required in the mapping.
+- Added auto truncating of text fields in order to avoid the PDO exception error of value too long.
 
 Stanford CAPx 7.x-1.3, 2016-02-05
 ---------------------------------
-
 - Bugfix: Removed hook_install views save and install time check for private files dir.
 - Bugfix: Reduced duplicate warning messages.
 - Bugfix: Fix UI for field collection mapping where it was only showing one.
@@ -33,7 +33,6 @@ Stanford CAPx 7.x-1.3, 2016-02-05
 
 Stanford CAPx 7.x-1.2, 2015-09-10
 ---------------------------------
-
 - Upgraded HTTP Client from Guzzle 3.7.4 -> 6.0.2
 - User entities when created from CAP now get a random password assigned to them.
 - Fixed permission issues with the profiles list view
