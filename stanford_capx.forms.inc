@@ -209,7 +209,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
 
   $form['entity-mapping']['multiple-entities'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Create multiple entities"),
+    '#title' => t("Would you like to create multiple entities per imported bundle for the type of content you're importing?"),
     '#description' => t('By default, a mapper will create one entity per person. If you wanted to import a persons publications you would need multiple entities per person. Check this box for multiple.'),
     '#default_value' => isset($mapper->multiple) ? $mapper->multiple : FALSE,
   );
