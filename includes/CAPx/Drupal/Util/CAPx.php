@@ -215,7 +215,13 @@ class CAPx {
       ->execute()
       ->fetchAssoc();
 
-    return isset($query['entity_id']) ? array_pop(entity_load($query['entity_type'], array($query['entity_id']))) : FALSE;
+    // If we gots one send it back.
+    if (isset($query['entity_id'])) {
+      $entities = entity_load($query['entity_type'], array($query['entity_id']));
+      return array_pop($entities);
+    }
+
+    return FALSE;
   }
 
   /**
