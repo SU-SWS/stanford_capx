@@ -49,7 +49,7 @@ $CAP_RESTRICTED_FIELD_PROPERTIES = array(
   'attributes',
 );
 
-define('STANFORD_CAPX_FILE_PATH', 'private://stanford_capx/');
+define('STANFORD_CAPX_FILE_PATH', 'private://stanford_capx');
 define('STANFORD_CAPX_SCHEMA_FILE', 'schema.json');
 
 /**
@@ -512,7 +512,7 @@ function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
     return FALSE;
   }
 
-  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+  $file = STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SCHEMA_FILE;
 
   // @TODO: Refresh automatically under some condition? Weekly?
   // If forcing a refesh or the schema hasn't been downloaded, download it!
@@ -543,7 +543,7 @@ function stanford_capx_schema_load($format = 'json', $reset = FALSE) {
  *   FALSE if failed or a json string if success.
  */
 function stanford_capx_schema_refresh() {
-  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE;
+  $file = STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SCHEMA_FILE;
 
   // Ensure the modules' private files directory exists and is writable.
   if (stanford_capx_files_dir_exists()) {
