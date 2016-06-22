@@ -13,83 +13,6 @@ use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
 
-// /////////////////////////////////////////////////////////////////////////////
-// CONNECT FORM
-// /////////////////////////////////////////////////////////////////////////////
-
-
-/**
- * Connection details form builder.
- */
-function stanford_capx_forms_connect_form($form, &$form_state) {
-
-  $username = CAPx::getAuthUsername();
-  $connection = CAPxConnection::testConnection();
-
-  $form['status'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Connection Status'),
-    '#collapsible' => TRUE,
-  );
-
-  $form['status']['status'] = array(
-    '#markup' => stanford_capx_connection_status_block(),
-  );
-
-  $form['auth'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Authorization'),
-    '#collapsible' => TRUE,
-    '#collapsed' => $connection->status,
-  );
-
-  $form['auth']['description'] = array(
-    '#markup' => t('Please enter your authentication information for the CAP API.'),
-  );
-
-  $form['auth']['stanford_capx_username'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Client ID:'),
-    '#default_value' => $username,
-    '#required' => TRUE,
-  );
-
-  $form['auth']['stanford_capx_password'] = array(
-    '#type' => 'password',
-    '#title' => t('Password:'),
-  );
-
-  $form['advanced'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Advanced'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => t('Advanced setting for CAP API and authentication URIs'),
-  );
-
-  $form['advanced']['stanford_capx_api_base_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Endpoint'),
-    '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
-    '#default_value' => CAPx::getAPIEndpoint(),
-    '#required' => TRUE,
-  );
-
-  $form['advanced']['stanford_capx_api_auth_uri'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Authentication URI'),
-    '#description' => t('CAP API authentication URI.'),
-    '#default_value' => CAPx::getAuthEndpoint(),
-    '#required' => TRUE,
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save connection settings'),
-  );
-
-  return $form;
-}
 
 /**
  * [stanford_capx_forms_connect_form_validate description]
@@ -104,46 +27,17 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
   $endpoint = $form_state['values']['stanford_capx_api_base_url'];
   $authpoint = $form_state['values']['stanford_capx_api_auth_uri'];
 
+  // Do not process a change on an empty password. Re-apply the password from
+  // the database because the system_form will save an empty value otherwise.
+  if (empty($password)) {
+    return;
+  }
+
   // If password changed validate auth.
-  if (!empty($password)) {
-    $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
-    if (!$auth_test->status) {
-      form_set_error('stanford_capx_username', t('Could not authenticate with server. Invalid credentials. Please check your username and password.'));
-      form_set_error('stanford_capx_password');
-    }
-  }
-
-  // In case the end points change we need to get pass from db.
-  $password = !empty($password) ? $password : CAPx::getAuthPassword();
-
-  // If authpoint changed.
-  if ($authpoint !== "https://authz.stanford.edu/oauth/token") {
-
-    if (!isset($auth_test)) {
-      $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
-    }
-
-    if (!$auth_test->status) {
-      form_set_error("stanford_capx_api_auth_uri", t("Please check your authorization url."));
-    }
-
-  }
-
-  // If endpoint changed.
-  if ($endpoint !== "https://api.stanford.edu") {
-
-    if (!isset($auth_test)) {
-      $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
-    }
-
-    if (isset($auth_test->token)) {
-      $token = $auth_test->token;
-      $end_test = CAPxConnection::testApiConnection($token, $endpoint);
-      if (!$end_test->status) {
-        form_set_error("stanford_capx_api_base_url", t("Could not connect to API endpoint."));
-      }
-    }
-
+  $auth_test = CAPxConnection::testAuthConnection($username, $password, $authpoint);
+  if (!$auth_test->status) {
+    form_set_error('stanford_capx_username', t('Could not authenticate with server. Invalid credentials. Please check your username and password.'));
+    form_set_error('stanford_capx_password');
   }
 
 }
@@ -156,7 +50,7 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
  */
 function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
-  drupal_set_message(t('Configuration options were saved.'));
+  drupal_set_message(t("Configuration options saved."), "status");
 
   // Username and Pass.
   if (!empty($form_state['values']['stanford_capx_username'])
@@ -167,16 +61,15 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
     variable_set('stanford_capx_username', $username);
     variable_set('stanford_capx_password', $password);
 
+    // In order to get here we have to have a valid connection.
+    // Lets get the org codes and schema.
+    stanford_capx_schema_refresh();
+    stanford_capx_organizations_sync();
   }
 
   // Endpoints.
   variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
   variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
-
-  // In order to get here we have to have a valid connection. Lets get the org codes
-  // and schema.
-  stanford_capx_schema_refresh();
-  stanford_capx_organizations_sync();
 }
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -1374,6 +1267,43 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
 }
 
 /**
+ * [stanford_capx_config_settings_data_sync_form description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
+function stanford_capx_config_settings_data_sync_form($form, $form_state) {
+  $form['orggroup'] = array(
+    '#type' => "fieldset",
+    '#title' => t("Organizations & Schema"),
+    '#description' => t("The CAPx module needs some information from the CAP API in order to function properly. Below are actions that require communication with the CAP API server and you must be connected before you can run these tasks."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  // Organizations.
+  $form['orggroup']['orgcodeinfo']['#markup'] = "<h3>Organizations</h3>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("Organization codes come from the CAP API and are saved to a taxonomy. This taxonomy powers the organization code autocomplete in the import section.") . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("Last sync: @date", array("@date" => variable_get('capx_last_orgs_sync', 'never'))) . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . t("View all organization codes: !link", array("!link" => l(t('Organization taxonomy'), 'admin/structure/taxonomy/capx_organizations'))) . "</p>";
+  $form['orggroup']['orgcodeinfo']['#markup'] .= "<p>" . l(t('Get organization data'), 'admin/config/capx/organizations/sync', array("attributes" => array('class' => array('btn button')), 'query' => array('destination' => current_path()))) . "</p>";
+
+  // Schema.
+  $form['orggroup']['schemainfo']['#markup'] = "<br /><h3>Schema Information</h3>";
+  $form['orggroup']['schemainfo']['#markup'] .= "<p>" . t("The CAP API provides a schema of the information available. The CAPx module needs this in order to power the data browser that is found on a mapping page.") . "</p>";
+  $form['orggroup']['schemainfo']['#markup'] .= "<p>" . t("Last sync: @date", array("@date" => variable_get('capx_last_schema_sync', 'never'))) . "</p>";
+  $form['orggroup']['submit'] = array(
+    '#type' => 'button',
+    '#value' => 'Get schema information',
+    '#op' => 'submit',
+    // '#element_validate' => array("stanford_capx_schema_refresh"), // Yes, I know this is abuse.
+  );
+
+  // $form['#submit'][] = "stanford_capx_schema_refresh";
+  return $form;
+}
+
+/**
  * AJAX callback.
  */
 function _stanford_capx_importer_form_mapper_ajax_callback($form, $form_state) {
@@ -1546,7 +1476,7 @@ function stanford_capx_admin_config_importer_delete($form, &$form_state, $machin
   $form['profile_action'] = array(
     '#type' => 'select',
     '#title' => t('What would you like to do with the items that are associated with this importer?'),
-//    '#description' => t('Perform an action on all of the items that have been imported by this importer.'),
+    //    '#description' => t('Perform an action on all of the items that have been imported by this importer.'),
     '#options' => array(
       'nothing' => t('Do nothing and leave the items as they are'),
       'delete' => t('Delete all of the items'),
@@ -1924,6 +1854,70 @@ function stanford_capx_schema_format_validation($schema = NULL) {
   return $formatted_schema;
 }
 
+/**
+ * Auth settings form. Was previously the connect page.
+ * @param  [type] $form        [description]
+ * @param  [type] &$form_state [description]
+ * @return [type]              [description]
+ */
+function stanford_capx_config_auth_settings_form($form, &$form_state) {
+  $username = CAPx::getAuthUsername();
+  $connection = CAPxConnection::testConnection();
+
+  $form['auth'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Authorization'),
+    '#collapsible' => TRUE,
+    '#collapsed' => $connection->status,
+    '#weight' => -10,
+  );
+
+  $form['auth']['description'] = array(
+    '#markup' => t('Please enter your authentication information for the CAP API. If you don\'t have these credentials yet you can !helpsu.', array('!helpsu' => l("File a HelpSU request", "https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP_API&dtemplate=CAP-OAuth-Info"))),
+  );
+
+  $form['auth']['stanford_capx_username'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Client ID:'),
+    '#default_value' => $username,
+    '#required' => TRUE,
+  );
+
+  $form['auth']['stanford_capx_password'] = array(
+    '#type' => 'password',
+    '#title' => t('Password:'),
+  );
+
+  $form['advanced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Advanced setting for CAP API and authentication URIs'),
+    '#access' => user_access("capx advanced administrator"),
+  );
+
+  $form['advanced']['stanford_capx_api_base_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Endpoint'),
+    '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
+    '#default_value' => CAPx::getAPIEndpoint(),
+    '#required' => TRUE,
+  );
+
+  $form['advanced']['stanford_capx_api_auth_uri'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Authentication URI'),
+    '#description' => t('CAP API authentication URI.'),
+    '#default_value' => CAPx::getAuthEndpoint(),
+    '#required' => TRUE,
+  );
+
+  $form['#validate'][] = "stanford_capx_forms_connect_form_validate";
+  $form['#submit'][] = "stanford_capx_forms_connect_form_submit";
+
+  return $form;
+}
 
 /**
  * The global configuration settings for CAPx form builder.
@@ -1959,9 +1953,21 @@ function stanford_capx_config_settings_form($form, &$form_state) {
     '#default_value' => variable_get('stanford_capx_default_field_format', 'filtered_html'),
   );
 
-  $form = system_settings_form($form);
-  $form['actions']['submit']['#value'] = t("Save settings");
+  $form["#submit"][] = "stanford_capx_config_settings_form_submit";
+
   return $form;
+}
+
+/**
+ * Submit function for stanford_capx_config_settings_form
+ * @param  [type] $form        [description]
+ * @param  [type] &$form_state [description]
+ * @return [type]              [description]
+ */
+function stanford_capx_config_settings_form_submit($form, &$form_state) {
+  $values = $form_state["values"];
+  variable_set("stanford_capx_batch_limit", check_plain($values['stanford_capx_batch_limit']));
+  variable_set("stanford_capx_default_field_format", check_plain($values['stanford_capx_default_field_format']));
 }
 
 /**
