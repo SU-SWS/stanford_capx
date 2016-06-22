@@ -91,7 +91,7 @@ function stanford_capx_admin_config_data_browser_refresh_submit($form, &$form_st
 function stanford_capx_admin_data_browser_schema_flush() {
   $files = array(
     'schema_file' => STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SCHEMA_FILE,
-    'sample_data_file' => STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE,
+    'sample_data_file' => STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SAMPLE_PROFILE,
   );
 
   // Delete the cached files, which will be re-fetched on next page reload.
@@ -252,13 +252,13 @@ function stanford_capx_sample_data_render($sample_data) {
 function stanford_capx_sample_data($selector) {
   static $sample_profile;
   static $json_parser;
-  $file = STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE;
+  $file = STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SAMPLE_PROFILE;
 
   // Load and static cache the sample data file.
   if (!isset($sample_profile)) {
     if (file_exists($file)) {
       // Load sample data from the file cache.
-      $json = file_get_contents(STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE);
+      $json = file_get_contents(STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SAMPLE_PROFILE);
     }
     else {
       // Fetch the profile from CAP and save to file cache.
