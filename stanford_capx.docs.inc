@@ -90,7 +90,7 @@ function stanford_capx_admin_config_data_browser_refresh_submit($form, &$form_st
  */
 function stanford_capx_admin_data_browser_schema_flush() {
   $files = array(
-    'schema_file' => STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SCHEMA_FILE,
+    'schema_file' => STANFORD_CAPX_FILE_PATH . "/" . STANFORD_CAPX_SCHEMA_FILE,
     'sample_data_file' => STANFORD_CAPX_FILE_PATH . STANFORD_CAPX_SAMPLE_PROFILE,
   );
 
