@@ -153,7 +153,7 @@ function stanford_capx_connection_status_block() {
     $content .= '<h2 class="error">' . t('Not Connected') . '</h2>';
 
     if ($connection->code == 0) {
-      $content .= t("Please go to the !connt page to connect to the CAP API.", array("!connt" => l(t("CAPx connection"), "admin/config/capx/connect")));
+      $content .= t("Please go to the !connt page to connect to the CAP API.", array("!connt" => l(t("CAPx settings"), "admin/config/capx/settings")));
     }
     else {
       $vars = array('@code' => $connection->code, '@message' => $connection->message);
