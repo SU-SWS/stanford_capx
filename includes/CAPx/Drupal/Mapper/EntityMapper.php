@@ -7,12 +7,17 @@
 namespace CAPx\Drupal\Mapper;
 
 use CAPx\Drupal\Processors\FieldProcessors\FieldProcessor;
+use CAPx\Drupal\Processors\FieldProcessors\EntityReferenceFieldProcessor;
 use CAPx\Drupal\Processors\PropertyProcessors\PropertyProcessor;
 use CAPx\Drupal\Processors\FieldCollectionProcessor;
+use CAPx\Drupal\Processors\EntityReferenceProcessor;
+use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 
 class EntityMapper extends MapperAbstract {
+
+  protected $index;
 
   /**
    * Execute starts the mapping process.
@@ -27,6 +32,11 @@ class EntityMapper extends MapperAbstract {
    */
   public function execute($entity, $data) {
 
+    // Always attach the profileId to the entity
+    $raw = $entity->value();
+    $raw->capx['profileId'] = $data['profileId'];
+    $entity->set($raw);
+
     // Store this for later.
     $this->setEntity($entity);
 
@@ -36,6 +46,7 @@ class EntityMapper extends MapperAbstract {
     // is logged to watchdog so handle any errors in each of these by throwing
     // only one error up a level.
 
+    // FIELDS.
     try {
       $this->mapFields($data);
     }
@@ -43,6 +54,7 @@ class EntityMapper extends MapperAbstract {
       $this->setError($e);
     }
 
+    // PROPERTIES.
     try {
       $this->mapProperties($data);
     }
@@ -50,10 +62,19 @@ class EntityMapper extends MapperAbstract {
       $this->setError($e);
     }
 
+    // FIELD COLLECTIONS.
     try {
       // Field Collections are special. Special means more code. They get their
       // own mapProcess even though they are sort of a field.
       $this->mapFieldCollections($data);
+    }
+    catch (\Exception $e) {
+      $this->setError($e);
+    }
+
+    // REFERENCES.
+    try {
+      $this->mapReferences();
     }
     catch (\Exception $e) {
       $this->setError($e);
@@ -128,6 +149,12 @@ class EntityMapper extends MapperAbstract {
             continue;
           }
 
+          // If we are running a multiple entity mapping we only want part of
+          // the result.
+          if ($this->isMultiple()) {
+            $info = $this->getMultipleIndexInfoResultField($info);
+          }
+
           // Widgets can change the way the data needs to be parsed. Provide
           // that to the FieldProcessor.
           $widget = $fieldInfoInstance['widget']['type'];
@@ -181,7 +208,7 @@ class EntityMapper extends MapperAbstract {
       try {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }
-      catch(\Exception $e) {
+      catch (\Exception $e) {
         $error = TRUE;
         $message = 'There was an exception when trying to get data by @path. Exception message is: @message.';
         $message_vars = array(
@@ -190,6 +217,12 @@ class EntityMapper extends MapperAbstract {
         );
         watchdog('stanford_capx_jsonpath', $message, $message_vars);
         continue;
+      }
+
+      // If we are running a multiple entity mapping we only want part of
+      // the result.
+      if ($this->isMultiple()) {
+        $info = $this->getMultipleIndexInfoResultProperty($info);
       }
 
       // Let the property processor do its magic.
@@ -228,7 +261,7 @@ class EntityMapper extends MapperAbstract {
     try {
       $collections = $this->getConfigSetting('fieldCollections');
     }
-    catch(\Exception $e) {
+    catch (\Exception $e) {
       // No collections. Just return.
       return;
     }
@@ -259,6 +292,56 @@ class EntityMapper extends MapperAbstract {
     }
 
     // Set the entity again for changes.
+    $this->setEntity($entity);
+  }
+
+  /**
+   * Process entity reference fields uniquely.
+   *
+   * Reference fields are a special field and need to be handled differently.
+   * Allow for the ability to look for an item to attach to from the API
+   * that has already been imported.
+   *
+   */
+  public function mapReferences() {
+
+    try {
+      $references = $this->getConfigSetting('references');
+    }
+    catch (\Exception $e) {
+      // No references. Just return.
+      return;
+    }
+
+    // Nothing to do here.
+    if (empty($references)) {
+      return;
+    }
+
+    $entity = $this->getEntity();
+
+    // Loop through each reference field and try to match up with another
+    // entity from another importer.
+    foreach ($references as $fieldName => $values) {
+      $target = array_pop($values);
+      $processor = new EntityReferenceProcessor($entity, $this->getImporter(), $target);
+      $referenceEntity = $processor->execute();
+
+      // No possible references available. End here.
+      if (empty($referenceEntity)) {
+        continue;
+      }
+
+      // wrap it up.
+      $referenceEntity = entity_metadata_wrapper($this->getEntityType(), $referenceEntity);
+
+      // Map the reference.
+      $entityReferenceFieldProcessor = new EntityReferenceFieldProcessor($entity, $fieldName);
+      $entityReferenceFieldProcessor->put($referenceEntity);
+
+    }
+
+    // Set the entity to apply any changes this function may have had.
     $this->setEntity($entity);
   }
 
@@ -458,6 +541,108 @@ class EntityMapper extends MapperAbstract {
     }
 
     return $affected;
+  }
+
+  /**
+   * Boolean to whether or not this is a multiple import or not.
+   * @return boolean [description]
+   */
+  public function isMultiple() {
+    try {
+      return $this->getConfigSetting("multiple");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Sets the multiple config value to passed in.
+   * @param $val bool
+   *   Boolean for multiple or not
+   */
+  public function setIsMultiple($val = TRUE) {
+    $this->config['multiple'] = $val;
+  }
+
+  /**
+   * get Subquery wrapper
+   */
+  public function getSubquery() {
+    try {
+      return $this->getConfigSetting("subquery");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * get guuid wrapper
+   */
+  public function getGUUIDQuery() {
+    try {
+      return $this->getConfigSetting("guuidquery");
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * [getIndex description]
+   * @return [type] [description]
+   */
+  public function getIndex() {
+    return $this->index;
+  }
+
+  /**
+   * [setIndex description]
+   * @param [type] $i [description]
+   */
+  public function setIndex($i) {
+    if (is_int($i) && $i >= 0) {
+      $this->index = $i;
+    }
+    else {
+      throw new \Exception("Could not set index. Invalid option.");
+
+    }
+  }
+
+  /**
+   * [getMultipleIndexInfoResult description]
+   * @param  [type] $info [description]
+   * @return [type]       [description]
+   */
+  protected function getMultipleIndexInfoResultField($info) {
+    $index = $this->getIndex();
+    $keys = array_keys($info);
+    $ret = array();
+
+    foreach ($keys as $key) {
+      if (isset($info[$key][$index])) {
+        $ret[$key] = array($info[$key][$index]);
+      }
+    }
+
+    return !empty($ret) ? $ret : $info;
+  }
+
+  /**
+   * @param $info
+   * @return array
+   */
+  protected function getMultipleIndexInfoResultProperty($info) {
+    $index = $this->getIndex();
+
+    // If an index value exists:
+    if (isset($info[$index])) {
+      return array($info[$index]);
+    }
+
+    return $info;
   }
 
 }

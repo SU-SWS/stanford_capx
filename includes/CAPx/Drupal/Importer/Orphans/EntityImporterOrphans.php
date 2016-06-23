@@ -69,10 +69,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     $this->setProfiles($profiles);
     $this->setLimit(count($profiles));
 
+    // Store all of the lookups.
     if (is_array($lookups)) {
       $this->lookups = $lookups;
     }
 
+    // Store all of the comparisons.
     if (is_array($comparisons)) {
       $this->comparisons = $comparisons;
     }
@@ -87,9 +89,6 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // If the action is set to do nothing to orphaned profiles, do nothing.
     $options = $this->getImporterOptions();
     $action = $options['orphan_action'];
-
-    $importer =  $this->getImporter();
-    $options = $this->getImporterOptions();
     $profiles = $this->getProfiles();
     $client = $this->getClient();
     $limit = $this->getLimit();
@@ -120,34 +119,41 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // Now that we have identified all of the orphans lets compare them to each
     // way we can import a profile to identify if an orphan in one is not an
     // orphan in another. Only an orphan across all ways is a true orphan.
-
     $comparisons = $this->getComparisons();
     foreach ($comparisons as $k => $comparison) {
       $orphans = $comparison->execute($this);
       $this->setOrphans($orphans);
     }
 
-    // If we have no orphans after all of that just end.
-    if (empty($orphans)) {
-      return;
+    // Special processor for multiple items.
+    if (isset($orphans['multiple'])) {
+      $this->processMultipleImporterOrphans($orphans['multiple']);
+      unset($orphans['multiple']);
     }
 
     // We have looked at everything and now it is time to process the orphans.
     // In order to be an orphan the orphan id has to appear in all importer
     // Options. So we can just take one and run the process on that.
-    $orphaned = array_pop($orphans);
+    $orphaned = end($orphans);
+
+    // Always want to do this in case the action has changed.
+    $this->processAdopted($profiles, $orphaned);
+    $this->processAdoptedMultiple($profiles);
+
+    // If we have no orphans after all of that just end.
+    if (empty($orphans)) {
+      return;
+    }
 
     // Small patch up fix.
     if (isset($orphans["missing"])) {
       $orphaned = array_merge($orphaned, $orphans["missing"]);
     }
 
+    // If no action is required then just skip over this and go to the adopted.
     if ($action !== "nothing") {
-      $this->processOrphans($orphaned, $importer);
+      $this->processOrphans($orphaned);
     }
-
-    // Always want to do this in case the action has changed.
-    $this->processAdopted($profiles, $orphaned);
 
   }
 
@@ -331,6 +337,45 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
   // ///////////////////////////////////////////////////////////////////////////
 
 
+  /**
+   * @param $entityIds
+   */
+  protected function processMultipleImporterOrphans($entityIds) {
+    $importer = $this->getImporter();
+    $entityType = $importer->getEntityType();
+    $options = $this->getImporterOptions();
+    $action = $options['orphan_action'];
+
+    // Do nothing John Snow.
+    if ($action == "nothing") {
+      return;
+    }
+
+    foreach ($entityIds as $entityId) {
+      $entity = entity_load($entityType, array($entityId));
+      $profile = entity_metadata_wrapper($entityType, $entity[$entityId]);
+
+      switch ($action) {
+        case 'delete':
+          $profile->delete();
+          break;
+
+        case 'block':
+        case 'unpublish':
+          $profile->status->set(0);
+          $profile->save();
+
+          // Log that this profile was orphaned.
+          $this->logOrphan($profile);
+          break;
+
+        default:
+          // Do nothing.
+      }
+    }
+
+  }
+
 
   /**
    * Handles what to do when a profile has been orphaned.
@@ -374,6 +419,62 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
       }
     }
 
+  }
+
+  /**
+   * Logs that a profile was orphaned.
+   *
+   * @param object $profile
+   *   The loaded and wrapped entity metadata.
+   */
+  public function logOrphan($entity) {
+
+    // Set the flag to 1 in the capx_profiles table.
+
+    // BEAN is returning its delta when using this.
+    // $id = $entity->getIdentifier();
+
+    $entityType = $entity->type();
+    $entityRaw = $entity->raw();
+    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
+
+    $guuid = $entityRaw->capx['guuid'];
+
+    $importer = $this->getImporter();
+    $importerName = $importer->getMachineName();
+    $entityType = $importer->getEntityType();
+    $bundleType = $importer->getBundleType();
+
+    $record = array(
+      'entity_type' => $entityType,
+      'bundle_type' => $bundleType,
+      'entity_id' => $id,
+      'importer' => $importerName,
+      'orphaned' => 1,
+    );
+
+    // For the multiple entity.
+    if (!empty($guuid)) {
+      $record['guuid'] = $guuid;
+    }
+
+    $keys = array(
+      'entity_type',
+      'entity_id',
+      'importer',
+      'bundle_type',
+    );
+
+    // For multiple entities.
+    if (!empty($guuid)) {
+      $keys[] = 'guuid';
+    }
+
+    $yes = drupal_write_record('capx_profiles', $record, $keys);
+
+    if ($yes) {
+      watchdog('EntityImporterOrphans', "%title was orphaned from the importer %importername.", array("%title" => $entity->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
+    }
   }
 
   /**
@@ -432,49 +533,87 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     return $orphans;
   }
+
   /**
-   * Logs that a profile was orphaned.
+   * Orphaned profiles that have returned to the importer.
    *
-   * @param object $profile
-   *   The loaded and wrapped entity metadata.
+   * Find and process profiles that have been added back into an import by
+   * removing their orphan status.
+   *
+   * @param array $profiles
+   *   An array of profile ids
+   * @param array $orphans
+   *   An array of orphaned profile ides
    */
-  public function logOrphan($entity) {
-
-    // Set the flag to 1 in the capx_profiles table.
-
-    // BEAN is returning its delta when using this.
-    // $id = $entity->getIdentifier();
-
-    $entityType = $entity->type();
-    $entityRaw = $entity->raw();
-    list($id, $vid, $bundle) = entity_extract_ids($entityType, $entityRaw);
-
+  public function processAdoptedMultiple($profiles) {
     $importer = $this->getImporter();
-    $importerName = $importer->getMachineName();
+    $importerMachineName = $importer->getMachineName();
     $entityType = $importer->getEntityType();
     $bundleType = $importer->getBundleType();
+    $options = $importer->getOptions();
+    $orphanAction = $options['orphan_action'];
 
-    $record = array(
-      'entity_type' => $entityType,
-      'bundle_type' => $bundleType,
-      'entity_id' => $id,
-      'importer' => $importerName,
-      'orphaned' => 1,
-    );
-
-    $keys = array(
-      'entity_type',
-      'entity_id',
-      'importer',
-      'bundle_type',
-    );
-
-    $yes = drupal_write_record('capx_profiles', $record, $keys);
-
-    if ($yes) {
-      watchdog('EntityImporterOrphans', "%title was orphaned from the importer %importername.", array("%title" => $entity->label(), "%importername" => $importerName), WATCHDOG_NOTICE, '');
+    if ($orphanAction !== "unpublish") {
+      // Nothing actionable to perform.
+      return;
     }
 
+    $results = $this->getResults();
+    $mapper = $this->getImporter()->getMapper();
+    $guuidquery = $mapper->getGUUIDQuery();
+    $parts = explode(".", $guuidquery);
+    $subquery = "$.." . array_pop($parts);
+    $remoteGUUIDs = $mapper->getRemoteDataByJsonPath($results, $subquery);
+
+    $or = db_or()->condition('profile_id', $profiles);
+    $localResults = db_select("capx_profiles", "cxp")
+      ->fields('cxp', array('entity_id', 'guuid'))
+      ->condition($or)
+      ->condition("importer", $importerMachineName)
+      ->condition("orphaned", 1)
+      ->execute()
+      ->fetchAllAssoc('guuid');
+
+    $localGUUIDs = array_keys($localResults);
+    $diff = array_intersect($localGUUIDs, $remoteGUUIDs);
+
+    // Nothing to adopt. Yay.
+    if (empty($diff)) {
+      return array();
+    }
+
+    foreach ($diff as $guuid) {
+      $entityID = $localResults[$guuid]->entity_id;
+      $ids = array($entityID);
+      $entity = array_pop(entity_load($entityType, $ids));
+      $profile = entity_metadata_wrapper($entityType, $entity);
+      $profile->status->set(1);
+      $profile->save();
+
+      // Profile is not an orphan. Lets enable it again.
+      $record = array(
+        'entity_type' => $entityType,
+        'bundle_type' => $bundleType,
+        'entity_id' => $entityID,
+        'importer' => $importerMachineName,
+        'orphaned' => 0,
+        'guuid' => $guuid,
+      );
+
+      $keys = array(
+        'entity_type',
+        'entity_id',
+        'importer',
+        'bundle_type',
+        'guuid',
+      );
+
+      drupal_write_record('capx_profiles', $record, $keys);
+    }
+
+
   }
+
+
 
 }

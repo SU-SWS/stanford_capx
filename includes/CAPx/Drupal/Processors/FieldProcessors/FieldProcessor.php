@@ -37,7 +37,6 @@ use CAPx\Drupal\Processors\FieldCollectionProcessor;
  * number_float             number
  * taxonomy_term_reference  options_select
  *
- *
  * text                     text_textfield
  * text_long                text_textarea
  * text_with_summary        text_textarea_with_summary
@@ -117,6 +116,10 @@ class FieldProcessor extends FieldProcessorAbstract {
       case "text_long":
       case "text_with_summary":
         $processor = new TextAreaFieldProcessor($entity, $fieldName, $type);
+        break;
+
+      case "entityreference":
+        $processor = new EntityReferenceFieldProcessor($entity, $fieldName, $type);
         break;
 
       default:

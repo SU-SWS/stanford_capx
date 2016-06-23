@@ -13,7 +13,7 @@ class EntityImporterOrphansBatch {
 
   /**
    * Callback for batch import functionality.
-
+  *
    * @param string $importerMachineName
    *   The machine name of the importer configuration entity.
    * @param int $profiles
