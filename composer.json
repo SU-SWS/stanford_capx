@@ -9,9 +9,6 @@
             "email": "sheamck@stanford.edu"
         }
     ],
-    "require": {}
-    {
-    "homepage": "https://github.com/SU-SWS/stanford_capx",
-}
-
+    "require": {},
+    "homepage": "https://github.com/SU-SWS/stanford_capx"
 }
