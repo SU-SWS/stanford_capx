@@ -9,6 +9,9 @@ namespace CAPx\Drupal\Processors;
 use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Util\CAPx;
 
+/**
+ * Entity references are a bit different than normal.
+ */
 class EntityReferenceProcessor {
 
   protected $entity;
@@ -17,20 +20,25 @@ class EntityReferenceProcessor {
 
   /**
    * Creates an entityReferenceProcessor to handle entity reference fields.
-   * @param [type] $entity   [description]
-   * @param [type] $importer [description]
-   * @param [type] $target   [description]
+   *
+   * @param object $entity
+   *   The entity we are currently working on to save.
+   * @param object $importer
+   *   The importer object and all its glory.
+   * @param string $target
+   *   The target importer where the relative entity lives.
    */
   public function __construct($entity, $importer, $target) {
     $this->entity = $entity;
     $this->importer = $importer;
-    $this->fieldName = $fieldName;
     $this->target = $target;
   }
 
   /**
    * Returns a list of possible matches.
-   * @return [type] [description]
+   *
+   * @return mixed
+   *   An empty array if no matches or a fully loaded entity.
    */
   public function execute() {
 
@@ -57,7 +65,7 @@ class EntityReferenceProcessor {
       return array();
     }
 
-    // try to load it.
+    // Try to load it.
     $entity = entity_load_single($match['entity_type'], $match['entity_id']);
 
     // Return the result.

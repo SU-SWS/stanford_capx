@@ -150,7 +150,7 @@ function stanford_capx_admin_config_help() {
   $content = "<h2>" . t("Getting started") . "</h2>";
   $content .= "<p>" . t("Importing content from CAP can be completed in 3 steps:") . "</p>";
   $content .= "<ol><li>";
-  $content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Connect"), "admin/config/capx/connect")));
+  $content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Settings"), "admin/config/capx/settings")));
   $content .= "</li><li>";
   $content .= t("!mapping - Create a mapping that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/mapper")));
   $content .= "</li><li>";

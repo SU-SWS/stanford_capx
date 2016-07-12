@@ -44,10 +44,10 @@ class EntityProcessor extends ProcessorAbstract {
 
     // Sometimes we need to create one, other times we need moar.
     if (!empty($multi) && $multi == 1) {
-      $entity = $this->executeMultiple();
+      $entity = $this->executeMultiple($force);
     }
     else {
-      $entity = $this->executeSingle();
+      $entity = $this->executeSingle($force);
     }
 
     return $entity;
@@ -58,7 +58,7 @@ class EntityProcessor extends ProcessorAbstract {
    * @param  [type] $force [description]
    * @return [type]        [description]
    */
-  protected function executeMultiple() {
+  protected function executeMultiple($force = FALSE) {
 
     $mapper = $this->getMapper();
     $data = $this->getData();
@@ -117,14 +117,6 @@ class EntityProcessor extends ProcessorAbstract {
     // GUUID available lets check to see if it matches the numEntities count.
     $numGUUIDs = count($mapper->getRemoteDataByJsonPath($data, $guuidPath));
 
-    // If the total number of ids does not match the total number of entities
-    // default to the delete and replace method.
-    // if ($numGUUIDs !== $numEntities) {
-    //   watchdog('EntityProcessor', "Entity count and GUUID mismatch on: %mapper. Defaulting to delete and replace update method.", array("%mapper" => $mapper->getMachineName()));
-    //   $this->multipleDeleteEntities($entities);
-    //   $this->multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper);
-    // }
-
     // Ok, we are in good shape at this point. We have results, we have ids, and
     // now we can update them in place!
     $this->multipleUpdateEntities($numEntities, $entityType, $bundleType, $data, $mapper);
@@ -132,7 +124,7 @@ class EntityProcessor extends ProcessorAbstract {
   }
 
   /**
-   * [multipleCreateNewEntity description]
+   * Create a bunch of new entities!
    * @param  [type] $numEntities [description]
    * @param  [type] $entityType  [description]
    * @param  [type] $data        [description]
@@ -198,7 +190,7 @@ class EntityProcessor extends ProcessorAbstract {
    * @param  [type] $force [description]
    * @return [type]        [description]
    */
-  protected function executeSingle($force) {
+  protected function executeSingle($force = FALSE) {
     $mapper = $this->getMapper();
     $data = $this->getData();
     $entityImporter = $this->getEntityImporter();
@@ -323,7 +315,7 @@ class EntityProcessor extends ProcessorAbstract {
    * @return object
    *   The new entity after it has been saved.
    */
-  public function newEntity($entityType, $bundleType, $data, $mapper, $guuid) {
+  public function newEntity($entityType, $bundleType, $data, $mapper, $guuid = NULL) {
 
     $properties = array(
       'type' => $bundleType,
