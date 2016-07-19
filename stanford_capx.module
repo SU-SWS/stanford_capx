@@ -69,7 +69,19 @@ function stanford_capx_permission() {
   return array(
     'administer capx' => array(
       'title' => t('Administer CAPx'),
-      'description' => t('Administer and Configure CAPx settings.'),
+      'description' => t('Administer and configure CAPx settings.'),
+    ),
+    // 'capx administer importers' => array(
+    //   'title' => t('Administer CAPx Importers'),
+    //   'description' => t('Administer and configure CAPx importers.'),
+    // ),
+    // 'capx administer mappers' => array(
+    //   'title' => t('Administer CAPx Mappers'),
+    //   'description' => t('Administer and configure CAPx mappers.'),
+    // ),
+    'capx advanced administrator' => array(
+      'title' => t('Administer Advanced CAPx settings'),
+      'description' => t('Administer and Ccnfigure CAPx advanced settings.'),
     ),
   );
 }
@@ -107,15 +119,6 @@ function stanford_capx_menu() {
     'page callback' => 'stanford_capx_admin_config',
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
-  );
-
-  // Connect page.
-  $items['admin/config/capx/connect'] = array(
-    'title' => 'Connect',
-    'page callback' => 'stanford_capx_admin_config_connect',
-    'access arguments' => array('administer capx'),
-    'type' => MENU_NORMAL_ITEM,
-    'weight' => -10,
   );
 
   // Settings Page.

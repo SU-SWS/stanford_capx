@@ -86,7 +86,13 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
           // Value wrapper assumes we providing single value.
           case 'EntityDrupalWrapper':
           case 'EntityValueWrapper':
-            $field->set(array_shift($data));
+
+            // Only Shift if it is an array.
+            if (is_array($data)) {
+              $data = array_shift($data);
+            }
+
+            $field->set($data);
             break;
         }
       }

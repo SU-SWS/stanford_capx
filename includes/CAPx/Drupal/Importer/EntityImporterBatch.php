@@ -165,6 +165,11 @@ class EntityImporterBatch {
 
       $message = $processor->getStatusMessage();
 
+      // Nada.
+      if (empty($message)) {
+        continue;
+      }
+
       // Log some information.
       // @todo This needs to be better.
       watchdog('stanford_capx', $message . " | " . $info['displayName'], array(), WATCHDOG_DEBUG);

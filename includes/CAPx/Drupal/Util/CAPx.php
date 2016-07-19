@@ -201,6 +201,30 @@ class CAPx {
   }
 
   /**
+   * Returns a loaded entity or false.
+   *
+   */
+  public static function getEntityIdByGUUID($importerMachineName, $profileId, $guuid) {
+
+    $query = db_select("capx_profiles", 'capx')
+      ->fields('capx', array('entity_type', 'entity_id'))
+      ->condition('importer', $importerMachineName)
+      ->condition('profile_id', $profileId)
+      ->condition('guuid', $guuid)
+      ->orderBy('id', 'DESC')
+      ->execute()
+      ->fetchAssoc();
+
+    // If we gots one send it back.
+    if (isset($query['entity_id'])) {
+      $entities = entity_load($query['entity_type'], array($query['entity_id']));
+      return array_pop($entities);
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Create new profile record.
    *
    * Inserts a record into the capx_profiles table with information that helps
@@ -209,7 +233,7 @@ class CAPx {
    * @param Entity $entity
    *   The entity that was just saved.
    */
-  public static function insertNewProfileRecord($entity, $profileId, $etag, $importer) {
+  public static function insertNewProfileRecord($entity, $profileId, $etag, $importer, $guuid = '') {
     // BEAN is returning its delta when using this.
     // $entityId = $entity->getIdentifier();
 
@@ -229,6 +253,7 @@ class CAPx {
       'sync' => 1,
       'last_sync' => $time,
       'orphaned' => 0,
+      'guuid' => $guuid,
     );
 
     $yes = drupal_write_record('capx_profiles', $record);
@@ -247,7 +272,7 @@ class CAPx {
    * @param  [type] $importer  [description]
    * @return [type]            [description]
    */
-  public static function updateProfileRecord($entity, $profileId, $etag, $importer) {
+  public static function updateProfileRecord($entity, $profileId, $etag, $importer, $guuid = '') {
 
     $time = time();
     // BEAN is returning its delta when using this.
@@ -265,6 +290,7 @@ class CAPx {
       'profile_id' => $profileId,
       'etag' => $etag,
       'last_sync' => $time,
+      'guuid' => $guuid,
     );
 
     $keys = array(
@@ -272,6 +298,7 @@ class CAPx {
       'entity_id',
       'importer',
       'profile_id',
+      'guuid',
     );
 
     $yes = drupal_write_record('capx_profiles', $record, $keys);

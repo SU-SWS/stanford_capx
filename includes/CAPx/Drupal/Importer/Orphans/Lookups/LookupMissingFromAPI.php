@@ -9,7 +9,7 @@ namespace CAPx\Drupal\Importer\Orphans\Lookups;
 class LookupMissingFromApi implements LookupInterface {
 
   /**
-   * Checks the API server to see if the SUNET item still exists.
+   * Checks the API server to see if the item still exists.
    *
    * @param EntityImporterOrphans $orphaner
    *   The orphan processor object.

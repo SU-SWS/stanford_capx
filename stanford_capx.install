@@ -21,6 +21,8 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_token');
   variable_del("capx_last_orgs_sync");
   variable_del("capx_last_schema_sync");
+  variable_del("stanford_capx_debug_always_force_etag");
+  variable_del("stanford_capx_autotruncate_textfields");
 }
 
 /**
@@ -76,6 +78,12 @@ function stanford_capx_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'guuid' => array(
+        'description' => 'A guuid that is not the profile id. Used for multiple creation.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
       'sync' => array(
         'description' => 'Does this profile needs to be synced?',
         'type' => 'int',
@@ -103,7 +111,7 @@ function stanford_capx_schema() {
     ),
   );
 
-  // Configuration Entity
+  // Configuration Entity.
   $schema['capx_cfe'] = array(
     'description' => 'The base table for configuration entities.',
     'fields' => array(
@@ -265,4 +273,23 @@ function stanford_capx_requirements($phase) {
       break;
   }
   return $requirements;
+}
+
+/**
+ * Add the guuid field to the capx_profiles table.
+ */
+function stanford_capx_update_7100() {
+
+  $table = "capx_profiles";
+  $field = "guuid";
+  $spec = array(
+    'description' => 'A guuid that is not the profile id. Used for multiple creation.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  );
+
+  db_add_field($table, $field, $spec);
+
 }
