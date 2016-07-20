@@ -33,9 +33,12 @@ Also included in this package is a module called: capx_issue_collector. If you e
 
 ### Security
 
-**Managing API Keys:** If you store your OAuth clientID and secret in a file somewhere, be sure that it is secure. UIT will not delete your .pass file on AFS, and it is secure in that location, but it is not recommended to leave them there indefinitely.
-**HTTPS:** CAPx uses https for all API calls. Please follow this best practice as you develop with this module.
-**httpoxy mitigation:** In July 2016, the httpoxy security exploit was announced for PHP, including libraries such as Guzzle. CAPx installs were by default protected because of https usage (see above). In addition, **developers are encouraged to seek their own httpoxy mitigation steps at the server level**. Check with your hosting provider to ensure that your implementation is protected from httpoxy. See https://httpoxy.org for details.
+#### Managing API Keys 
+If you store your OAuth clientID and secret in a file somewhere, be sure that it is secure. UIT will not delete your .pass file on AFS, and it is secure in that location, but it is not recommended to leave them there indefinitely.
+#### HTTPS 
+CAPx uses https for all API calls. Please follow this best practice as you develop with this module.
+#### httpoxy mitigation:
+In July 2016, the httpoxy security exploit was announced for PHP, including libraries such as Guzzle. CAPx installs were by default protected because of https usage (see above). In addition, **developers are encouraged to seek their own httpoxy mitigation steps at the server level**. Check with your hosting provider to ensure that your implementation is protected from httpoxy. See https://httpoxy.org for details.
 
 ## Credits
 
