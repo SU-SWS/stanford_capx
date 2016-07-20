@@ -32,9 +32,6 @@ Collaboration and bug reports are welcome. Please file bug reports on the github
 Also included in this package is a module called: capx_issue_collector. If you enable this module you will have a 'report feedback' button added to the bottom right hand corner of your website. This will allow you to post feedback directly to our Jira instance.
 
 ### Security
-
-#### Managing API Keys 
-If you store your OAuth clientID and secret in a file somewhere, be sure that it is secure. UIT will not delete your .pass file on AFS, and it is secure in that location, but it is not recommended to leave them there indefinitely.
 #### HTTPS 
 CAPx uses https for all API calls. Please follow this best practice as you develop with this module.
 #### httpoxy mitigation:
