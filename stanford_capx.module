@@ -338,13 +338,6 @@ function stanford_capx_cron_queue_info() {
     'skip on cron' => FALSE,
   );
 
-  // A queue process for handling the multiple entity subquery mapper.
-  $queues['stanford_capx_profiles_multi'] = array(
-    'worker callback' => 'stanford_capx_cron_multiple_queue_callback',
-    'time' => variable_get('stanford_capx_runtime_limit', 240),
-    'skip on cron' => FALSE,
-  );
-
   return $queues;
 }
 
@@ -358,19 +351,6 @@ function stanford_capx_cron_queue_info() {
  *   An array of item information to process.
  */
 function stanford_capx_cron_queue_callback($item) {
-  EntityImporterBatch::queue($item);
-}
-
-/**
- * Callback function.
- *
- * This function exists merely as a callback function as the static class
- * function was not able to be called directly.
- *
- * @param array $item
- *   An array of item information to process.
- */
-function stanford_capx_cron_multiple_queue_callback($item) {
   EntityImporterBatch::queue($item);
 }
 
