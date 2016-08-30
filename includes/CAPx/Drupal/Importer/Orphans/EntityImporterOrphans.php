@@ -552,14 +552,19 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     $bundleType = $importer->getBundleType();
     $options = $importer->getOptions();
     $orphanAction = $options['orphan_action'];
+    $mapper = $this->getImporter()->getMapper();
 
     if ($orphanAction !== "unpublish") {
       // Nothing actionable to perform.
       return;
     }
 
+    // No need to do anything if it is not a multiple query...
+    if (!$mapper->getConfigSetting('multiple')) {
+      return;
+    }
+
     $results = $this->getResults();
-    $mapper = $this->getImporter()->getMapper();
     $guuidquery = $mapper->getGUUIDQuery();
     $parts = explode(".", $guuidquery);
     $subquery = "$.." . array_pop($parts);

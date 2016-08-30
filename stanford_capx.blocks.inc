@@ -199,10 +199,10 @@ function stanford_capx_data_browser_launch_block() {
   // $rows[] = array('Cohort', '$.maintainers.*.title');
   $rows[] = array('Affiliations', '$.affiliations');
   $rows[] = array('Job title short', '$.shortTitle.label.text');
-  $rows[] = array('Job title long', '$.longTitle[0]');
+  $rows[] = array('Job title long', '$.longTitle.title');
   // $rows[] = array('Dissertation title', '');
   $rows[] = array('Degrees / education', '$.education.*.label.text');
-  $rows[] = array('Title and department', '$.longTitle[0]');
+  $rows[] = array('Title and department', '$.longTitle.title');
   // $rows[] = array('Faculty status', '');
   $rows[] = array('Fax', '$.primaryContact.fax');
   $rows[] = array('CV - file', '$.documents.cv');

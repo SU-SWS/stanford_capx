@@ -327,14 +327,14 @@ function stanford_capx_cron_queue_info() {
   // A queue process for importing/sync profiles.
   $queues['stanford_capx_profiles'] = array(
     'worker callback' => 'stanford_capx_cron_queue_callback',
-    'time' => variable_get('stanford_capx_runtime_limit', 120),
+    'time' => variable_get('stanford_capx_runtime_limit', 240),
     'skip on cron' => FALSE,
   );
 
   // A queue process for finding and removing orphans.
   $queues['stanford_capx_profile_orphans'] = array(
     'worker callback' => 'stanford_capx_cron_orphan_queue_callback',
-    'time' => variable_get('stanford_capx_runtime_limit', 120),
+    'time' => variable_get('stanford_capx_runtime_limit', 240),
     'skip on cron' => FALSE,
   );
 

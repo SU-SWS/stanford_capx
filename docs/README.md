@@ -65,7 +65,7 @@ Display Name |	$.names.legal.middleName
 Profile Picture |	$.profilePhotos.bigger
 Type |	$.titles.*.type
 Profile / Bio |	$.bio.html
-Title and Department | $.longTitle[0]
+Title and Department | $.longTitle.title
 Degrees / Education |	$.education.*.label.text
 File |	$.documents.cv
 Email |	$.primaryContact.email
