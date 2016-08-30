@@ -3,6 +3,8 @@
  * @file
  */
 
+use CAPx\Drupal\Util\CAPxMapper;
+
 /**
  * Implements hook_install().
  */
@@ -278,7 +280,7 @@ function stanford_capx_requirements($phase) {
 /**
  * Add the guuid field to the capx_profiles table.
  */
-function stanford_capx_update_7100() {
+function stanford_capx_update_7200() {
 
   $table = "capx_profiles";
   $field = "guuid";
@@ -292,4 +294,26 @@ function stanford_capx_update_7100() {
 
   db_add_field($table, $field, $spec);
 
+}
+
+/**
+ * If auto_nodetitle is enabled we should enable capx_auto_nodetitle.
+ */
+function stanford_capx_update_7201() {
+  if (module_exists("auto_nodetitle")) {
+    module_enable(array("capx_auto_nodetitle"));
+  }
+}
+
+/**
+ * Resave each mapper so they get the new default config keys.
+ */
+function stanford_capx_update_7202() {
+  $mappers = CAPxMapper::loadAllMappers();
+  foreach ($mappers as $mapper) {
+    $mapper->settings['multiple'] = FALSE;
+    $mapper->settings['subquery'] = '';
+    $mapper->settings['guuidquery'] = '';
+    $mapper->save();
+  }
 }
