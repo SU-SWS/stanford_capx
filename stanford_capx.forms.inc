@@ -689,6 +689,7 @@ function stanford_capx_filter_properties($entity_type, $properties = array()) {
   $blacklist['node'][] = "comment_count";
   $blacklist['node'][] = "comment_count_new";
   $blacklist['node'][] = "feed_nid";
+  $blacklist['node'][] = "feed_node";
   $blacklist['node'][] = "uuid";
   $blacklist['node'][] = "vuuid";
   $blacklist['node'][] = "log";
