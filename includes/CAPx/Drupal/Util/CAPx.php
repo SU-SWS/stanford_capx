@@ -375,7 +375,6 @@ class CAPx {
    *   importers acquired using CAPxImporter::loadImportersByMapper($mapper);
    */
   public static function invalidateTimestamp($importers) {
-    dpm('invalidateTimestamp');
     $importer_machine_names = array();
     foreach ($importers as $importer) {
       $importer_machine_names[] = $importer->machine_name;
