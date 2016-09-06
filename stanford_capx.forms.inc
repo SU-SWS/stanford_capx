@@ -1020,40 +1020,12 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   }
   else {
     CAPx::invalidateEtags("mapper", $mapper);
-    drupal_set_message(t("Your mapping has been updated."), 'status', FALSE);
     // Add logic for invalidating timestamp and clearing image cache here so that profile images are updated when mapper is saved with potetially different profile image settings.
     $importers = CAPxImporter::loadImportersByMapper($mapper);
     if (!empty($importers)) {
-      $importer_machine_names = array();
-      foreach ($importers as $importer) {
-        $importer_machine_names[] = $importer->machine_name;
-      }
-      $q = db_select('capx_profiles', 'cp');
-      $q->addfield('cp', 'entity_id');
-      $q->condition('cp.importer', $importer_machine_names, 'IN');
-      $r = $q->execute()->fetchAll();
-      $profile_ids = array();
-      if (!empty($r)) {
-        foreach ($r as $id) {
-          $profile_ids[] = $id->entity_id;
-        }
-        $q = db_select('field_data_field_s_person_profile_picture', 'pp');
-        $q->addfield('pp', 'field_s_person_profile_picture_fid');
-        $q->condition('pp.entity_id', $profile_ids, 'IN');
-        $r = $q->execute()->fetchAll();
-        $fids = array();
-        if (!empty($r)) {
-          foreach ($r as $fid) {
-            $fids[] = (int) $fid->field_s_person_profile_picture_fid;
-          }
-          $q = db_update('file_managed');
-          $q->fields(array('timestamp' => 0));
-          $q->condition('fid', $fids, 'IN');
-          $q->execute();
-          cache_clear_all('*', 'cache_image', TRUE);
-        }
-      }
-    }    
+      CAPx::invalidateTimestamp($importers);
+    }
+    drupal_set_message(t("Your mapping has been updated."), 'status', FALSE);
   }
 
   // Do the save.
