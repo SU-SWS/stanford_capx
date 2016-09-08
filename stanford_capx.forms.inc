@@ -1020,6 +1020,12 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   }
   else {
     CAPx::invalidateEtags("mapper", $mapper);
+    // Add logic for invalidating timestamp and clearing image cache here so that profile images are updated when mapper is saved with potetially different profile image settings.
+    $importers = CAPxImporter::loadImportersByMapper($mapper);
+    if (!empty($importers)) {
+      CAPx::clearTheQueue();
+      CAPx::invalidateTimestamp($importers);
+    }
     drupal_set_message(t("Your mapping has been updated."), 'status', FALSE);
   }
 
