@@ -366,6 +366,17 @@ class CAPx {
   }
   
   /**
+   * Clears the stanford_capx_profiles queue.
+   *
+   * If you need to clear the queue because of config changes, this is your method.
+   *
+   */
+  public static function clearTheQueue($importers) {
+    $queue = \DrupalQueue::get('stanford_capx_profiles', TRUE);
+    $queue->deleteQueue();
+  }
+  
+  /**
    * Invalidates profile photo timestamp by importer.
    *
    * When a mapper changes we need to invalidate the timestamp on the
