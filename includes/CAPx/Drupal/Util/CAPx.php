@@ -371,7 +371,7 @@ class CAPx {
    * If you need to clear the queue because of config changes, this is your method.
    *
    */
-  public static function clearTheQueue($importers) {
+  public static function clearTheQueue() {
     $queue = \DrupalQueue::get('stanford_capx_profiles', TRUE);
     $queue->deleteQueue();
   }
