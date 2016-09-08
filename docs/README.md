@@ -4,7 +4,7 @@
 
 - Linux xxx
 - Drupal 7.x or higher
-- PHP 5.5 or higher (Note: ealier verions of PHP will spin forever when trying to connect to the CAP server.)
+- PHP 5.5 or higher (Note: earlier verions of PHP will spin forever when trying to connect to the CAP server via the Drupal admin interface.)
 
 ##Install the Stanford CAPx module on your Drupal 7 site
 
