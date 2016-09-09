@@ -15,6 +15,7 @@ Stanford CAPx 7.x-2.0, 2016-05-27
 - Added auto truncating of text fields in order to avoid the PDO exception error of value too long.
 - Bugfix for invalid orphan checking
 - Upgrade paths
+- File timestamp and queue invalidation on mapper configuration change
 
 Stanford CAPx 7.x-1.3, 2016-02-05
 ---------------------------------
