@@ -13,6 +13,9 @@ Stanford CAPx 7.x-2.0, 2016-05-27
 - Removed superfluous required text on field mapping
 - Required fields with a default value are no longer required in the mapping.
 - Added auto truncating of text fields in order to avoid the PDO exception error of value too long.
+- Bugfix for invalid orphan checking
+- Upgrade paths
+- File timestamp and queue invalidation on mapper configuration change
 
 Stanford CAPx 7.x-1.3, 2016-02-05
 ---------------------------------
@@ -52,4 +55,3 @@ By jbickar:
   -Fixed typos in labels
   -Added LICENSE.txt
   -Added CHANGELOG.txt
-
