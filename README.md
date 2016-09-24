@@ -40,10 +40,9 @@ In July 2016, the httpoxy security exploit was announced for PHP, including libr
 ## Credits
 
 * Trellon, for the [original CAP module](https://github.com/Stanford/CAP_drupal) and all the problems they solved. A great amount of inspiration and information was used from this module.
-* Trellon, for added support in the development and testing of this module.
 * Kenneth Sharp, for his work on CAP lite and for his contributions to functionality.
 * Zach Chandler, for his vision and direction.
 * Stanford Web Services, for putting all the pieces together.
 * CAP working group for all of their invaluable feedback and time spent.
-* Brendan Walsh, for seeing the value and backing this project.
+* Brendan Walsh and the Office of International Affairs, for their sponsorship funding this module.
 * Darryl Dieckman, for all his hard work and support on the API.
