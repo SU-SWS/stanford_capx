@@ -7,7 +7,7 @@ php54, 2015-10-19
 - Guzzle downgraded to 5.3 to support PHP 5.4
 
 
-Stanford CAPx 7.x-2.0, 2016-05-27
+Stanford CAPx 7.x-2.0-php54, 2016-05-27
 ---------------------------------
 - Entity relationships!
 - Multiple entity creation (IE: Publications).
@@ -64,4 +64,3 @@ By jbickar:
   -Fixed typos in labels
   -Added LICENSE.txt
   -Added CHANGELOG.txt
-
