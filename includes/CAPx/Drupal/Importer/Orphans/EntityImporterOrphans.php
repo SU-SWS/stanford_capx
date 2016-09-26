@@ -100,6 +100,13 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     // Make one request to the server for the profile information to check for
     // profiles that no longer exist on the API.
     $response = $client->api('profile')->search("ids", $profiles);
+
+    // Fail if the response from the server was not successful.
+    if (!$response || !is_array($response) || !isset($response['values'])) {
+      watchdog("EntityImporterOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing.", array(), WATCHDOG_WARNING);
+      return;
+    }
+
     $results = $response['values'];
 
     // Allow those to alter this set.
