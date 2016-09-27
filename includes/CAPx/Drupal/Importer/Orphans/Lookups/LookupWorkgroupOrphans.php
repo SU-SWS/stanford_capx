@@ -34,6 +34,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
     $client = $orphaner->getClient();
     $profiles = $orphaner->getProfiles();
     $groups = explode(",", $options['workgroup']);
+    $orphans['privGroups'] = array();
 
     // Flip the profileIds so that the profile array is keyed.
     $profiles = array_flip($profiles);
