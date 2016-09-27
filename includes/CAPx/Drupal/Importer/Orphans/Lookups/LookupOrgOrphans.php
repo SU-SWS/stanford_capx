@@ -43,6 +43,7 @@ class LookupOrgOrphans implements LookupInterface {
 
     $profiles = $orphaner->getProfiles();
     $myOrphans = array();
+    $orphans['orgCodes'] = array();
 
     $keyTids = array();
     $codes = explode(",", $options['organization']);

@@ -196,6 +196,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
     // Build and make the request.
+    $response = FALSE;
     try {
 
       $response = $client->get($endpoint, $options);
