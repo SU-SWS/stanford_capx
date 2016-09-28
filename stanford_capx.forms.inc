@@ -1731,7 +1731,7 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
   // mapped.
   list($entity_type, $entity) = _stanford_capx_entity_form_get_entity($form, $form_state, $form_id);
 
-  if (isset($entity->capx)) {
+  if (isset($entity->capx['importer'])) {
     drupal_set_message(t("This entity has been imported from the CAP API. Fields that are greyed out cannot be changed as that information is from the CAP website. If you would like to change that information please visit the CAP website and edit the information there."), "warning");
     stanford_capx_entity_form_add_vt($form, $form_state, $entity_type, $entity);
     stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $entity_type, $entity);
@@ -1779,6 +1779,12 @@ function _stanford_capx_entity_form_get_entity(&$form, &$form_state, $form_id) {
 function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $entity) {
 
   $capx_info = $entity->capx;
+
+  // Sometimes capx information is there with no importer. (Org terms)
+  if (!isset($capx_info['importer'])) {
+    return;
+  }
+
   $importer = capx_cfe_load_by_machine_name($capx_info['importer'], 'importer');
   if (!$importer) {
     return;
@@ -1872,7 +1878,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
 function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $entity_type, $entity) {
 
   // Only proceed if the sync is enabled.
-  if (!$entity->capx['sync']) {
+  if (!isset($entity->capx['sync']) || !$entity->capx['sync']) {
     return;
   }
 

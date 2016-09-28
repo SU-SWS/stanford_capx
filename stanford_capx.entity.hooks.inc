@@ -233,32 +233,33 @@ function stanford_capx_entity_update($entity, $type) {
 
 /**
  * Add some extra information to every loaded entity.
- * @todo : Think about this some more. Should we do this? Overhead?
+ *
+ * Looks like entity_load gets called A LOT. Especially if a view uses entities
+ * rather than fields. So instead of making a number of calls. Call once and
+ * static cache.
+ *
  * @param  [type] $entities [description]
  * @param  [type] $type     [description]
  * @return [type]           [description]
  */
 function stanford_capx_entity_load($entities, $type) {
 
-  // @todo: cache all this!
   $ids = array_keys($entities);
+  $meta = &drupal_static(__FUNCTION__, NULL);
 
-  $meta = db_select("capx_profiles", 'capx')
+  if (empty($meta)) {
+    $meta = db_select("capx_profiles", 'capx')
       ->fields('capx')
-      ->condition('entity_type', $type)
-      ->condition('entity_id', $ids)
       ->execute()
       ->fetchAllAssoc('entity_id');
+  }
 
-  foreach ($entities as $entity_id => $entity) {
-
+  // Add the capx information if it matches.
+  foreach ($ids as $entity_id) {
     // If we do not find a match then carry on.
-    if (!isset($meta[$entity_id])) {
-      continue;
+    if (isset($meta[$entity_id]) && $meta[$entity_id]->entity_type == $type) {
+      $entities[$entity_id]->capx = (array) $meta[$entity_id];
     }
-
-    $entity->capx = (array) $meta[$entity_id];
-
   }
 
 }
