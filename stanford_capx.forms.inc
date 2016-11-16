@@ -4,7 +4,6 @@
  * @author [author] <[email]>
  *
  * A collection of forms
- *
  */
 
 use CAPx\Drupal\Util\CAPx;
@@ -13,12 +12,16 @@ use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
 
-
 /**
- * [stanford_capx_forms_connect_form_validate description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Validation Hook for the connect form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return NULL
+ *    Nothing as the form values are passed by reference.
  */
 function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
@@ -43,14 +46,23 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 }
 
 /**
- * [stanford_capx_forms_connect_form_submit description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Submit hook for the connect form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return NULL
+ *    Nothing as the form values are passed by reference.
  */
 function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
   drupal_set_message(t("Configuration options saved."), "status");
+
+  // Endpoints.
+  variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
+  variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
 
   // Username and Pass.
   if (!empty($form_state['values']['stanford_capx_username'])
@@ -64,12 +76,12 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
     // In order to get here we have to have a valid connection.
     // Lets get the org codes and schema.
     stanford_capx_schema_refresh();
+
+    // This function triggers a batch operation and prevents anything else from
+    // running below it.
     stanford_capx_organizations_sync();
   }
 
-  // Endpoints.
-  variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
-  variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -2021,13 +2033,20 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 
 /**
  * Auth settings form. Was previously the connect page.
- * @param  [type] $form        [description]
- * @param  [type] &$form_state [description]
- * @return [type]              [description]
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return array
+ *    The form elements.
  */
 function stanford_capx_config_auth_settings_form($form, &$form_state) {
   $username = CAPx::getAuthUsername();
   $connection = CAPxConnection::testConnection();
+  $endpoint = !isset($form_state['input']['stanford_capx_api_base_url']) ? FALSE : $form_state['input']['stanford_capx_api_base_url'];
+  $authpoint = !isset($form_state['input']['stanford_capx_api_auth_url']) ? FALSE : $form_state['input']['stanford_capx_api_auth_url'];
 
   $form['auth'] = array(
     '#type' => 'fieldset',
@@ -2066,7 +2085,7 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Endpoint'),
     '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
-    '#default_value' => CAPx::getAPIEndpoint(),
+    '#default_value' => ($endpoint) ? $endpoint : CAPx::getAPIEndpoint(),
     '#required' => TRUE,
   );
 
@@ -2074,7 +2093,7 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Authentication URI'),
     '#description' => t('CAP API authentication URI.'),
-    '#default_value' => CAPx::getAuthEndpoint(),
+    '#default_value' => ($authpoint) ? $authpoint : CAPx::getAuthEndpoint(),
     '#required' => TRUE,
   );
 
