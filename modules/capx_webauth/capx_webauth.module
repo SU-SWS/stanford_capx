@@ -34,7 +34,8 @@ function capx_webauth_capx_post_entity_create_alter($entity) {
   $uid = $entity->getIdentifier();
 
   // Add the authmap to the table.
-  db_insert("authmap")
+  db_merge("authmap")
+    ->key(array('uid' => $uid, 'authname' => $mail))
     ->fields(array(
       'uid' => $uid,
       'authname' => $mail,

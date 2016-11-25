@@ -23,7 +23,6 @@ function capx_ssp_help($path, $arg) {
  *   The entity that was just created by capx.
  */
 function capx_ssp_capx_post_entity_create_alter($entity) {
-
   // We only want users.
   if ($entity->type() !== "user" || $entity->getBundle() !== "user") {
     return;
@@ -35,7 +34,8 @@ function capx_ssp_capx_post_entity_create_alter($entity) {
   $uid = $entity->getIdentifier();
 
   // Add the authmap to the table.
-  db_insert("authmap")
+  db_merge("authmap")
+    ->key(array('uid' => $uid, 'authname' => $sunet))
     ->fields(array(
       'uid' => $uid,
       'authname' => $sunet,
