@@ -232,31 +232,11 @@ function hook_capx_find_sunet_orphans_alter($orphans) {
 
 }
 
+/**
+ * @param EntityDrupalWrapper $entity
+ * @param array $data
+ * @param CAPx\Drupal\Mapper\EntityMapper $mapper
+ */
+function hook_capx_entity_presave_alter(&$entity, $data, $mapper){
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

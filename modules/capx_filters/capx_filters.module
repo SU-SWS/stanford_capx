@@ -43,48 +43,72 @@ function capx_filters_menu() {
 }
 
 /**
- * Implements hook_capx_post_json_parse().
+ * Implements hook_capx_entity_presave_alter().
+ *
+ * @param EntityDrupalWrapper $entity
+ *   Entity to be saved.
+ * @param array $data
+ * @param CAPx\Drupal\Mapper\EntityMapper $mapper
  */
-/**
- * Implements hook_capx_post_json_parse_alter().
- */
-function capx_filters_capx_post_json_parse_alter($path, &$parsed, $mapper) {
-  if (isset($mapper->settings['filters'])) {
-    foreach ($mapper->settings['filters'] as $filter) {
-      if ($filter['key'] == $path) {
-        if (is_array($parsed)) {
-          $parsed = reset($parsed);
+function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
+  $config = $mapper->getConfig();
+  if (isset($config['filters'])) {
+    foreach ($config['filters'] as $filter) {
+      $filter['value'] = strtolower($filter['value']);
+      $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+      if (is_array($item) && $item && count($item) == 1) {
+        $item = reset($item);
+      }
+      else {
+        $item = '';
+      }
+
+      // Handles TRUE/FALSE values.
+      if (is_bool($item)) {
+        if ($item) {
+          $item = 'true';
         }
-        dpm($filter);
-        switch ($filter['comparison']) {
-          case '=':
-            if ($parsed != $filter['value']) {
-              watchdog('test', 'invalid');
-              throw new Exception(t('Data is inaccurate'));
-            }
-            break;
+        else {
+          $item = 'false';
+        }
+      }
 
-          case '>':
-            if ($parsed <= $filter['value']) {
-              watchdog('test', 'invalid');
-              throw new Exception(t('Data is inaccurate'));
-            }
-            break;
+      $filtered = FALSE;
+      switch ($filter['comparison']) {
+        case '=':
+          if ($item != $filter['value']) {
+            $filtered = TRUE;
+          }
+          break;
 
-          case '<':
-            if ($parsed >= $filter['value']) {
-              watchdog('test', 'invalid');
-              throw new Exception(t('Data is inaccurate'));
-            }
-            break;
+        case '>':
+          if (((int) $item) <= ((int) $filter['value'])) {
+            $filtered = TRUE;
+          }
+          break;
 
-          case 'contains':
-            if (strpos($parsed, $filter['value']) === FALSE) {
-              watchdog('test', 'invalid');
-              throw new Exception(t('Data is inaccurate'));
-            }
-            break;
+        case '<':
+          if (((int) $item) >= ((int) $filter['value'])) {
+            $filtered = TRUE;
+          }
+          break;
 
+        case 'contains':
+          if (strpos($item, $filter['value']) === FALSE) {
+            $filtered = TRUE;
+          }
+          break;
+      }
+
+
+      if ($filter['exclude']) {
+        if (!$filtered) {
+          $entity->clear();
+        }
+      }
+      else {
+        if ($filtered) {
+          $entity->clear();
         }
       }
     }
