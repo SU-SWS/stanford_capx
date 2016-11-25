@@ -22,8 +22,8 @@ class EntityMapper extends MapperAbstract {
   /**
    * Execute starts the mapping process.
    *
-   * @param Entity $entity
-   *   Expects the entity to be wrapped in entity_metadata_wrapper
+   * @param \EntityDrupalWrapper $entity
+   *   Expects the entity to be wrapped in entity_metadata_wrapper.
    * @param array $data
    *   An array of json data. The response from the API.
    *
@@ -97,6 +97,7 @@ class EntityMapper extends MapperAbstract {
   public function mapFields($data) {
 
     $config = $this->getConfig();
+    /** @var \EntityDrupalWrapper $entity */
     $entity = $this->getEntity();
     $error = FALSE;
 
@@ -166,11 +167,10 @@ class EntityMapper extends MapperAbstract {
             $fieldProcessor->field($field)->widget($widget)->put($info);
           }
           catch (\Exception $e) {
-            // IF there was an exception we want to carry on processing but let
-            // the entity mapper know. Throw an error after everything.
+            // IF there was an exception we want to carry on processing but
+            // let the entity mapper know. Throw an error after everything.
             $error = TRUE;
           }
-
           // Allow altering of an entity after this process.
           drupal_alter('capx_post_map_field', $entity, $fieldName);
         }

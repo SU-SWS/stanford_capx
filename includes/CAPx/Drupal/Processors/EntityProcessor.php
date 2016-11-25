@@ -282,12 +282,16 @@ class EntityProcessor extends ProcessorAbstract {
     }
 
     // Save the entity.
+    drupal_alter('capx_entity_presave', $entity, $data, $mapper);
     $entity->save();
 
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
-    $guuid = $mapper->getGUUID($data, $mapper->getIndex());
-    CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+
+    if ($entity->getIdentifier()) {
+      $guuid = $mapper->getGUUID($data, $mapper->getIndex());
+      CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+    }
 
     drupal_alter('capx_post_update_entity', $entity);
 
@@ -334,6 +338,7 @@ class EntityProcessor extends ProcessorAbstract {
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
     // @todo Need to catch exceptions here as well.
+    drupal_alter('capx_entity_presave', $entity, $data, $mapper);
     $entity->save();
 
     // There is a possiblility that a field or property had an error while being
@@ -354,7 +359,9 @@ class EntityProcessor extends ProcessorAbstract {
     // Write a new record.
     $entityImporter = $this->getEntityImporter();
     $importerMachineName = $entityImporter->getMachineName();
-    CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+    if ($entity->getIdentifier()) {
+      CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+    }
 
     return $entity;
   }
