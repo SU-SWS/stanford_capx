@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * @file
+ * CAPx Filters module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function capx_filters_menu() {
+  $items = array();
+  $items['admin/config/capx/filters'] = array(
+    'title' => 'Filters',
+    'page callback' => 'capx_filters_list',
+    'file' => 'capx_filters.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/config/capx/filters/add'] = array(
+    'title' => 'Add New Filter',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_edit'),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $items['admin/config/capx/filters/edit/%'] = array(
+    'title' => 'Edit filters',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_edit', 5),
+    'access arguments' => array('administer capx'),
+  );
+  $items['admin/config/capx/filters/delete/%'] = array(
+    'title' => 'Delete filters',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_delete', 5),
+    'access arguments' => array('administer capx'),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_capx_post_json_parse().
+ */
+/**
+ * Implements hook_capx_post_json_parse_alter().
+ */
+function capx_filters_capx_post_json_parse_alter($path, &$parsed, $mapper) {
+  if (isset($mapper->settings['filters'])) {
+    foreach ($mapper->settings['filters'] as $filter) {
+      if ($filter['key'] == $path) {
+        if (is_array($parsed)) {
+          $parsed = reset($parsed);
+        }
+        dpm($filter);
+        switch ($filter['comparison']) {
+          case '=':
+            if ($parsed != $filter['value']) {
+              watchdog('test', 'invalid');
+              throw new Exception(t('Data is inaccurate'));
+            }
+            break;
+
+          case '>':
+            if ($parsed <= $filter['value']) {
+              watchdog('test', 'invalid');
+              throw new Exception(t('Data is inaccurate'));
+            }
+            break;
+
+          case '<':
+            if ($parsed >= $filter['value']) {
+              watchdog('test', 'invalid');
+              throw new Exception(t('Data is inaccurate'));
+            }
+            break;
+
+          case 'contains':
+            if (strpos($parsed, $filter['value']) === FALSE) {
+              watchdog('test', 'invalid');
+              throw new Exception(t('Data is inaccurate'));
+            }
+            break;
+
+        }
+      }
+    }
+  }
+}

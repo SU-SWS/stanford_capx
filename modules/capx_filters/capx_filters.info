@@ -1,0 +1,4 @@
+name = CAPx Filters
+core = 7.x
+
+dependencies[] = stanford_capx
