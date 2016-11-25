@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * File description
+ *
+ * Long description
+ */
+
+/**
+ * Implements hook_help().
+ */
+function capx_webauth_help($path, $arg) {
+  switch ($path) {
+    case 'capx#ssp':
+      return '<p>' . t('No help available.') . '</p>';
+  }
+}
+
+/**
+ * Add the authmap when a user entity is created.
+ *
+ * @param object $entity
+ *   The entity that was just created by capx.
+ */
+function capx_webauth_capx_post_entity_create_alter($entity) {
+
+  // We only want users.
+  if ($entity->type() !== "user" || $entity->getBundle() !== "user") {
+    return;
+  }
+
+  // Get the sunetid from the email address.
+  $mail = $entity->mail->value();
+  $uid = $entity->getIdentifier();
+
+  // Add the authmap to the table.
+  db_insert("authmap")
+    ->fields(array(
+      'uid' => $uid,
+      'authname' => $mail,
+      'module' => 'webauth',
+    ))
+    ->execute();
+}
