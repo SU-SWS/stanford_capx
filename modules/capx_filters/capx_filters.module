@@ -10,35 +10,43 @@
  */
 function capx_filters_menu() {
   $items = array();
-  $items['admin/config/capx/filters'] = array(
+
+  $items['admin/config/capx/mapper/edit/%/filters'] = array(
     'title' => 'Filters',
     'page callback' => 'capx_filters_list',
     'file' => 'capx_filters.forms.inc',
-    'access arguments' => array('administer capx'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  $items['admin/config/capx/filters/add'] = array(
-    'title' => 'Add New Filter',
-    'page callback' => 'drupal_get_form',
-    'file' => 'capx_filters.forms.inc',
-    'page arguments' => array('capx_filters_edit'),
+    'page arguments' => array(5),
     'access arguments' => array('administer capx'),
     'type' => MENU_LOCAL_ACTION,
   );
-  $items['admin/config/capx/filters/edit/%'] = array(
-    'title' => 'Edit filters',
+
+  $items['admin/config/capx/mapper/edit/%/filters/add'] = array(
+    'title' => 'Add New Filter',
     'page callback' => 'drupal_get_form',
     'file' => 'capx_filters.forms.inc',
     'page arguments' => array('capx_filters_edit', 5),
     'access arguments' => array('administer capx'),
+    'type' => MENU_LOCAL_ACTION,
   );
-  $items['admin/config/capx/filters/delete/%'] = array(
-    'title' => 'Delete filters',
+
+  $items['admin/config/capx/mapper/edit/%/filters/%/edit'] = array(
+    'title' => 'Edit Filter',
     'page callback' => 'drupal_get_form',
     'file' => 'capx_filters.forms.inc',
-    'page arguments' => array('capx_filters_delete', 5),
+    'page arguments' => array('capx_filters_edit', 5, 7),
     'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
   );
+
+  $items['admin/config/capx/mapper/edit/%/filters/%/delete'] = array(
+    'title' => 'Edit Filter',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_delete', 5, 7),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -103,14 +111,15 @@ function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
           break;
       }
 
-
       if ($filter['exclude']) {
         if (!$filtered) {
+          $entity->delete();
           $entity->clear();
         }
       }
       else {
         if ($filtered) {
+          $entity->delete();
           $entity->clear();
         }
       }
