@@ -301,18 +301,22 @@ class Orgs {
    * @return [type]       [description]
    */
   public static function getAliasesByTid($tids) {
-    $aliases = array();
 
-    $query = db_select('capx_org_aliases', 'coa')
-              ->fields('coa', array('id', 'tid', 'code', 'alias'))
-              ->condition('tid', $tids)
-              ->execute();
+    $aliases = &drupal_static(__FUNCTION__, array());
 
-    while ($obj = $query->fetchObject()) {
-      $aliases[$obj->tid][] = $obj->alias;
+    if (empty($aliases)) {
+      $query = db_select('capx_org_aliases', 'coa')
+        ->fields('coa', array('id', 'tid', 'code', 'alias'))
+        ->execute();
+
+      while ($obj = $query->fetchObject()) {
+        $aliases[$obj->tid][] = $obj->alias;
+      }
+
     }
-
-    return $aliases;
+    $tids = array_flip($tids);
+    $found = array_intersect_key($aliases, $tids);
+    return $found;
   }
 
   /**

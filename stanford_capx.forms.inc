@@ -4,7 +4,6 @@
  * @author [author] <[email]>
  *
  * A collection of forms
- *
  */
 
 use CAPx\Drupal\Util\CAPx;
@@ -13,12 +12,16 @@ use CAPx\Drupal\Util\CAPxMapper;
 use CAPx\Drupal\Util\CAPxImporter;
 use \Peekmo\JsonPath\JsonStore as JsonParser;
 
-
 /**
- * [stanford_capx_forms_connect_form_validate description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Validation Hook for the connect form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return NULL
+ *    Nothing as the form values are passed by reference.
  */
 function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
@@ -43,14 +46,23 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 }
 
 /**
- * [stanford_capx_forms_connect_form_submit description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Submit hook for the connect form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return NULL
+ *    Nothing as the form values are passed by reference.
  */
 function stanford_capx_forms_connect_form_submit($form, &$form_state) {
 
   drupal_set_message(t("Configuration options saved."), "status");
+
+  // Endpoints.
+  variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
+  variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
 
   // Username and Pass.
   if (!empty($form_state['values']['stanford_capx_username'])
@@ -64,12 +76,12 @@ function stanford_capx_forms_connect_form_submit($form, &$form_state) {
     // In order to get here we have to have a valid connection.
     // Lets get the org codes and schema.
     stanford_capx_schema_refresh();
+
+    // This function triggers a batch operation and prevents anything else from
+    // running below it.
     stanford_capx_organizations_sync();
   }
 
-  // Endpoints.
-  variable_set('stanford_capx_api_base_url', $form_state['values']['stanford_capx_api_base_url']);
-  variable_set('stanford_capx_api_auth_uri', $form_state['values']['stanford_capx_api_auth_uri']);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -1731,7 +1743,7 @@ function stanford_capx_form_alter(&$form, &$form_state, $form_id) {
   // mapped.
   list($entity_type, $entity) = _stanford_capx_entity_form_get_entity($form, $form_state, $form_id);
 
-  if (isset($entity->capx)) {
+  if (isset($entity->capx['importer'])) {
     drupal_set_message(t("This entity has been imported from the CAP API. Fields that are greyed out cannot be changed as that information is from the CAP website. If you would like to change that information please visit the CAP website and edit the information there."), "warning");
     stanford_capx_entity_form_add_vt($form, $form_state, $entity_type, $entity);
     stanford_capx_entity_form_disable_mapped_fields($form, $form_state, $entity_type, $entity);
@@ -1779,6 +1791,12 @@ function _stanford_capx_entity_form_get_entity(&$form, &$form_state, $form_id) {
 function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $entity) {
 
   $capx_info = $entity->capx;
+
+  // Sometimes capx information is there with no importer. (Org terms)
+  if (!isset($capx_info['importer'])) {
+    return;
+  }
+
   $importer = capx_cfe_load_by_machine_name($capx_info['importer'], 'importer');
   if (!$importer) {
     return;
@@ -1872,7 +1890,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
 function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $entity_type, $entity) {
 
   // Only proceed if the sync is enabled.
-  if (!$entity->capx['sync']) {
+  if (!isset($entity->capx['sync']) || !$entity->capx['sync']) {
     return;
   }
 
@@ -2015,13 +2033,20 @@ function stanford_capx_schema_format_validation($schema = NULL) {
 
 /**
  * Auth settings form. Was previously the connect page.
- * @param  [type] $form        [description]
- * @param  [type] &$form_state [description]
- * @return [type]              [description]
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ *
+ * @return array
+ *    The form elements.
  */
 function stanford_capx_config_auth_settings_form($form, &$form_state) {
   $username = CAPx::getAuthUsername();
   $connection = CAPxConnection::testConnection();
+  $endpoint = !isset($form_state['input']['stanford_capx_api_base_url']) ? FALSE : $form_state['input']['stanford_capx_api_base_url'];
+  $authpoint = !isset($form_state['input']['stanford_capx_api_auth_url']) ? FALSE : $form_state['input']['stanford_capx_api_auth_url'];
 
   $form['auth'] = array(
     '#type' => 'fieldset',
@@ -2060,7 +2085,7 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Endpoint'),
     '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
-    '#default_value' => CAPx::getAPIEndpoint(),
+    '#default_value' => ($endpoint) ? $endpoint : CAPx::getAPIEndpoint(),
     '#required' => TRUE,
   );
 
@@ -2068,7 +2093,7 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Authentication URI'),
     '#description' => t('CAP API authentication URI.'),
-    '#default_value' => CAPx::getAuthEndpoint(),
+    '#default_value' => ($authpoint) ? $authpoint : CAPx::getAuthEndpoint(),
     '#required' => TRUE,
   );
 

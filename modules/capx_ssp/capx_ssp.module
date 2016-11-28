@@ -1,0 +1,45 @@
+<?php
+/**
+ * @file
+ * File description
+ *
+ * Long description
+ */
+
+ /**
+  * Implements hook_help().
+  */
+function capx_ssp_help($path, $arg) {
+  switch ($path) {
+    case 'capx#ssp':
+      return '<p>' . t('No help available.') . '</p>';
+  }
+}
+
+/**
+ * Add the authmap when a user entity is created.
+ *
+ * @param object $entity
+ *   The entity that was just created by capx.
+ */
+function capx_ssp_capx_post_entity_create_alter($entity) {
+  // We only want users.
+  if ($entity->type() !== "user" || $entity->getBundle() !== "user") {
+    return;
+  }
+
+  // Get the sunetid from the email address.
+  $mail = $entity->mail->value();
+  $sunet = str_replace("@stanford.edu", "", $mail);
+  $uid = $entity->getIdentifier();
+
+  // Add the authmap to the table.
+  db_merge("authmap")
+    ->key(array('uid' => $uid, 'authname' => $sunet))
+    ->fields(array(
+      'uid' => $uid,
+      'authname' => $sunet,
+      'module' => 'stanford_simplesamlphp_auth',
+    ))
+    ->execute();
+}
