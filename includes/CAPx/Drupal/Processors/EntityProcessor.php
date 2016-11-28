@@ -73,7 +73,12 @@ class EntityProcessor extends ProcessorAbstract {
     }
     else {
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
-      $this->setStatus(1, 'Created new entity.');
+      if ($entity->getIdentifier()) {
+        $this->setStatus(1, 'Created new entity.');
+      }
+      else {
+        $this->setStatus(0, 'Skipped entity.');
+      }
     }
 
     return $entity;
@@ -245,7 +250,5 @@ class EntityProcessor extends ProcessorAbstract {
     }
     return $this->force;
   }
-
-
 
 }
