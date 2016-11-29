@@ -7,6 +7,7 @@
 
 use \CAPx\Drupal\Util\CAPx;
 
+
 /**
  * Menu Callback to display current filters active on the CAPx mapper.
  *
@@ -18,12 +19,19 @@ use \CAPx\Drupal\Util\CAPx;
  */
 function capx_filters_list($mapper_id) {
   $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+  // Mapper Not Found.
+  if (!$mapper) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+
   $filters = array();
   if (isset($mapper->settings['filters'])) {
     foreach ($mapper->settings['filters'] as $key => $filter) {
-      $actions = l(t('Edit'), "admin/config/capx/mapper/edit/$mapper_id/filters/$key/edit");
+      $actions = l(t('Edit'), CAPX_FILTERS_PAGE . "/$mapper_id/filters/$key/edit");
       $actions .= ' | ';
-      $actions .= l(t('Delete'), "admin/config/capx/mapper/edit/$mapper_id/filters/$key/delete");
+      $actions .= l(t('Delete'), CAPX_FILTERS_PAGE . "/$mapper_id/filters/$key/delete");
       $filters[] = array(
         'key' => $filter['key'],
         'comparison' => $filter['comparison'],
@@ -33,7 +41,8 @@ function capx_filters_list($mapper_id) {
       );
     }
   }
-  $output['content']['table'] = array(
+  $output['menu'] = stanford_capx_management_menu_block();
+  $output['table'] = array(
     '#theme' => 'table',
     '#header' => array(
       t('Path'),
@@ -57,8 +66,15 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
   $value = '';
   $comparison = '=';
   $exclude = 0;
+  $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+  // Mapper Not Found.
+  if (!$mapper) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
   if ($filter_id !== -1) {
-    $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+    // Filter ID was given, but check to see if it actually exists.
     if (isset($mapper->settings['filters']) && isset($mapper->settings['filters'][$filter_id])) {
       $filter = $mapper->settings['filters'][$filter_id];
       $key = $filter['key'];
@@ -66,8 +82,11 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
       $comparison = $filter['comparison'];
       $exclude = $filter['exclude'];
     }
+    else {
+      drupal_not_found();
+      drupal_exit();
+    }
   }
-
   $form = array();
 
   $form['mapper_id'] = array(
@@ -140,13 +159,19 @@ function capx_filters_edit_submit($form, &$form_state) {
   $mapper->settings['filters'] = array_values($mapper->settings['filters']);
   capx_mapper_save($mapper);
   CAPx::invalidateEtags('mapper', $mapper);
-  $form_state['redirect'] = 'admin/config/capx/mapper/edit/' . $mapper->getMachineName() . '/filters';
+  $form_state['redirect'] = CAPX_FILTERS_PAGE . "/{$mapper->getMachineName()}/filters";
 }
 
 /**
  * Form to confirm the deletion of the filter.
  */
 function capx_filters_delete($form, &$form_state, $mapper_id, $filter_id) {
+  // Mapper Not Found.
+  if (!capx_cfe_load_by_machine_name($mapper_id, 'mapper')) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
   $form = array();
   $form['disclaimer'] = array(
     '#markup' => t('Are you sure you wish to delete this filter? This action cannot be undone'),
@@ -182,8 +207,9 @@ function capx_filters_delete($form, &$form_state, $mapper_id, $filter_id) {
  * Removes the filter from the CAPx mapper settings array.
  */
 function capx_filters_delete_submit($form, &$form_state) {
+  global $_CAPX_FILTERS_PAGE_;
   $mapper_id = $form_state['values']['mapper_id'];
-  $form_state['redirect'] = 'admin/config/capx/mapper/edit/' . $mapper_id . '/filters';
+  $form_state['redirect'] = CAPX_FILTERS_PAGE . "/$mapper_id/filters";
   if ($form_state['triggering_element']['#name'] == 'cancel') {
     return;
   }
