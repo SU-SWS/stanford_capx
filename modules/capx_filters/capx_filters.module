@@ -55,23 +55,31 @@ function capx_filters_menu() {
 
 /**
  * Implements hook_capx_entity_presave_alter().
- *
- * @param EntityDrupalWrapper $entity
- *   Entity to be saved.
- * @param array $data
- * @param CAPx\Drupal\Mapper\EntityMapper $mapper
  */
 function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
+  $path_value = &drupal_static(__FUNCTION__, array());
   $config = $mapper->getConfig();
   if (isset($config['filters'])) {
     foreach ($config['filters'] as $filter) {
       $filter['value'] = strtolower($filter['value']);
-      $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
-      if (is_array($item) && $item && count($item) == 1) {
+
+      if (strpos($filter['key'], '*') !== FALSE) {
+        if (!count($path_value)) {
+          $path_value = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+        }
+        // Have to use slice instead of shift due to possible boolean values.
+        $item = array_slice($path_value, 0, 1, TRUE);
+        unset($path_value[key($item)]);
+      }
+      else {
+        $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+      }
+
+      if (is_array($item) && $item) {
         $item = reset($item);
       }
       else {
-        $item = '';
+        $item = NULL;
       }
 
       // Handles TRUE/FALSE values.
@@ -172,6 +180,12 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
   array_unshift($form['#submit'], 'capx_filters_mapper_config_form_submit');
 }
 
+/**
+ * Mapper configuration form submit.
+ *
+ * Sets a static variable to use later. This prevents the need to manipulate
+ * existing save functionality.
+ */
 function capx_filters_mapper_config_form_submit($form, &$form_state) {
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   $filter_settings = &drupal_static(__FUNCTION__, array(
@@ -187,7 +201,7 @@ function capx_filters_mapper_config_form_submit($form, &$form_state) {
  * Implements hook_entity_presave().
  */
 function capx_filters_entity_presave($entity, $type) {
-  $filter_settings = drupal_static('capx_filters_mapper_config_form_submit', FALSE);
+  $filter_settings = drupal_static('capx_filters_mapper_config_form_submit', array());
   if ($type == 'capx_cfe' && array_filter($filter_settings)) {
     $entity->settings['filters'] = $filter_settings['filters'];
     $entity->settings['filters_delete'] = $filter_settings['delete'];
