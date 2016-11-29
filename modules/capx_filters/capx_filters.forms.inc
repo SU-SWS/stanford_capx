@@ -5,6 +5,8 @@
  * CAPx Filters forms.
  */
 
+use \CAPx\Drupal\Util\CAPx;
+
 /**
  * Menu Callback to display current filters active on the CAPx mapper.
  *
@@ -137,7 +139,7 @@ function capx_filters_edit_submit($form, &$form_state) {
 
   $mapper->settings['filters'] = array_values($mapper->settings['filters']);
   capx_mapper_save($mapper);
-  capx_filters_clear_etags($mapper);
+  CAPx::invalidateEtags('mapper', $mapper);
   $form_state['redirect'] = 'admin/config/capx/mapper/edit/' . $mapper->getMachineName() . '/filters';
 }
 
@@ -189,28 +191,5 @@ function capx_filters_delete_submit($form, &$form_state) {
   unset($mapper->settings['filters'][$form_state['values']['filter_id']]);
   $mapper->settings['filters'] = array_values($mapper->settings['filters']);
   capx_mapper_save($mapper);
-  capx_filters_clear_etags($mapper);
-}
-
-/**
- * Clear all etag fields for the specified mapper.
- *
- * @param CFEntity $mapper
- *   Mapper to find all importers and clear etags.
- */
-function capx_filters_clear_etags($mapper) {
-  /** @var CFEntity $entity */
-  $importers = array();
-  foreach (entity_load('capx_cfe') as $id => $entity) {
-    if ($entity->type == 'importer' && $entity->settings['mapper'] == $mapper->getMachineName()) {
-      $importers[] = $entity->getMachineName();
-    }
-  }
-
-  if ($importers) {
-    db_update('capx_profiles')
-      ->fields(array('etag' => ''))
-      ->condition('importer', $importers, 'in')
-      ->execute();
-  }
+  CAPx::invalidateEtags('mapper', $mapper);
 }

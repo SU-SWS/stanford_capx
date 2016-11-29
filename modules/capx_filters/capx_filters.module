@@ -17,7 +17,7 @@ function capx_filters_menu() {
     'file' => 'capx_filters.forms.inc',
     'page arguments' => array(5),
     'access arguments' => array('administer capx'),
-    'type' => MENU_LOCAL_ACTION,
+    'type' => MENU_CALLBACK,
   );
 
   $items['admin/config/capx/mapper/edit/%/filters/add'] = array(
@@ -113,16 +113,80 @@ function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
 
       if ($filter['exclude']) {
         if (!$filtered) {
-          $entity->delete();
+          if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
+            $entity->delete();
+          }
           $entity->clear();
         }
       }
       else {
         if ($filtered) {
-          $entity->delete();
+          if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
+            $entity->delete();
+          }
           $entity->clear();
         }
       }
     }
+  }
+}
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state, $form_id, $m) {
+  $mapper_name = FALSE;
+  $filter_delete = 0;
+  if ($form['naming']['machine-name']['#default_value']) {
+    $mapper_name = $form['naming']['machine-name']['#default_value'];
+    $mapper = $form_state['build_info']['args'][0];
+    $filter_delete = $mapper->settings['filters_delete'];
+  }
+  $form['field-mapping']['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filters'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  if (!$mapper_name) {
+    $form['field-mapping']['filters']['info'] = array(
+      '#markup' => t('Configure and save the mapper before configuring filters.'),
+    );
+    return;
+  }
+
+  $form['field-mapping']['filters']['delete'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete Existing'),
+    '#description' => t('If checked, existing content will be deleted if it does not pass the configured filters'),
+    '#default_value' => $filter_delete,
+  );
+  $form['field-mapping']['filters']['info'] = array(
+    '#markup' => l(t('Configure Filters'), "admin/config/capx/mapper/edit/$mapper_name/filters"),
+  );
+
+  array_unshift($form['#submit'], 'capx_filters_mapper_config_form_submit');
+}
+
+function capx_filters_mapper_config_form_submit($form, &$form_state) {
+  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
+  $filter_settings = &drupal_static(__FUNCTION__, array(
+    'filters' => array(),
+    'delete' => $form_state['values']['field-mapping']['filters']['delete'],
+  ));
+  if (isset($mapper->settings['filters'])) {
+    $filter_settings['filters'] = $mapper->settings['filters'];
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function capx_filters_entity_presave($entity, $type) {
+  $filter_settings = drupal_static('capx_filters_mapper_config_form_submit', FALSE);
+  if ($type == 'capx_cfe' && array_filter($filter_settings)) {
+    $entity->settings['filters'] = $filter_settings['filters'];
+    $entity->settings['filters_delete'] = $filter_settings['delete'];
   }
 }
