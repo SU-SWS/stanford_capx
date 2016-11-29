@@ -42,6 +42,15 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
       return;
     }
 
+    // If autotruncating is enabled lets do that here. This is to help
+    // avoid issues when trying to map data to the API.
+    if (variable_get("stanford_capx_autotruncate_textfields", TRUE)) {
+      $maxlength = 255; // Default.
+      if (strlen($data) > $maxlength) {
+        $data = substr($data, 0, $maxlength);
+      }
+    }
+
     try {
       $entity->{$propertyName}->set($data);
     }

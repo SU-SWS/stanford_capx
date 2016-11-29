@@ -3,6 +3,8 @@
  * @file
  */
 
+use CAPx\Drupal\Util\CAPxMapper;
+
 /**
  * Implements hook_install().
  */
@@ -21,6 +23,8 @@ function stanford_capx_uninstall() {
   variable_del('stanford_capx_token');
   variable_del("capx_last_orgs_sync");
   variable_del("capx_last_schema_sync");
+  variable_del("stanford_capx_debug_always_force_etag");
+  variable_del("stanford_capx_autotruncate_textfields");
 }
 
 /**
@@ -76,6 +80,12 @@ function stanford_capx_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'guuid' => array(
+        'description' => 'A guuid that is not the profile id. Used for multiple creation.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
       'sync' => array(
         'description' => 'Does this profile needs to be synced?',
         'type' => 'int',
@@ -103,7 +113,7 @@ function stanford_capx_schema() {
     ),
   );
 
-  // Configuration Entity
+  // Configuration Entity.
   $schema['capx_cfe'] = array(
     'description' => 'The base table for configuration entities.',
     'fields' => array(
@@ -265,4 +275,45 @@ function stanford_capx_requirements($phase) {
       break;
   }
   return $requirements;
+}
+
+/**
+ * Add the guuid field to the capx_profiles table.
+ */
+function stanford_capx_update_7200() {
+
+  $table = "capx_profiles";
+  $field = "guuid";
+  $spec = array(
+    'description' => 'A guuid that is not the profile id. Used for multiple creation.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  );
+
+  db_add_field($table, $field, $spec);
+
+}
+
+/**
+ * If auto_nodetitle is enabled we should enable capx_auto_nodetitle.
+ */
+function stanford_capx_update_7201() {
+  if (module_exists("auto_nodetitle")) {
+    module_enable(array("capx_auto_nodetitle"));
+  }
+}
+
+/**
+ * Resave each mapper so they get the new default config keys.
+ */
+function stanford_capx_update_7202() {
+  $mappers = CAPxMapper::loadAllMappers();
+  foreach ($mappers as $mapper) {
+    $mapper->settings['multiple'] = FALSE;
+    $mapper->settings['subquery'] = '';
+    $mapper->settings['guuidquery'] = '';
+    $mapper->save();
+  }
 }

@@ -297,7 +297,7 @@ function stanford_capx_taxonomy_term_load($terms) {
   // For each term add the aliases to them if they are a part of the org vocab.
   foreach($terms as &$term) {
     if ($term->vocabulary_machine_name == $vocab_name) {
-      $term->capx = array("aliases" => $aliases[$term->tid]);
+      $term->capx = array("aliases" => $aliases);
     }
   }
 

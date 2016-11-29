@@ -1,4 +1,5 @@
 # Stanford CAPx
+#### Version 2.0-PHP54
 
 Stanford CAP Extensible module builds on some great work. This module provides an interface for administrators to pull information directly from the CAP API into Drupal. This allows profile owners to continue to manage their profile information on the CAP web service and have that information automatically reflected into a Drupal website.
 
@@ -30,13 +31,18 @@ Collaboration and bug reports are welcome. Please file bug reports on the github
 
 Also included in this package is a module called: capx_issue_collector. If you enable this module you will have a 'report feedback' button added to the bottom right hand corner of your website. This will allow you to post feedback directly to our Jira instance.
 
+### Security
+#### HTTPS
+CAPx uses https for all API calls. Please follow this best practice as you develop with this module.
+#### httpoxy mitigation:
+In July 2016, the httpoxy security exploit was announced for PHP, including libraries such as Guzzle. CAPx installs were by default protected because of https usage (see above). In addition, **developers are encouraged to seek their own httpoxy mitigation steps at the server level**. Check with your hosting provider to ensure that your implementation is protected from httpoxy. See https://httpoxy.org for details.
+
 ## Credits
 
 * Trellon, for the [original CAP module](https://github.com/Stanford/CAP_drupal) and all the problems they solved. A great amount of inspiration and information was used from this module.
-* Trellon, for added support in the development and testing of this module.
 * Kenneth Sharp, for his work on CAP lite and for his contributions to functionality.
 * Zach Chandler, for his vision and direction.
 * Stanford Web Services, for putting all the pieces together.
 * CAP working group for all of their invaluable feedback and time spent.
-* Brendan Walsh, for seeing the value and backing this project.
+* Brendan Walsh and the Office of International Affairs, for their sponsorship funding this module.
 * Darryl Dieckman, for all his hard work and support on the API.

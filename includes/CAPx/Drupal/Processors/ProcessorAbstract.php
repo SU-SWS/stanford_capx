@@ -17,8 +17,10 @@ abstract class ProcessorAbstract implements ProcessorInterface {
 
   /**
    * construction method
-   * @param EntityMapper $mapper EntityMapper
-   * @param Array  $capData an array of cap data
+   * @param $mapper EntityMapper
+   *   The mapper.
+   * @param $data  array
+   *   An array of cap data
    */
   public function __construct($mapper, $data) {
     $this->setMapper($mapper);

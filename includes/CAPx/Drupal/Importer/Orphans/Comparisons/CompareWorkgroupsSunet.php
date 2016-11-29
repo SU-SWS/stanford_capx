@@ -37,7 +37,7 @@ class CompareWorkgroupsSunet implements ComparisonInterface {
     $sunetOptions = array_map('trim', $sunetOptions);
 
     foreach ($orphans['privGroups'] as $index => $profileId) {
-      if (in_array($sunetIds[$profileId], $sunetOptions)) {
+      if (isset($sunetIds[$profileId]) && in_array($sunetIds[$profileId], $sunetOptions)) {
         // If the sunet code is found in the sunet id list option then the
         // profile is not an orphan and we need to unset it from the orphans.
         unset($orphans["orgCodes"][$index]);

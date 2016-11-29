@@ -28,6 +28,7 @@ class LookupMissingFromSunetList implements LookupInterface {
       return $orphans;
     }
 
+    $orphans['uids'] = array();
     $results = $orphaner->getResults();
     $profiles = $orphaner->getProfiles();
     $orphans = $orphaner->getOrphans();
