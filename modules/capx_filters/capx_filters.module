@@ -13,7 +13,6 @@ define('CAPX_FILTERS_PAGE', 'admin/config/capx/mapper/edit');
 function capx_filters_menu() {
   $items = array();
 
-
   $items[CAPX_FILTERS_PAGE . "/%/filters"] = array(
     'title' => 'Filters',
     'page callback' => 'capx_filters_list',
@@ -55,33 +54,28 @@ function capx_filters_menu() {
 
 /**
  * Implements hook_capx_entity_presave_alter().
+ *
+ * @param EntityDrupalWrapper $entity
+ * @param CAPx\Drupal\Mapper\EntityMapper $mapper
  */
-function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
-  $path_value = &drupal_static(__FUNCTION__, array());
+function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
+  $raw_entity = $entity->value();
   $config = $mapper->getConfig();
-  if (isset($config['filters'])) {
-    foreach ($config['filters'] as $filter) {
-      $filter['value'] = strtolower($filter['value']);
-
-      if (strpos($filter['key'], '*') !== FALSE) {
-        if (!count($path_value)) {
-          $path_value = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
-        }
-        // Have to use slice instead of shift due to possible boolean values.
-        $item = array_slice($path_value, 0, 1, TRUE);
-        unset($path_value[key($item)]);
-      }
-      else {
-        $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+  if (isset($config['filters']) && $config['filters']) {
+    $pass = TRUE;
+    foreach ($config['filters'] as $i => $filter) {
+      // Already failed a filter.
+      if (!$pass) {
+        break;
       }
 
+      $item = NULL;
+      if (isset($raw_entity->capx[$filter['key']])) {
+        $item = $raw_entity->capx[$filter['key']];
+      }
       if (is_array($item) && $item) {
         $item = reset($item);
       }
-      else {
-        $item = NULL;
-      }
-
       // Handles TRUE/FALSE values.
       if (is_bool($item)) {
         if ($item) {
@@ -91,57 +85,72 @@ function capx_filters_capx_entity_presave_alter(&$entity, $data, $mapper) {
           $item = 'false';
         }
       }
-      else {
-        $item = "$item";
-      }
-
-      $filtered = FALSE;
+      $item = strtolower("$item");
       switch ($filter['comparison']) {
         case '=':
-          if ($item != $filter['value']) {
-            $filtered = TRUE;
-          }
+          $pass = $item == $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          break;
+
+        case '!=':
+          $pass = $item != $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
           break;
 
         case '>':
-          if (((int) $item) <= ((int) $filter['value'])) {
-            $filtered = TRUE;
-          }
+          $pass = $item > $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
           break;
 
         case '<':
-          if (((int) $item) >= ((int) $filter['value'])) {
-            $filtered = TRUE;
-          }
+          $pass = $item < $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          break;
+
+        case 'not empty':
+          $pass = !is_null($item) ? !$filter['exclude'] : $filter['exclude'];
           break;
 
         case 'contains':
-          if (strpos($item, $filter['value']) === FALSE) {
-            $filtered = TRUE;
-          }
+          $pass = strpos($item, $filter['value']) !== FALSE ? !$filter['exclude'] : $filter['exclude'];
           break;
       }
+    }
 
-      if ($filter['exclude']) {
-        if (!$filtered) {
-          if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
-            $entity->delete();
-          }
-          $entity->clear();
-        }
+    if (!$pass) {
+      if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
+        $entity->delete();
       }
-      else {
-        if ($filtered) {
-          if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
-            $entity->delete();
-          }
-          $entity->clear();
-        }
-      }
+      $entity->clear();
+    }
+  }
+
+}
+
+
+/**
+ * Implements hook_capx_config_fields_alter().
+ */
+function capx_filters_capx_config_fields_alter($mapper, &$fields) {
+  $config = $mapper->getConfig();
+  if (isset($config['filters'])) {
+    foreach ($config['filters'] as $i => $filter) {
+//      if (!field_info_field("capx_filter_$i")) {
+//        $field = array(
+//          'field_name' => "capx_filter_$i",
+//          'type' => 'text',
+//        );
+//        field_create_field($field);
+//      }
+//      if (!field_info_instance($config['entity_type'], "capx_filter_$i", $config['bundle_type'])) {
+//        $instance = array(
+//          'field_name' => "capx_filter_$i",
+//          'entity_type' => $config['entity_type'],
+//          'bundle' => $config['bundle_type'],
+//        );
+//        field_create_instance($instance);
+//      }
+
+      $fields["capx_filter_$i"] = array($filter['key']);
     }
   }
 }
-
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -187,6 +196,7 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
  * existing save functionality.
  */
 function capx_filters_mapper_config_form_submit($form, &$form_state) {
+  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   $filter_settings = &drupal_static(__FUNCTION__, array(
     'filters' => array(),

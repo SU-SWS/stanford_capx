@@ -22,8 +22,8 @@ class EntityMapper extends MapperAbstract {
   /**
    * Execute starts the mapping process.
    *
-   * @param Entity $entity
-   *   Expects the entity to be wrapped in entity_metadata_wrapper
+   * @param \EntityDrupalWrapper $entity
+   *   Expects the entity to be wrapped in entity_metadata_wrapper.
    * @param array $data
    *   An array of json data. The response from the API.
    *
@@ -97,17 +97,19 @@ class EntityMapper extends MapperAbstract {
   public function mapFields($data) {
 
     $config = $this->getConfig();
+    /** @var \EntityDrupalWrapper $entity */
     $entity = $this->getEntity();
     $error = FALSE;
 
     // Loop through each field and run a field processor on it.
+    drupal_alter('capx_config_fields', $this, $config['fields']);
     foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
       // Get some information about the field we are going to process.
       $fieldInfoField = field_info_field($fieldName);
-      if ($fieldInfoField) {
+      if ($fieldInfoField || strpos($fieldName, 'capx_filter') !== FALSE) {
         $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
 
-        if ($fieldInfoInstance) {
+        if ($fieldInfoInstance || strpos($fieldName, 'capx_filter') !== FALSE) {
           $info = array();
 
           drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
@@ -153,6 +155,12 @@ class EntityMapper extends MapperAbstract {
           // the result.
           if ($this->isMultiple()) {
             $info = $this->getMultipleIndexInfoResultField($info);
+          }
+
+          $raw = $entity->value();
+          if (isset($info[$key]) && !isset($raw->capx[$dataPath])) {
+            $raw->capx[$dataPath] = $info[$key];
+            $entity->set($raw);
           }
 
           // Widgets can change the way the data needs to be parsed. Provide

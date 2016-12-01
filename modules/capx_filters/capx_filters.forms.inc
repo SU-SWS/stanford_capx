@@ -7,7 +7,6 @@
 
 use \CAPx\Drupal\Util\CAPx;
 
-
 /**
  * Menu Callback to display current filters active on the CAPx mapper.
  *
@@ -114,8 +113,10 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
     '#title' => t('Comparison operation'),
     '#options' => array(
       '=' => '=',
+      '!=' => '!=',
       '>' => '>',
       '<' => '<',
+      'not empty' => t('Not Empty'),
       'contains' => t('Contains'),
     ),
     '#default_value' => $comparison,
@@ -141,7 +142,7 @@ function capx_filters_edit_submit($form, &$form_state) {
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['mapper_id'], 'mapper');
   $filter = array(
     'key' => $form_state['values']['key'],
-    'value' => $form_state['values']['value'],
+    'value' => strtolower($form_state['values']['value']),
     'comparison' => $form_state['values']['comparison'],
     'exclude' => $form_state['values']['exclude'],
   );

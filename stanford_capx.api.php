@@ -234,9 +234,21 @@ function hook_capx_find_sunet_orphans_alter($orphans) {
 
 /**
  * @param EntityDrupalWrapper $entity
+ * @param string $type
+ * @param string $bundle
  * @param array $data
  * @param CAPx\Drupal\Mapper\EntityMapper $mapper
  */
-function hook_capx_entity_presave_alter(&$entity, $data, $mapper){
+function hook_capx_entity_presave_alter(&$entity, $mapper) {
+
+}
+
+/**
+ * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
+ *   Entity Mapper in use
+ * @param array $fields
+ *   Keyed array of fields and values.
+ */
+function hook_capx_config_fields_alter($mapper, &$fields) {
 
 }

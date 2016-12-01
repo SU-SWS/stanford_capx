@@ -287,7 +287,7 @@ class EntityProcessor extends ProcessorAbstract {
     }
 
     // Save the entity.
-    drupal_alter('capx_entity_presave', $entity, $data, $mapper);
+    drupal_alter('capx_entity_presave', $entity, $mapper);
     $entity->save();
 
     $entityImporter = $this->getEntityImporter();
@@ -316,7 +316,7 @@ class EntityProcessor extends ProcessorAbstract {
    *   The bundle type of the entity being created
    * @param array $data
    *   The data to be mapped to the new entity
-   * @param object $mapper
+   * @param EntityMapper $mapper
    *   The EntityMapper instance
    * @param mixed $guuid
    *   The genuine unique id for this entity of other than profileId.
@@ -337,13 +337,14 @@ class EntityProcessor extends ProcessorAbstract {
     drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
 
     // Create an empty entity.
+    /** @var \EntityDrupalWrapper $entity */
     $entity = entity_create($entityType, $properties);
 
     // Wrap it up baby!
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
     // @todo Need to catch exceptions here as well.
-    drupal_alter('capx_entity_presave', $entity, $data, $mapper);
+    drupal_alter('capx_entity_presave', $entity, $mapper);
     $entity->save();
 
     // There is a possiblility that a field or property had an error while being
