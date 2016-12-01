@@ -102,14 +102,13 @@ class EntityMapper extends MapperAbstract {
     $error = FALSE;
 
     // Loop through each field and run a field processor on it.
-    drupal_alter('capx_config_fields', $this, $config['fields']);
     foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
       // Get some information about the field we are going to process.
       $fieldInfoField = field_info_field($fieldName);
-      if ($fieldInfoField || strpos($fieldName, 'capx_filter') !== FALSE) {
+      if ($fieldInfoField) {
         $fieldInfoInstance = field_info_instance($entity->type(), $fieldName, $entity->getBundle());
 
-        if ($fieldInfoInstance || strpos($fieldName, 'capx_filter') !== FALSE) {
+        if ($fieldInfoInstance) {
           $info = array();
 
           drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
@@ -157,28 +156,20 @@ class EntityMapper extends MapperAbstract {
             $info = $this->getMultipleIndexInfoResultField($info);
           }
 
-          $raw = $entity->value();
-          if (isset($info[$key]) && !isset($raw->capx[$dataPath])) {
-            $raw->capx[$dataPath] = $info[$key];
-            $entity->set($raw);
-          }
-
           // Widgets can change the way the data needs to be parsed. Provide
           // that to the FieldProcessor.
           $widget = $fieldInfoInstance['widget']['type'];
           $field = $fieldInfoField['type'];
 
           // Create a new field processor and let it do its magic.
-          if (strpos($fieldName, 'capx_filter') === FALSE) {
-            try {
-              $fieldProcessor = new FieldProcessor($entity, $fieldName);
-              $fieldProcessor->field($field)->widget($widget)->put($info);
-            }
-            catch (\Exception $e) {
-              // IF there was an exception we want to carry on processing but
-              // let the entity mapper know. Throw an error after everything.
-              $error = TRUE;
-            }
+          try {
+            $fieldProcessor = new FieldProcessor($entity, $fieldName);
+            $fieldProcessor->field($field)->widget($widget)->put($info);
+          }
+          catch (\Exception $e) {
+            // IF there was an exception we want to carry on processing but
+            // let the entity mapper know. Throw an error after everything.
+            $error = TRUE;
           }
           // Allow altering of an entity after this process.
           drupal_alter('capx_post_map_field', $entity, $fieldName);

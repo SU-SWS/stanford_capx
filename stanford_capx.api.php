@@ -62,14 +62,15 @@ function hook_capx_post_update_entity_alter(&$entity) {
 /**
  * [hook_capx_pre_entity_create description]
  * @see  EntityProcessor.php
- * @param  [type] $properties  [description]
- * @param  [type] $entity_type [description]
- * @param  [type] $bundle_type [description]
- * @param  [type] $mapper      [description]
- * @return [type]              [description]
+ * @param array $values
  */
-function hook_capx_pre_entity_create_alter(&$properties, &$entity_type, &$bundle_type, &$mapper) {
-
+function hook_capx_pre_entity_create_alter(&$values) {
+  $properties = $values['properties'];
+  $entityType = $values['entity_type'];
+  $bundleType = $values['bundle_type'];
+  $mapper = $values['mapper'];
+  $data = $values['data'];
+  $guid = $values['guid'];
 }
 
 /**
@@ -240,15 +241,5 @@ function hook_capx_find_sunet_orphans_alter($orphans) {
  * @param CAPx\Drupal\Mapper\EntityMapper $mapper
  */
 function hook_capx_entity_presave_alter(&$entity, $mapper) {
-
-}
-
-/**
- * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
- *   Entity Mapper in use
- * @param array $fields
- *   Keyed array of fields and values.
- */
-function hook_capx_config_fields_alter($mapper, &$fields) {
 
 }

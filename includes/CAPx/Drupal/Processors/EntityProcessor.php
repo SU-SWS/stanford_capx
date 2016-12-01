@@ -76,7 +76,10 @@ class EntityProcessor extends ProcessorAbstract {
     $bundleType = $mapper->getBundleType();
 
     // Check to see what entities we have for this profile.
-    $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
+    $entities = CAPx::getProfiles($entityType, array(
+      'profile_id' => $data['profileId'],
+      'importer' => $importerMachineName
+    ));
 
     // Looks like we have a whole new batch to create.
     if (empty($entities)) {
@@ -200,7 +203,10 @@ class EntityProcessor extends ProcessorAbstract {
     $bundleType = $mapper->getBundleType();
 
     $entity = NULL;
-    $entities = CAPx::getProfiles($entityType, array('profile_id' => $data['profileId'], 'importer' => $importerMachineName));
+    $entities = CAPx::getProfiles($entityType, array(
+      'profile_id' => $data['profileId'],
+      'importer' => $importerMachineName
+    ));
     if (is_array($entities)) {
       $entity = array_pop($entities);
     }
@@ -233,7 +239,7 @@ class EntityProcessor extends ProcessorAbstract {
     }
     else {
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
-      if ($entity->getIdentifier()) {
+      if ($entity) {
         $this->setStatus(1, 'Created new entity.');
       }
       else {
@@ -250,57 +256,62 @@ class EntityProcessor extends ProcessorAbstract {
    * Slightly different from the new entity. If we have an entity we will
    * execute the mapper on it and re-save it.
    *
-   * @param object $entity
+   * @param \EntityDrupalWrapper $entity
    *   The entity to be updated
    * @param array $data
    *   The data to map into it.
    * @param object $mapper
    *   The entity mapper instance
    *
-   * @return object
+   * @return object|bool
    *   The updated entity.
    */
   public function updateEntity($entity, $data, $mapper) {
     $entity_info = entity_get_info($entity->type());
     drupal_alter('capx_pre_update_entity', $entity, $data, $mapper);
-
-    $entity = $mapper->execute($entity, $data);
-
-    // There is a possiblility that a field or property had an error while being
-    // processed. These errors are stored for us to get later so that no one
-    // field stops the processing of an entity. If there was an error somewhere
-    // the eTag should be invalidated so that this entity gets updates on the
-    // next import run.
-    $errors = $mapper->getErrors();
-
-    if (!empty($errors)) {
-      // If there was an error on the field mapping set the etag to errors.
-      $data['meta']['etag'] = "errors";
-    }
-
-    // Nodes have special sauces.
-    if ($entity->type() == "node") {
-      // Set up default values, if required.
-      $node_options = variable_get('node_options_' . $entity->getBundle(), array('status', 'promote'));
-      // Always use the default revision setting.
-      $entity->revision->set(in_array('revision', $node_options));
-    }
-
-    // Save the entity.
-    drupal_alter('capx_entity_presave', $entity, $mapper);
-    $entity->save();
-
-    $entityImporter = $this->getEntityImporter();
-    $importerMachineName = $entityImporter->getMachineName();
-
     if ($entity->getIdentifier()) {
-      $guuid = $mapper->getGUUID($data, $mapper->getIndex());
-      CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+      $entity = $mapper->execute($entity, $data);
+
+      // There is a possiblility that a field or property had an error while being
+      // processed. These errors are stored for us to get later so that no one
+      // field stops the processing of an entity. If there was an error somewhere
+      // the eTag should be invalidated so that this entity gets updates on the
+      // next import run.
+      $errors = $mapper->getErrors();
+
+      if (!empty($errors)) {
+        // If there was an error on the field mapping set the etag to errors.
+        $data['meta']['etag'] = "errors";
+      }
+
+      // Nodes have special sauces.
+      if ($entity->type() == "node") {
+        // Set up default values, if required.
+        $node_options = variable_get('node_options_' . $entity->getBundle(), array(
+          'status',
+          'promote'
+        ));
+        // Always use the default revision setting.
+        $entity->revision->set(in_array('revision', $node_options));
+      }
+
+      // Save the entity.
+      drupal_alter('capx_entity_presave', $entity, $mapper);
+      $entity->save();
+
+      $entityImporter = $this->getEntityImporter();
+      $importerMachineName = $entityImporter->getMachineName();
+
+      if ($entity->getIdentifier()) {
+        $guuid = $mapper->getGUUID($data, $mapper->getIndex());
+        CAPx::updateProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
+      }
+
+      drupal_alter('capx_post_update_entity', $entity);
+
+      return $entity;
     }
-
-    drupal_alter('capx_post_update_entity', $entity);
-
-    return $entity;
+    return FALSE;
   }
 
   /**
@@ -321,7 +332,7 @@ class EntityProcessor extends ProcessorAbstract {
    * @param mixed $guuid
    *   The genuine unique id for this entity of other than profileId.
    *
-   * @return object
+   * @return object|bool
    *   The new entity after it has been saved.
    */
   public function newEntity($entityType, $bundleType, $data, $mapper, $guuid = NULL) {
@@ -334,42 +345,53 @@ class EntityProcessor extends ProcessorAbstract {
       'promote' => 0, // Fogetaboutit.
     );
 
-    drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
+    $values = array(
+      'properties' => $properties,
+      'entityType' => $entityType,
+      'bundleType' => $bundleType,
+      'mapper' => $mapper,
+      'data' => $data,
+      'guid' => $guuid,
+    );
+    drupal_alter('capx_pre_entity_create', $values);
+    extract($values);
 
-    // Create an empty entity.
-    /** @var \EntityDrupalWrapper $entity */
-    $entity = entity_create($entityType, $properties);
+    if (!isset($properties['no_create']) || !$properties['no_create']) {
+      // Create an empty entity.
+      /** @var \EntityDrupalWrapper $entity */
+      $entity = entity_create($entityType, $properties);
 
-    // Wrap it up baby!
-    $entity = entity_metadata_wrapper($entityType, $entity);
-    $entity = $mapper->execute($entity, $data);
-    // @todo Need to catch exceptions here as well.
-    drupal_alter('capx_entity_presave', $entity, $mapper);
-    $entity->save();
+      // Wrap it up baby!
+      $entity = entity_metadata_wrapper($entityType, $entity);
+      $entity = $mapper->execute($entity, $data);
+      // @todo Need to catch exceptions here as well.
+      drupal_alter('capx_entity_presave', $entity, $mapper);
+      $entity->save();
 
-    // There is a possiblility that a field or property had an error while being
-    // processed. These errors are stored for us to get later so that no one
-    // field stops the processing of an entity. If there was an error somewhere
-    // the eTag should be invalidated so that this entity gets updates on the
-    // next import run.
-    $errors = $mapper->getErrors();
 
-    if (!empty($errors)) {
-      // If there was an error on the field mapping set the etag to errors.
-      $data['meta']['etag'] = "errors";
-    }
+      // There is a possiblility that a field or property had an error while being
+      // processed. These errors are stored for us to get later so that no one
+      // field stops the processing of an entity. If there was an error somewhere
+      // the eTag should be invalidated so that this entity gets updates on the
+      // next import run.
+      $errors = $mapper->getErrors();
 
-    // Allow altering.
-    drupal_alter('capx_post_entity_create', $entity);
+      if (!empty($errors)) {
+        // If there was an error on the field mapping set the etag to errors.
+        $data['meta']['etag'] = "errors";
+      }
 
-    // Write a new record.
-    $entityImporter = $this->getEntityImporter();
-    $importerMachineName = $entityImporter->getMachineName();
-    if ($entity->getIdentifier()) {
+      // Allow altering.
+      drupal_alter('capx_post_entity_create', $entity);
+
+      // Write a new record.
+      $entityImporter = $this->getEntityImporter();
+      $importerMachineName = $entityImporter->getMachineName();
       CAPx::insertNewProfileRecord($entity, $data['profileId'], $data['meta']['etag'], $importerMachineName, $guuid);
-    }
 
-    return $entity;
+      return $entity;
+    }
+    return FALSE;
   }
 
   /**
