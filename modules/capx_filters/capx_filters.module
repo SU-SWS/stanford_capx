@@ -99,37 +99,37 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
         $item = strtolower("$item");
       }
 
-      $temp_pass = TRUE;
+      $temp_pass = NULL;
       switch ($filter['comparison']) {
         case '=':
-          $pass = $item == $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = $item == $filter['value'];
           break;
 
         case '!=':
-          $pass = $item != $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = $item != $filter['value'];
           break;
 
         case '>':
-          $pass = (int) $item > (int) $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = (int) $item > (int) $filter['value'];
           break;
 
         case '<':
-          $pass = (int) $item < (int) $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = (int) $item < (int) $filter['value'];
           break;
 
         case 'not empty':
-          $pass = !is_null($item) ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = !is_null($item);
           break;
 
         case 'contains':
-          $pass = strpos($item, $filter['value']) !== FALSE ? !$filter['exclude'] : $filter['exclude'];
+          $temp_pass = strpos($item, $filter['value']) !== FALSE;
           break;
 
         case 'before':
           $item = capx_filters_parse_date($item);
           $value = capx_filters_parse_date($filter['value']);
           if ($item && $value) {
-            $pass = $item < $value ? !$filter['exclude'] : $filter['exclude'];
+            $temp_pass = $item < $value;
           }
           break;
 
@@ -137,13 +137,22 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
           $item = capx_filters_parse_date($item);
           $value = capx_filters_parse_date($filter['value']);
           if ($item && $value) {
-            $pass = $item > $value ? !$filter['exclude'] : $filter['exclude'];
+            $temp_pass = $item > $value;
           }
           break;
       }
+
+      if (!is_null($temp_pass)) {
+        if ($temp_pass) {
+          $pass = !$filter['exclude'];
+        }
+        else {
+          $pass = $filter['exclude'];
+        }
+      }
     }
 
-    if (!$pass) {
+    if (!is_null($pass) && !$pass) {
       if (
         isset($config['filters_delete']) &&
         $config['filters_delete'] &&
@@ -172,6 +181,7 @@ function capx_filters_parse_date($string) {
     return $date->getTimestamp();
   }
   catch (Exception $e) {
+    watchdog('capx_filters', t('Unable to parse date value. %type given.', array('%type' => gettype($string))));
     return FALSE;
   }
 }

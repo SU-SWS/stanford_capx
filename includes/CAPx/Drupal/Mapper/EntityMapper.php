@@ -169,16 +169,17 @@ class EntityMapper extends MapperAbstract {
           $field = $fieldInfoField['type'];
 
           // Create a new field processor and let it do its magic.
-          try {
-            $fieldProcessor = new FieldProcessor($entity, $fieldName);
-            $fieldProcessor->field($field)->widget($widget)->put($info);
+          if (strpos($fieldName, 'capx_filter') === FALSE) {
+            try {
+              $fieldProcessor = new FieldProcessor($entity, $fieldName);
+              $fieldProcessor->field($field)->widget($widget)->put($info);
+            }
+            catch (\Exception $e) {
+              // IF there was an exception we want to carry on processing but
+              // let the entity mapper know. Throw an error after everything.
+              $error = TRUE;
+            }
           }
-          catch (\Exception $e) {
-            // IF there was an exception we want to carry on processing but let
-            // the entity mapper know. Throw an error after everything.
-            $error = TRUE;
-          }
-
           // Allow altering of an entity after this process.
           drupal_alter('capx_post_map_field', $entity, $fieldName);
         }
