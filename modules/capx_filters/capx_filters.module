@@ -56,7 +56,9 @@ function capx_filters_menu() {
  * Implements hook_capx_entity_presave_alter().
  *
  * @param EntityDrupalWrapper $entity
+ *   Entity to be manipulated.
  * @param CAPx\Drupal\Mapper\EntityMapper $mapper
+ *   Capx mapper used on the entity.
  */
 function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
   $raw_entity = $entity->value();
@@ -73,9 +75,16 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
       if (isset($raw_entity->capx[$filter['key']])) {
         $item = $raw_entity->capx[$filter['key']];
       }
-      if (is_array($item) && $item) {
-        $item = reset($item);
+
+      if (is_array($item)) {
+        if (array_filter($item)) {
+          $item = reset($item);
+        }
+        else {
+          $item = NULL;
+        }
       }
+
       // Handles TRUE/FALSE values.
       if (is_bool($item)) {
         if ($item) {
@@ -85,7 +94,12 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
           $item = 'false';
         }
       }
-      $item = strtolower("$item");
+
+      if (!is_array($item) && $item) {
+        $item = strtolower("$item");
+      }
+
+      $temp_pass = TRUE;
       switch ($filter['comparison']) {
         case '=':
           $pass = $item == $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
@@ -96,11 +110,11 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
           break;
 
         case '>':
-          $pass = $item > $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $pass = (int) $item > (int) $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
           break;
 
         case '<':
-          $pass = $item < $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
+          $pass = (int) $item < (int) $filter['value'] ? !$filter['exclude'] : $filter['exclude'];
           break;
 
         case 'not empty':
@@ -110,17 +124,56 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
         case 'contains':
           $pass = strpos($item, $filter['value']) !== FALSE ? !$filter['exclude'] : $filter['exclude'];
           break;
+
+        case 'before':
+          $item = capx_filters_parse_date($item);
+          $value = capx_filters_parse_date($filter['value']);
+          if ($item && $value) {
+            $pass = $item < $value ? !$filter['exclude'] : $filter['exclude'];
+          }
+          break;
+
+        case 'after':
+          $item = capx_filters_parse_date($item);
+          $value = capx_filters_parse_date($filter['value']);
+          if ($item && $value) {
+            $pass = $item > $value ? !$filter['exclude'] : $filter['exclude'];
+          }
+          break;
       }
     }
 
     if (!$pass) {
-      if (isset($mapper->settings['filters_delete']) && $mapper->settings['filters_delete']) {
+      if (
+        isset($config['filters_delete']) &&
+        $config['filters_delete'] &&
+        $entity->getIdentifier()
+      ) {
         $entity->delete();
       }
       $entity->clear();
     }
   }
 
+}
+
+/**
+ * Catch errors if user inputs incorrect date string.
+ *
+ * @param string $string
+ *   Date string to parse.
+ *
+ * @return bool|int
+ *   Timestamp if valid date string or false.
+ */
+function capx_filters_parse_date($string) {
+  try {
+    $date = new DateTime($string);
+    return $date->getTimestamp();
+  }
+  catch (Exception $e) {
+    return FALSE;
+  }
 }
 
 
@@ -131,22 +184,6 @@ function capx_filters_capx_config_fields_alter($mapper, &$fields) {
   $config = $mapper->getConfig();
   if (isset($config['filters'])) {
     foreach ($config['filters'] as $i => $filter) {
-//      if (!field_info_field("capx_filter_$i")) {
-//        $field = array(
-//          'field_name' => "capx_filter_$i",
-//          'type' => 'text',
-//        );
-//        field_create_field($field);
-//      }
-//      if (!field_info_instance($config['entity_type'], "capx_filter_$i", $config['bundle_type'])) {
-//        $instance = array(
-//          'field_name' => "capx_filter_$i",
-//          'entity_type' => $config['entity_type'],
-//          'bundle' => $config['bundle_type'],
-//        );
-//        field_create_instance($instance);
-//      }
-
       $fields["capx_filter_$i"] = array($filter['key']);
     }
   }

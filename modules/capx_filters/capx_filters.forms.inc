@@ -98,7 +98,7 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
   );
   $form['key'] = array(
     '#type' => 'textfield',
-    '#title' => t('Path to value'),
+    '#title' => t('CAP API path'),
     '#default_value' => $key,
     '#required' => TRUE,
   );
@@ -106,18 +106,27 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
     '#type' => 'textfield',
     '#title' => t('Value to check'),
     '#default_value' => $value,
-    '#required' => TRUE,
   );
   $form['comparison'] = array(
     '#type' => 'select',
     '#title' => t('Comparison operation'),
     '#options' => array(
-      '=' => '=',
-      '!=' => '!=',
-      '>' => '>',
-      '<' => '<',
-      'not empty' => t('Not Empty'),
-      'contains' => t('Contains'),
+      'Text' => array(
+        '=' => '=',
+        '!=' => '!=',
+        'contains' => t('Contains'),
+      ),
+      'Numeric' => array(
+        '>' => '>',
+        '<' => '<',
+      ),
+      'Date' => array(
+        'before' => t('Before'),
+        'after' => t('After'),
+      ),
+      'Other' => array(
+        'not empty' => t('Not Empty'),
+      ),
     ),
     '#default_value' => $comparison,
     '#required' => TRUE,
@@ -133,6 +142,15 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
   );
 
   return $form;
+}
+
+function capx_filters_edit_validate($form, &$form_state) {
+  if ($form_state['values']['comparison'] == 'before' || $form_state['values']['comparison'] == 'after') {
+    $date = capx_filters_parse_date($form_state['values']['value']);
+    if (!$date) {
+      form_set_error('value', t('Invalid date string.'));
+    }
+  }
 }
 
 /**
