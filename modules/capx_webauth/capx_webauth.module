@@ -36,7 +36,7 @@ function capx_webauth_capx_post_entity_create_alter($entity, $data) {
   // needs to be the sunetid from the api.
 
   if (!isset($data['uid'])) {
-    watchdog("capx_webauth", "Entity %type with ID %id did not have a sunet available. Webauth link not created.", array("%type" => $entity->type, "%id" => $entity->uid), WATCHDOG_ALERT);
+    watchdog("capx_webauth", "Entity %type with ID %id did not have a sunet available. Webauth link not created.", array("%type" => "user", "%id" => $entity->uid), WATCHDOG_ALERT);
     return;
   }
 
