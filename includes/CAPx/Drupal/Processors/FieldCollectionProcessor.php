@@ -46,6 +46,10 @@ class FieldCollectionProcessor extends EntityProcessor {
     while($hasValues) {
       $mapper->setIndex($i);
       $entity = $this->newEntity($entityType, $bundleType, $data, $mapper);
+      if (!$entity) {
+        $i++;
+        continue;
+      }
       drupal_alter('capx_new_fc', $entity);
       $entity = $mapper->execute($entity, $data);
 
