@@ -44,7 +44,7 @@ function capx_webauth_capx_post_entity_create_alter($entity, $data) {
   $uid = $entity->getIdentifier();
 
   // Sunet ID from API.
-  $sunet = $data['uid'];
+  $sunet = $data['uid'] . "@stanford.edu";
 
   // Add the authmap to the table.
   db_merge("authmap")
