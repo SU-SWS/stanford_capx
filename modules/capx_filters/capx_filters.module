@@ -105,7 +105,10 @@ function capx_filters_valid($data, $mapper) {
 
       $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
       if (strpos($filter['key'], '*') !== FALSE) {
-        $item = $item[$mapper->getIndex()];
+        $index = $mapper->getIndex();
+        if (isset($item[$index])) {
+          $item = $item[$index];
+        }
       }
 
       if (is_array($item)) {
