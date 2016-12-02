@@ -22,7 +22,7 @@ function capx_ssp_help($path, $arg) {
  * @param object $entity
  *   The entity that was just created by capx.
  */
-function capx_ssp_capx_post_entity_create_alter($entity) {
+function capx_ssp_capx_post_entity_create_alter($entity, $data) {
   // We only want users.
   if ($entity->type() !== "user" || $entity->getBundle() !== "user") {
     return;

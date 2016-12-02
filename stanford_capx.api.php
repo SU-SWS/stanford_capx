@@ -73,13 +73,20 @@ function hook_capx_pre_entity_create_alter(&$properties, &$entity_type, &$bundle
 }
 
 /**
- * [hook_capx_post_entity_create_alter description]
- * @see  EntityProcessor.php
- * @param  [type] $entity [description]
- * @return [type]         [description]
+ * After the entity has completed mapping and processing it is saved.
+ *
+ * This is an alter hook after the entity has been saved and it a real object
+ * in the system.
+ *
+ * @param object $entity
+ *   The saved entity.
+ * @param array $data
+ *   The data array of the information from the api.
+ *
+ * @see EntityProcessor.php
  */
-function hook_capx_post_entity_create_alter(&$entity) {
-
+function hook_capx_post_entity_create_alter(&$entity, $data) {
+  // Do additional actions after the entity has been saved.
 }
 
 /**
@@ -231,32 +238,3 @@ function hook_capx_find_workgroup_orphans_alter($orphans) {
 function hook_capx_find_sunet_orphans_alter($orphans) {
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

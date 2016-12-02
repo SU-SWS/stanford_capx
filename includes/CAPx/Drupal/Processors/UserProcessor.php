@@ -55,7 +55,7 @@ class UserProcessor extends EntityProcessor {
       }
     }
 
-    drupal_alter('capx_post_entity_create', $entity);
+    drupal_alter('capx_post_entity_create', $entity, $data);
 
     // Write a new record.
     $entityImporter = $this->getEntityImporter();
