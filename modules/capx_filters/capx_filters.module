@@ -53,27 +53,62 @@ function capx_filters_menu() {
 }
 
 /**
- * Implements hook_capx_entity_presave_alter().
- *
- * @param EntityDrupalWrapper $entity
- *   Entity to be manipulated.
- * @param CAPx\Drupal\Mapper\EntityMapper $mapper
- *   Capx mapper used on the entity.
+ * Implements hook_capx_pre_entity_create_alter().
  */
-function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
-  $raw_entity = $entity->value();
+/**
+ * Implements hook_capx_pre_entity_create_alter().
+ */
+function capx_filters_capx_pre_entity_create_alter(&$values) {
+  /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
+  $mapper = NULL;
+  $data = array();
+  extract($values);
+  if (!capx_filters_valid($data, $mapper)) {
+    $values['properties']['no_create'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_capx_pre_update_entity_alter().
+ */
+function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
+  if (!capx_filters_valid($data, $mapper)) {
+    $config = $mapper->getConfig();
+    if (isset($config['filters_delete']) && $config['filters_delete']) {
+      $entity->delete();
+    }
+    $entity->clear();
+  }
+  $entity->clear();
+}
+
+/**
+ * Use the data to check if the item passes all filters.
+ *
+ * @param array $data
+ *   Data from the api.
+ * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
+ *   Mapper used for import.
+ *
+ * @return bool
+ *   If its valid.
+ */
+function capx_filters_valid($data, $mapper) {
   $config = $mapper->getConfig();
+  $pass = TRUE;
   if (isset($config['filters']) && $config['filters']) {
-    $pass = TRUE;
     foreach ($config['filters'] as $i => $filter) {
       // Already failed a filter.
       if (!$pass) {
         break;
       }
 
-      $item = NULL;
-      if (isset($raw_entity->capx[$filter['key']])) {
-        $item = $raw_entity->capx[$filter['key']];
+      $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+      if (strpos($filter['key'], '*') !== FALSE) {
+        $index = $mapper->getIndex();
+        if (isset($item[$index])) {
+          $item = $item[$index];
+        }
       }
 
       if (is_array($item)) {
@@ -156,19 +191,8 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
         }
       }
     }
-
-    if (!is_null($pass) && !$pass) {
-      if (
-        isset($config['filters_delete']) &&
-        $config['filters_delete'] &&
-        $entity->getIdentifier()
-      ) {
-        $entity->delete();
-      }
-      $entity->clear();
-    }
   }
-
+  return $pass;
 }
 
 /**
