@@ -247,6 +247,7 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#weight' => 1,
+    '#tree' => TRUE,
   );
 
   // Move the submit buttons to the bottom.
@@ -290,10 +291,11 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
  */
 function capx_filters_mapper_config_form_submit($form, &$form_state) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+  dpm($form_state);
   $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
   $filter_settings = &drupal_static(__FUNCTION__, array(
     'filters' => array(),
-    'delete' => $form_state['values']['field-mapping']['filters']['delete'],
+    'delete' => $form_state['values']['filters']['delete'],
   ));
   if (isset($mapper->settings['filters'])) {
     $filter_settings['filters'] = $mapper->settings['filters'];
