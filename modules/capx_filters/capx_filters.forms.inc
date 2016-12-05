@@ -18,12 +18,15 @@ use \CAPx\Drupal\Util\CAPx;
  */
 function capx_filters_list($mapper_id) {
   $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+
   // Mapper Not Found.
   if (!$mapper) {
     drupal_not_found();
     drupal_exit();
   }
 
+  // Set the page title.
+  drupal_set_title($mapper->title . " Filters");
 
   $filters = array();
   if (isset($mapper->settings['filters'])) {
@@ -40,7 +43,13 @@ function capx_filters_list($mapper_id) {
       );
     }
   }
+
   $output['menu'] = stanford_capx_management_menu_block();
+
+  $output['goback'] = array(
+    "#markup" => "<p>" . l(t("Manage Mapping Configuration ->"), "admin/config/capx/mapper/edit/" . $mapper_id) . "</p>",
+  );
+
   $output['table'] = array(
     '#theme' => 'table',
     '#header' => array(
@@ -52,6 +61,11 @@ function capx_filters_list($mapper_id) {
     ),
     '#rows' => $filters,
     '#empty' => t('No Filters Configured'),
+  );
+
+  $add_button = l(t("+ Add New Filter"), "admin/config/capx/mapper/edit/$mapper_id/filters/add", array("attributes" => array("class" => array("button"))));
+  $output['addbutton'] = array(
+    "#markup" => $add_button,
   );
 
   return $output;
@@ -104,13 +118,16 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
   );
   $form['value'] = array(
     '#type' => 'textfield',
-    '#title' => t('Value to check'),
+    '#title' => t('Value'),
     '#default_value' => $value,
   );
   $form['comparison'] = array(
     '#type' => 'select',
     '#title' => t('Comparison operation'),
     '#options' => array(
+      'Boolean' => array(
+        'bool' => t("True / False"),
+      ),
       'Text' => array(
         '=' => '=',
         '!=' => '!=',
@@ -144,6 +161,12 @@ function capx_filters_edit($form, &$form_state, $mapper_id, $filter_id = -1) {
   return $form;
 }
 
+/**
+ * [capx_filters_edit_validate description]
+ * @param  [type] $form       [description]
+ * @param  [type] $form_state [description]
+ * @return [type]             [description]
+ */
 function capx_filters_edit_validate($form, &$form_state) {
   if ($form_state['values']['comparison'] == 'before' || $form_state['values']['comparison'] == 'after') {
     $date = capx_filters_parse_date($form_state['values']['value']);

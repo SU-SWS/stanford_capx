@@ -101,6 +101,11 @@ function capx_filters_capx_entity_presave_alter(&$entity, $mapper) {
 
       $temp_pass = NULL;
       switch ($filter['comparison']) {
+
+        case "bool":
+          $temp_pass = strtolower($item) == strtolower($filter['value']);
+          break;
+
         case '=':
           $temp_pass = $item == $filter['value'];
           break;
@@ -205,32 +210,49 @@ function capx_filters_capx_config_fields_alter($mapper, &$fields) {
 function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state, $form_id) {
   $mapper_name = FALSE;
   $filter_delete = 0;
+
   if ($form['naming']['machine-name']['#default_value']) {
     $mapper_name = $form['naming']['machine-name']['#default_value'];
     $mapper = $form_state['build_info']['args'][0];
     $filter_delete = $mapper->settings['filters_delete'];
   }
-  $form['field-mapping']['filters'] = array(
+
+  $form['filters'] = array(
     '#type' => 'fieldset',
     '#title' => t('Filters'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+    '#weight' => 1,
   );
+
+  // Move the submit buttons to the bottom.
+  $form['actions']['#weight'] = 100;
+
   if (!$mapper_name) {
-    $form['field-mapping']['filters']['info'] = array(
+    $form['filters']['info'] = array(
       '#markup' => t('Configure and save the mapper before configuring filters.'),
     );
     return;
   }
 
-  $form['field-mapping']['filters']['delete'] = array(
+  $form['filters']['intro'] = array(
+    '#markup' => "<p>" . t("Filters allow you to prevent importing items from the API. When an item matches a filter it will not be saved to this website. Filters are placed on API values. For example, Affiliations. You can create a filter that would prevent importing items unless that item $.affiliations has \"staff\".") . "<p>",
+  );
+
+  $form['filters']['delete'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Delete Existing'),
-    '#description' => t('If checked, existing content will be deleted if it does not pass the configured filters'),
+    '#title' => t('Remove existing on match'),
+    '#description' => t('If checked, existing content will be deleted if it matches a filter. Content from the API can change and when it does a previously imported item that now matches a filter will be removed from this website.'),
     '#default_value' => $filter_delete,
   );
-  $form['field-mapping']['filters']['info'] = array(
-    '#markup' => l(t('Configure Filters'), CAPX_FILTERS_PAGE . "/$mapper_name/filters"),
+
+  $cta = "<br/><p>";
+  $cta .= l(t('Manage Filters'), CAPX_FILTERS_PAGE . "/$mapper_name/filters", array("attributes" => array("class" => 'button')));
+  $cta .= "</p>";
+  $cta .= "<span><em>" . t("Clicking this button will navigate you away to a new page. Please save your work first.") . "</em></span>";
+
+  $form['filters']['cta'] = array(
+    '#markup' => $cta,
   );
 
   array_unshift($form['#submit'], 'capx_filters_mapper_config_form_submit');
