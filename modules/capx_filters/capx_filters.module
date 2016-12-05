@@ -261,7 +261,7 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
   }
 
   $form['filters']['intro'] = array(
-    '#markup' => "<p>" . t("Filters allow you to prevent importing items from the API. When an item matches a filter it will not be saved to this website. Filters are placed on API values. For example, Affiliations. You can create a filter that would prevent importing items unless that item $.affiliations has \"staff\".") . "<p>",
+    '#markup' => "<p>" . t("Filters allow you to prevent importing items from the API. Filters allow you to choose wether to include or exclude an item based on a value from the API. For example, you can create a filter that would prevent importing items unless that item $.affiliations.capStaff is TRUE") . "<p>",
   );
 
   $form['filters']['delete'] = array(
