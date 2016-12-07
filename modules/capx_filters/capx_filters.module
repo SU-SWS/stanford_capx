@@ -1,0 +1,314 @@
+<?php
+
+/**
+ * @file
+ * CAPx Filters module.
+ */
+
+define('CAPX_FILTERS_PAGE', 'admin/config/capx/mapper/edit');
+
+/**
+ * Implements hook_menu().
+ */
+function capx_filters_menu() {
+  $items = array();
+
+  $items[CAPX_FILTERS_PAGE . "/%/filters"] = array(
+    'title' => 'Filters',
+    'page callback' => 'capx_filters_list',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array(5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[CAPX_FILTERS_PAGE . "/%/filters/add"] = array(
+    'title' => 'Add New Filter',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_edit', 5),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items[CAPX_FILTERS_PAGE . "/%/filters/%/edit"] = array(
+    'title' => 'Edit Filter',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_edit', 5, 7),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[CAPX_FILTERS_PAGE . "/%/filters/%/delete"] = array(
+    'title' => 'Edit Filter',
+    'page callback' => 'drupal_get_form',
+    'file' => 'capx_filters.forms.inc',
+    'page arguments' => array('capx_filters_delete', 5, 7),
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_capx_pre_entity_create_alter().
+ */
+/**
+ * Implements hook_capx_pre_entity_create_alter().
+ */
+function capx_filters_capx_pre_entity_create_alter(&$values) {
+  /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
+  $mapper = NULL;
+  $data = array();
+  extract($values);
+  if (!capx_filters_valid($data, $mapper)) {
+    $values['properties']['no_create'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_capx_pre_update_entity_alter().
+ */
+function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
+  if (!capx_filters_valid($data, $mapper)) {
+    $config = $mapper->getConfig();
+    if (isset($config['filters_delete']) && $config['filters_delete']) {
+      $entity->delete();
+    }
+    $entity->clear();
+  }
+  $entity->clear();
+}
+
+/**
+ * Use the data to check if the item passes all filters.
+ *
+ * @param array $data
+ *   Data from the api.
+ * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
+ *   Mapper used for import.
+ *
+ * @return bool
+ *   If its valid.
+ */
+function capx_filters_valid($data, $mapper) {
+  $config = $mapper->getConfig();
+  $pass = TRUE;
+  if (isset($config['filters']) && $config['filters']) {
+    foreach ($config['filters'] as $i => $filter) {
+      // Already failed a filter.
+      if (!$pass) {
+        break;
+      }
+
+      $item = $mapper->getRemoteDataByJsonPath($data, $filter['key']);
+      if (strpos($filter['key'], '*') !== FALSE) {
+        $index = $mapper->getIndex();
+        if (isset($item[$index])) {
+          $item = $item[$index];
+        }
+      }
+
+      if (is_array($item)) {
+        if (array_filter($item)) {
+          $item = reset($item);
+        }
+        else {
+          $item = NULL;
+        }
+      }
+
+      // Handles TRUE/FALSE values.
+      if (is_bool($item)) {
+        if ($item) {
+          $item = 'true';
+        }
+        else {
+          $item = 'false';
+        }
+      }
+
+      if (!is_array($item) && $item) {
+        $item = strtolower("$item");
+      }
+
+      $temp_pass = NULL;
+      switch ($filter['comparison']) {
+
+        case "bool":
+          $temp_pass = strtolower($item) == strtolower($filter['value']);
+          break;
+
+        case '=':
+          $temp_pass = $item == $filter['value'];
+          break;
+
+        case '!=':
+          $temp_pass = $item != $filter['value'];
+          break;
+
+        case '>':
+          $temp_pass = (int) $item > (int) $filter['value'];
+          break;
+
+        case '<':
+          $temp_pass = (int) $item < (int) $filter['value'];
+          break;
+
+        case 'not empty':
+          $temp_pass = !is_null($item);
+          break;
+
+        case 'contains':
+          $temp_pass = strpos($item, $filter['value']) !== FALSE;
+          break;
+
+        case 'before':
+          $item = capx_filters_parse_date($item);
+          $value = capx_filters_parse_date($filter['value']);
+          if ($item && $value) {
+            $temp_pass = $item < $value;
+          }
+          break;
+
+        case 'after':
+          $item = capx_filters_parse_date($item);
+          $value = capx_filters_parse_date($filter['value']);
+          if ($item && $value) {
+            $temp_pass = $item > $value;
+          }
+          break;
+      }
+
+      if (!is_null($temp_pass)) {
+        if ($temp_pass) {
+          $pass = !$filter['exclude'];
+        }
+        else {
+          $pass = $filter['exclude'];
+        }
+      }
+    }
+  }
+  return $pass;
+}
+
+/**
+ * Catch errors if user inputs incorrect date string.
+ *
+ * @param string $string
+ *   Date string to parse.
+ *
+ * @return bool|int
+ *   Timestamp if valid date string or false.
+ */
+function capx_filters_parse_date($string) {
+  try {
+    $date = new DateTime($string);
+    return $date->getTimestamp();
+  }
+  catch (Exception $e) {
+    watchdog('capx_filters', t('Unable to parse date value. %type given.', array('%type' => gettype($string))));
+    return FALSE;
+  }
+}
+
+
+/**
+ * Implements hook_capx_config_fields_alter().
+ */
+function capx_filters_capx_config_fields_alter($mapper, &$fields) {
+  $config = $mapper->getConfig();
+  if (isset($config['filters'])) {
+    foreach ($config['filters'] as $i => $filter) {
+      $fields["capx_filter_$i"] = array($filter['key']);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state, $form_id) {
+  $mapper_name = FALSE;
+  $filter_delete = 0;
+
+  if ($form['naming']['machine-name']['#default_value']) {
+    $mapper_name = $form['naming']['machine-name']['#default_value'];
+    $mapper = $form_state['build_info']['args'][0];
+    $filter_delete = $mapper->settings['filters_delete'];
+  }
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filters'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 1,
+    '#tree' => TRUE,
+  );
+
+  // Move the submit buttons to the bottom.
+  $form['actions']['#weight'] = 100;
+
+  if (!$mapper_name) {
+    $form['filters']['info'] = array(
+      '#markup' => t('Configure and save the mapper before configuring filters.'),
+    );
+    return;
+  }
+
+  $form['filters']['intro'] = array(
+    '#markup' => "<p>" . t("Filters allow you to prevent importing items from the API. Filters allow you to choose wether to include or exclude an item based on a value from the API. For example, you can create a filter that would prevent importing items unless that item $.affiliations.capStaff is TRUE") . "<p>",
+  );
+
+  $form['filters']['delete'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remove existing on match'),
+    '#description' => t('If checked, existing content will be deleted if it matches a filter. Content from the API can change and when it does a previously imported item that now matches a filter will be removed from this website.'),
+    '#default_value' => $filter_delete,
+  );
+
+  $cta = "<br/><p>";
+  $cta .= l(t('Manage Filters'), CAPX_FILTERS_PAGE . "/$mapper_name/filters", array("attributes" => array("class" => 'button')));
+  $cta .= "</p>";
+  $cta .= "<span><em>" . t("Clicking this button will navigate you away to a new page. Please save your work first.") . "</em></span>";
+
+  $form['filters']['cta'] = array(
+    '#markup' => $cta,
+  );
+
+  array_unshift($form['#submit'], 'capx_filters_mapper_config_form_submit');
+}
+
+/**
+ * Mapper configuration form submit.
+ *
+ * Sets a static variable to use later. This prevents the need to manipulate
+ * existing save functionality.
+ */
+function capx_filters_mapper_config_form_submit($form, &$form_state) {
+  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+  dpm($form_state);
+  $mapper = capx_cfe_load_by_machine_name($form_state['values']['machine-name'], 'mapper');
+  $filter_settings = &drupal_static(__FUNCTION__, array(
+    'filters' => array(),
+    'delete' => $form_state['values']['filters']['delete'],
+  ));
+  if (isset($mapper->settings['filters'])) {
+    $filter_settings['filters'] = $mapper->settings['filters'];
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function capx_filters_entity_presave($entity, $type) {
+  $filter_settings = drupal_static('capx_filters_mapper_config_form_submit', array());
+  if ($type == 'capx_cfe' && array_filter($filter_settings)) {
+    $entity->settings['filters'] = $filter_settings['filters'];
+    $entity->settings['filters_delete'] = $filter_settings['delete'];
+  }
+}
