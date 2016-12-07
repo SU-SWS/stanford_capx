@@ -238,7 +238,7 @@ function capx_filters_form_stanford_capx_mapper_form_alter(&$form, &$form_state,
   if ($form['naming']['machine-name']['#default_value']) {
     $mapper_name = $form['naming']['machine-name']['#default_value'];
     $mapper = $form_state['build_info']['args'][0];
-    $filter_delete = $mapper->settings['filters_delete'];
+    $filter_delete = isset($mapper->settings['filters_delete']);
   }
 
   $form['filters'] = array(
