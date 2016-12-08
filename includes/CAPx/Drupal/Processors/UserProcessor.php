@@ -27,7 +27,15 @@ class UserProcessor extends EntityProcessor {
       'pass' => user_hash_password(user_password(20)),
     );
 
-    drupal_alter('capx_pre_entity_create', $properties, $entityType, $bundleType, $mapper);
+    $values = array(
+      'properties' =>  $properties,
+      'entity_type' => $entityType,
+      'bundle_type' => $bundleType,
+      'mapper' => $mapper,
+      'data' => $data,
+    );
+
+    drupal_alter('capx_pre_entity_create', $values);
 
     // Create an empty entity.
     $entity = entity_create($entityType, $properties);
@@ -36,8 +44,22 @@ class UserProcessor extends EntityProcessor {
     $entity = entity_metadata_wrapper($entityType, $entity);
     $entity = $mapper->execute($entity, $data);
 
+    // Allow altering again.
+    drupal_alter('capx_entity_presave', $entity, $mapper);
+
+    // Special validation to ensure that the user has an email. If not, cheat
+    // and create one through the sunet id.
+    if ($entity && !valid_email_address($entity->mail->value()) {
+      $entity->mail = $data['uid'] . "@stanford.edu";
+    }
+
     // Now all the values should be set. Lets save.
-    $entity->save();
+    if ($entity) {
+      $entity->save();
+    }
+    else {
+      $this->setStatus(0, 'Skipped user entity with sunet id: ' . $data['uid']);
+    }
 
     // Because this is a new user and the init value is not available to be
     // mapped to look in the entity and see if we can clone the mail value to
@@ -52,7 +74,6 @@ class UserProcessor extends EntityProcessor {
         ->execute();
     }
 
-
     drupal_alter('capx_post_entity_create', $entity, $data);
 
     // Write a new record.
@@ -62,6 +83,5 @@ class UserProcessor extends EntityProcessor {
 
     return $entity;
   }
-
 
 }

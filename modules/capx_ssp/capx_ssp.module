@@ -28,9 +28,17 @@ function capx_ssp_capx_post_entity_create_alter($entity, $data) {
     return;
   }
 
-  // Get the sunetid from the email address.
-  $mail = $entity->mail->value();
-  $sunet = str_replace("@stanford.edu", "", $mail);
+  // Get the sunetid from the data first or if not set the email.
+  $sunet = NULL;
+
+  if (isset($data['uid'])) {
+    $sunet = $data['uid'];
+  }
+  else {
+    $mail = $entity->mail->value();
+    $sunet = str_replace("@stanford.edu", "", $mail);
+  }
+
   $uid = $entity->getIdentifier();
 
   // Add the authmap to the table.
