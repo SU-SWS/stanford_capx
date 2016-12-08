@@ -49,7 +49,7 @@ class UserProcessor extends EntityProcessor {
 
     // Special validation to ensure that the user has an email. If not, cheat
     // and create one through the sunet id.
-    if ($entity && !valid_email_address($entity->mail->value()) {
+    if ($entity && !valid_email_address($entity->mail->value())) {
       $entity->mail = $data['uid'] . "@stanford.edu";
     }
 
