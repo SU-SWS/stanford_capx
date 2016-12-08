@@ -400,6 +400,12 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     foreach ($profileIds as $id) {
       $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+
+      // Could not load the profile for some strange reason.
+      if (!$profile) {
+        continue;
+      }
+
       // If already an orphan we don't want to flood with messages.
       if (CAPx::profileIsOrphan($profile)) {
         continue;
@@ -503,6 +509,11 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     foreach ($profiles as $id) {
       $profile = CAPx::getEntityByProfileId($entityType, $bundleType, $id);
+
+      if (!$profile) {
+        continue;
+      }
+
       $profileWrapped = entity_metadata_wrapper($entityType, $profile);
 
       if (CAPx::profileIsOrphan($profile) && !in_array($id, $orphans)) {
