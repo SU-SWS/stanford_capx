@@ -79,7 +79,6 @@ function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
     }
     $entity->clear();
   }
-  $entity->clear();
 }
 
 /**
