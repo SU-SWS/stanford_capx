@@ -1,0 +1,195 @@
+<?php
+/**
+ * @file
+ * CAPx Tamper Module.
+ */
+
+define('CAPX_TAMPER', 'admin/config/capx/mapper/edit');
+
+/**
+ * Implements hook_menu().
+ */
+function capx_tamper_menu() {
+  $items = array();
+  $items[CAPX_TAMPER . '/%/tamper'] = array(
+    'title' => 'Tampers',
+    'page callback' => 'capx_tamper_list',
+    'page arguments' => array(5),
+    'file' => 'capx_tamper.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[CAPX_TAMPER . '/%/tamper/add/%'] = array(
+    'title' => 'Add Tamper',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('capx_tamper_add', 5, 8),
+    'file' => 'capx_tamper.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items[CAPX_TAMPER . '/%/tamper/%/edit'] = array(
+    'title' => 'Tampers',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('capx_tamper_edit', 5, 7),
+    'file' => 'capx_tamper.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[CAPX_TAMPER . '/%/tamper/%/delete'] = array(
+    'title' => 'Tampers',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('capx_tamper_delete', 5, 7),
+    'file' => 'capx_tamper.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+
+function capx_tamper_load_tamper($id) {
+  $query = db_select('capx_tamper', 'c')
+    ->fields('c')
+    ->condition('id', $id)
+    ->execute()
+    ->fetchAssoc();
+  if ($query) {
+    $query['settings'] = unserialize($query['settings']);
+    return $query;
+  }
+  return FALSE;
+}
+
+
+function capx_tamper_save_instance($tamper) {
+  if (capx_tamper_load_tamper($tamper['id'])) {
+    drupal_write_record('capx_tamper', $tamper, 'id');
+  }
+  else {
+    drupal_write_record('capx_tamper', $tamper);
+  }
+}
+
+function capx_tamper_delete_instance($tamper) {
+  db_delete('capx_tamper')
+    ->condition('id', $tamper['id'])
+    ->execute();
+}
+
+/**
+ * @param string $mapper_id
+ *   Machine name of the mapper.
+ * @param null|string $source
+ *   The field name/property if desired to get that particular set of tampers.
+ *
+ * @return array
+ *   All active tampers for the given parameters.
+ */
+function capx_tamper_get_tampers($mapper_id, $source = NULL) {
+  $tampers = array();
+  $query = db_select('capx_tamper', 'c');
+  $query->fields('c');
+  $query->condition('mapper', $mapper_id);;
+  if ($source) {
+    $query->condition('source', $source);
+  }
+  $query->orderBy('weight', 'ASC');
+  $results = $query->execute();
+
+  while ($row = $results->fetchAssoc()) {
+    $row['settings'] = unserialize($row['settings']);
+    $tampers[$row['weight']] = $row;
+  }
+  return $tampers;
+}
+
+/**
+ * Implements hook_capx_pre_entity_create_alter().
+ */
+function capx_tamper_capx_pre_entity_create_alter(&$values) {
+  /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
+  $mapper = NULL;
+  $data = array();
+  extract($values);
+  /** @var \CAPx\Drupal\Entities\CFEntity $cfe_mapper */
+  $cfe_mapper = $mapper->getMapper();
+
+  $tampers = capx_tamper_get_tampers($cfe_mapper->machine_name);
+
+  foreach ($tampers as $tamper) {
+    $path = NULL;
+    $plugin = feeds_tamper_get_plugin($tamper['plugin_id']);
+    if (function_exists($plugin['callback'])) {
+
+      if (isset($cfe_mapper->fields[$tamper['source']])) {
+        $temp = array_filter($cfe_mapper->fields[$tamper['source']]);
+        $path = $temp[key($temp)];
+      }
+      else {
+        if (isset($cfe_mapper->properties[$tamper['source']])) {
+          $path = $cfe_mapper->properties[$tamper['source']];
+        }
+      }
+
+      if ($path) {
+        $field = $mapper->getRemoteDataByJsonPath($data, $path);
+        if (strpos($path, '*') !== FALSE) {
+          if (isset($field[$mapper->getIndex()])) {
+            $field = $field[$mapper->getIndex()];
+          }
+          else {
+            $field = NULL;
+          }
+        }
+        else {
+          $field = reset($field);
+        }
+
+        if ($field) {
+          $plugin['callback'](NULL, NULL, NULL, $field, $tamper['settings'], $tamper['source']);
+          capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
+        }
+      }
+    }
+  }
+
+  $values['data'] = $data;
+}
+
+function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
+  if (!is_array($data)) {
+    $data = $value;
+    return;
+  }
+
+  $paths = explode('.', $path);
+  $piece = array_shift($paths);
+  switch ($piece) {
+    case '$':
+      capx_tamper_set_data_by_json_path($data, implode('.', $paths), $value);
+      break;
+
+    case '*':
+      capx_tamper_set_data_by_json_path($data[$index], implode('.', $paths), $value);
+      break;
+
+    default:
+      if (isset($data[$piece])) {
+        capx_tamper_set_data_by_json_path($data[$piece], implode('.', $paths), $value);
+      }
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_node_insert().
+ */
+function capx_tamper_node_insert($node) {
+  // For quick deletion during development period.
+  // todo: Delete after finished developing.
+  node_delete($node->nid);
+}
