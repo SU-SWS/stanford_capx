@@ -4,7 +4,21 @@
 Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama)
 [Changelog.txt](CHANGELOG.txt)
 
-Enable this module to allow user entities that are created with CAPx to log in with the stanford_ssp authentication module.
+Usage
+---
+
+Enable this module to allow user entities that are created with CAPx to log in with the `stanford_ssp` authentication module.
+It allows user entities to be pre-populated from CAP (e.g., with additional fields) prior to having the user authenticate via SSO.
+
+1. Enable `capx_ssp`
+2. Import a user profile
+3. Have the user log in via stanford_ssp at `/sso/login`
+4. The user's `uid` is the same as the user entity that was imported via CAPx.
+
+Limitations
+---
+If the user's email address is not public in [StanfordYou](https://stanfordyou.stanford.edu), `capx_ssp` will set the email address of the _Drupal_ user to `sunetid@stanford.edu`. This may not match the user's preferred email address.
+
 
 Installation
 ---
