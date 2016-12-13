@@ -153,6 +153,17 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   /** @var \CAPx\Drupal\Entities\CFEntity $cfe_mapper */
   $cfe_mapper = $mapper->getMapper();
 
+  $result = new stdClass();
+  $items = array();
+  foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path => $targets) {
+    $items[0][$path] = $mapper->getRemoteDataByJsonPath($data, $path);
+    if (strpos($path, '*') !== FALSE) {
+      $items[0][$path] = $items[0][$path][$mapper->getIndex()];
+    }
+  }
+  $result->items = $items;
+
+
   foreach (capx_tamper_load_tampers(array('mapper' => $cfe_mapper->machine_name)) as $tamper) {
     $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
     if (function_exists($plugin['callback'])) {
@@ -171,7 +182,7 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
       }
 
       if ($field) {
-        $plugin['callback'](NULL, NULL, NULL, $field, $tamper->settings, $tamper->source);
+        $plugin['callback']($result, 0, $path, $field, $tamper->settings, $tamper->source);
         capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
       }
     }
@@ -194,6 +205,9 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
  */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
   if (!is_array($data)) {
+    if (is_array($value)) {
+      $value = reset($value);
+    }
     $data = $value;
     return;
   }
