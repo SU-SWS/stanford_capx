@@ -55,6 +55,7 @@ function capx_tamper_menu() {
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
   );
+
   return $items;
 }
 

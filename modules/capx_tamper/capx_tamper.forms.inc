@@ -29,6 +29,7 @@ function capx_tamper_list($mapper_id) {
   $header = array(
     t('Description'),
     t('Plugin'),
+    t('Status'),
     t('Operations'),
     t('Enabled'),
   );
@@ -51,10 +52,34 @@ function capx_tamper_list($mapper_id) {
       $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/edit";
       $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/delete";
       $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
+
+      $status = '';
+      $edit = '';
+      $delete = '';
+      if ($tamper->export_type == EXPORT_IN_CODE) {
+        $status = t('Default');
+        $edit = l(t('Override'), $edit_url);
+        $delete = '';
+      }
+      elseif ($tamper->export_type == EXPORT_IN_DATABASE) {
+        $status = t('Normal');
+        $edit = l(t('Edit'), $edit_url);
+        $delete = l(t('Delete'), $delete_url);
+      }
+      elseif ($tamper->export_type == (EXPORT_IN_CODE | EXPORT_IN_DATABASE)) {
+        $status = t('Overridden');
+        $edit = l(t('Edit'), $edit_url);
+        $delete = l(t('Revert'), $delete_url);
+      }
+
+      if($delete){
+        $edit .= " | $delete";
+      }
       $rows[] = array(
         $tamper->description,
         $plugin['name'],
-        l(t('Edit'), $edit_url) . ' | ' . l(t('Delete'), $delete_url),
+        $status,
+        $edit,
         '&#x2705',
       );
     }
@@ -258,8 +283,16 @@ function capx_tamper_delete($form, &$form_state, $mapper_id, $tamper_id) {
   $tamper = reset(capx_tamper_load_tampers(array('id' => $tamper_id)));
   $form_state['tamper'] = $tamper;
   $form_state['mapper'] = $mapper;
-  $question = t('Would you really like to delete the plugin @instance?', array('@instance' => $tamper->description));
-  $button_label = t('Delete');
+
+  if ($tamper->export_type & EXPORT_IN_CODE) {
+    $question = t('Would you really like to revert the plugin @tamper?', array('@tamper' => $tamper->description));
+    $button_label = t('Revert');
+  }
+  else {
+    $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
+    $button_label = t('Delete');
+  }
+
 
   return confirm_form(
     $form,
@@ -277,13 +310,20 @@ function capx_tamper_delete_submit($form, &$form_state) {
   $tamper = $form_state['tamper'];
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $mapper = $form_state['mapper'];
-
   capx_tamper_delete_instance($tamper);
 
-  drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
-    '%plugin' => $tamper->description,
-    '%source' => $tamper->source,
-  )));
+  switch ($tamper->export_type) {
+    case EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
+        '%plugin' => $tamper->description,
+        '%source' => $tamper->source,
+      )));
+      break;
+
+    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $tamper->description)));
+      break;
+  }
 
   $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
 }
