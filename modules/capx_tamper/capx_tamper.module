@@ -7,6 +7,15 @@
 define('CAPX_TAMPER', 'admin/config/capx/mapper/edit');
 
 /**
+ * Implements hook_ctools_plugin_api().
+ */
+function capx_tamper_ctools_plugin_api($owner, $api) {
+  if ($owner == 'mymodule' && $api == 'capx_tamper') {
+    return array('version' => 1);
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function capx_tamper_menu() {
@@ -49,23 +58,46 @@ function capx_tamper_menu() {
   return $items;
 }
 
-
-function capx_tamper_load_tamper($id) {
-  $query = db_select('capx_tamper', 'c')
-    ->fields('c')
-    ->condition('id', $id)
-    ->execute()
-    ->fetchAssoc();
-  if ($query) {
-    $query['settings'] = unserialize($query['settings']);
-    return $query;
+/**
+ * Implements hook_entity_delete().
+ */
+function capx_tamper_entity_delete($entity, $type) {
+  if ($type == 'capx_cfe') {
+    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
+    db_delete('capx_tamper')
+      ->condition('mapper', $entity->getMachineName())
+      ->execute();
   }
-  return FALSE;
 }
 
+/**
+ * Load a single or all capx tamper plugins.
+ *
+ * @param array $conditions
+ *   Keyed conditions of the tampers to load.
+ *   'mapper' => mapper machine name.
+ *   'id' => tamper id.
+ *   'source' => field name or entity property.
+ *
+ * @return array
+ *   Single or all tampers configured.
+ */
+function capx_tamper_load_tampers($conditions = array()) {
+  ctools_include('export');
+  if ($conditions) {
+    return ctools_export_load_object('capx_tamper', 'conditions', $conditions);
+  }
+  return ctools_export_load_object('capx_tamper');
+}
 
+/**
+ * Saves the tamper plugin and settings.
+ *
+ * @param object $tamper
+ *   CAPx Tamper object.
+ */
 function capx_tamper_save_instance($tamper) {
-  if (capx_tamper_load_tamper($tamper['id'])) {
+  if (capx_tamper_load_tampers(array('id' => $tamper->id))) {
     drupal_write_record('capx_tamper', $tamper, 'id');
   }
   else {
@@ -73,37 +105,16 @@ function capx_tamper_save_instance($tamper) {
   }
 }
 
+/**
+ * Deletes the given CAPx Tamper plugin.
+ *
+ * @param object $tamper
+ *   CAPx Tamper plugin to delete.
+ */
 function capx_tamper_delete_instance($tamper) {
   db_delete('capx_tamper')
-    ->condition('id', $tamper['id'])
+    ->condition('id', $tamper->id)
     ->execute();
-}
-
-/**
- * @param string $mapper_id
- *   Machine name of the mapper.
- * @param null|string $source
- *   The field name/property if desired to get that particular set of tampers.
- *
- * @return array
- *   All active tampers for the given parameters.
- */
-function capx_tamper_get_tampers($mapper_id, $source = NULL) {
-  $tampers = array();
-  $query = db_select('capx_tamper', 'c');
-  $query->fields('c');
-  $query->condition('mapper', $mapper_id);;
-  if ($source) {
-    $query->condition('source', $source);
-  }
-  $query->orderBy('weight', 'ASC');
-  $results = $query->execute();
-
-  while ($row = $results->fetchAssoc()) {
-    $row['settings'] = unserialize($row['settings']);
-    $tampers[$row['weight']] = $row;
-  }
-  return $tampers;
 }
 
 /**
@@ -117,20 +128,18 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   /** @var \CAPx\Drupal\Entities\CFEntity $cfe_mapper */
   $cfe_mapper = $mapper->getMapper();
 
-  $tampers = capx_tamper_get_tampers($cfe_mapper->machine_name);
-
-  foreach ($tampers as $tamper) {
+  foreach (capx_tamper_load_tampers(array('mapper' => $cfe_mapper->machine_name)) as $tamper) {
     $path = NULL;
     $plugin = feeds_tamper_get_plugin($tamper['plugin_id']);
     if (function_exists($plugin['callback'])) {
 
-      if (isset($cfe_mapper->fields[$tamper['source']])) {
-        $temp = array_filter($cfe_mapper->fields[$tamper['source']]);
+      if (isset($cfe_mapper->fields[$tamper->source])) {
+        $temp = array_filter($cfe_mapper->fields[$tamper->source]);
         $path = $temp[key($temp)];
       }
       else {
-        if (isset($cfe_mapper->properties[$tamper['source']])) {
-          $path = $cfe_mapper->properties[$tamper['source']];
+        if (isset($cfe_mapper->properties[$tamper->source])) {
+          $path = $cfe_mapper->properties[$tamper->source];
         }
       }
 
@@ -149,7 +158,7 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
         }
 
         if ($field) {
-          $plugin['callback'](NULL, NULL, NULL, $field, $tamper['settings'], $tamper['source']);
+          $plugin['callback'](NULL, NULL, NULL, $field, $tamper->settings, $tamper->source);
           capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
         }
       }
@@ -159,6 +168,18 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   $values['data'] = $data;
 }
 
+/**
+ * Given the object's data array, change a single value.
+ *
+ * @param array $data
+ *   Object array from json response from API.
+ * @param string $path
+ *   JSON string path to desired value.
+ * @param mixed $value
+ *   New value to set.
+ * @param int $index
+ *   For wildcard items, change the correct indexed item.
+ */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
   if (!is_array($data)) {
     $data = $value;

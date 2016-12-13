@@ -11,17 +11,17 @@ function capx_tamper_schema() {
   $schema = array();
   $schema['capx_tamper'] = array(
     'description' => 'Table storing CAPx tamper instances.',
-//    'export' => array(
-//      'key' => 'id',
-//      'identifier' => 'capx_tamper', // Exports will be as $tamper_instalce
-//      'default hook' => 'capx_tamper_default',  // Function hook name.
-//      'api' => array(
-//        'owner' => 'capx_tamper',
-//        'api' => 'capx_tamper_default',  // Base name for api include files.
-//        'minimum_version' => 2,
-//        'current_version' => 2,
-//      ),
-//    ),
+    'export' => array(
+      'key' => 'id',
+      'identifier' => 'plugin',
+      'default hook' => 'capx_tamper_plugins',
+      'api' => array(
+        'owner' => 'capx_tamper',
+        'api' => 'capx_tamper_plugins',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
     'fields' => array(
       'id' => array(
         'type' => 'varchar',
