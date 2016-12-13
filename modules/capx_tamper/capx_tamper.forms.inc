@@ -9,14 +9,13 @@
 /**
  * Shows the current tampers in table format for the given CAPx Mapper.
  *
- * @param string $mapper_id
- *   Machine name of the mapper to apply tamper to.
+ * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ *   Mapper to apply tamper to.
  *
  * @return array
  *   Renderable array.
  */
 function capx_tamper_list($mapper) {
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   drupal_set_title(t('!mapper Tamper Plugins', array('!mapper' => $mapper->title)));
   capx_tamper_breadcrumb($mapper);
   $output = array();
@@ -53,9 +52,8 @@ function capx_tamper_list($mapper) {
 
 
     foreach (capx_tamper_load_tampers($conditions) as $tamper) {
-      $hex = bin2hex($tamper->id);
-      $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/$hex/edit";
-      $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/$hex/delete";
+      $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/edit";
+      $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/delete";
       $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
 
       $status = '';
@@ -120,26 +118,6 @@ function capx_tamper_list($mapper) {
 }
 
 /**
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
- * @param null $tamper_id
- */
-function capx_tamper_breadcrumb($mapper, $tamper_id = NULL) {
-  $breadcrumb = array(
-    l(t('Home'), '/'),
-    l(t('Administration'), '/admin'),
-    l(t('Configuration'), '/admin/config'),
-    l(t('CAPx'), '/admin/config/capx'),
-    l(t('Map'), '/admin/config/capx/mapper'),
-    l(t($mapper->title), CAPX_TAMPER . "/edit/{$mapper->getMachineName()}"),
-
-  );
-  if ($tamper_id) {
-    $breadcrumb[] = l(t('Tamper'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper");
-  }
-  drupal_set_breadcrumb($breadcrumb);
-}
-
-/**
  * Tamper add form.
  */
 function capx_tamper_add($form, &$form_state, $mapper_id, $source) {
@@ -163,6 +141,10 @@ function capx_tamper_add($form, &$form_state, $mapper_id, $source) {
   foreach ($plugins as &$p) {
     asort($p);
   }
+
+  // Unsupported tampers.
+  unset($plugins[t('Filter')]);
+  unset($plugins[t('Field Collection')]);
 
   $machine_name = key(reset($plugins));
   if (!empty($form_state['values']['plugin_id'])) {
@@ -282,84 +264,9 @@ function capx_tamper_add_submit($form, &$form_state) {
 }
 
 /**
- * Checks for existing machine name.
- */
-function capx_tamper_machine_name_callback($id, $form, &$form_state) {
-  $id = implode('-', array(
-    $form_state['mapper']->identifier(),
-    $form_state['source'],
-    $form_state['values']['id'],
-  ));
-  return capx_tamper_load_tampers(array('id' => $id));
-}
-
-
-/**
- * Ajax callback for add plugin form.
- */
-function capx_tamper_ajax_callback($form, $form_state) {
-  return $form['plugin'];
-}
-
-/**
- * Confirmation of delete tamper.
- */
-function capx_tamper_delete($form, &$form_state, $mapper_id, $tamper_id) {
-  $tamper_id = hex2bin($tamper_id);
-  $mapper = capx_tamper_mapper_load($mapper_id);
-  $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
-  $tamper = reset($tamper);
-  $form_state['tamper'] = $tamper;
-  $form_state['mapper'] = $mapper;
-
-  if ($tamper->export_type & EXPORT_IN_CODE) {
-    $question = t('Would you really like to revert the plugin @tamper?', array('@tamper' => $tamper->description));
-    $button_label = t('Revert');
-  }
-  else {
-    $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
-    $button_label = t('Delete');
-  }
-
-  return confirm_form(
-    $form,
-    $question,
-    CAPX_TAMPER . "/{$mapper->identifier()}/tamper",
-    NULL,
-    $button_label
-  );
-}
-
-/**
- * Tamper delete form submit.
- */
-function capx_tamper_delete_submit($form, &$form_state) {
-  $tamper = $form_state['tamper'];
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
-  $mapper = $form_state['mapper'];
-  capx_tamper_delete_instance($tamper);
-
-  switch ($tamper->export_type) {
-    case EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
-        '%plugin' => $tamper->description,
-        '%source' => $tamper->source,
-      )));
-      break;
-
-    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $tamper->description)));
-      break;
-  }
-
-  $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
-}
-
-/**
  * Tamper plugin edit form.
  */
 function capx_tamper_edit($form, &$form_state, $mapper_id, $tamper_id) {
-  $tamper_id = hex2bin($tamper_id);
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $mapper = capx_tamper_mapper_load($mapper_id);
   $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
@@ -427,4 +334,96 @@ function capx_tamper_edit_submit($form, &$form_state) {
   capx_tamper_save_instance($tamper);
   drupal_set_message(t('The plugin %plugin has been updated.', array('%plugin' => $tamper->description)));
   $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
+}
+
+/**
+ * Confirmation of delete tamper.
+ */
+function capx_tamper_delete($form, &$form_state, $mapper_id, $tamper_id) {
+  $mapper = capx_tamper_mapper_load($mapper_id);
+  $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
+  $tamper = reset($tamper);
+  $form_state['tamper'] = $tamper;
+  $form_state['mapper'] = $mapper;
+
+  if ($tamper->export_type & EXPORT_IN_CODE) {
+    $question = t('Would you really like to revert the plugin @tamper?', array('@tamper' => $tamper->description));
+    $button_label = t('Revert');
+  }
+  else {
+    $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
+    $button_label = t('Delete');
+  }
+
+  return confirm_form(
+    $form,
+    $question,
+    CAPX_TAMPER . "/{$mapper->identifier()}/tamper",
+    NULL,
+    $button_label
+  );
+}
+
+/**
+ * Tamper delete form submit.
+ */
+function capx_tamper_delete_submit($form, &$form_state) {
+  $tamper = $form_state['tamper'];
+  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+  $mapper = $form_state['mapper'];
+  capx_tamper_delete_instance($tamper);
+
+  switch ($tamper->export_type) {
+    case EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
+        '%plugin' => $tamper->description,
+        '%source' => $tamper->source,
+      )));
+      break;
+
+    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $tamper->description)));
+      break;
+  }
+
+  $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
+}
+
+/**
+ * Checks for existing machine name.
+ */
+function capx_tamper_machine_name_callback($id, $form, &$form_state) {
+  $id = implode('-', array(
+    $form_state['mapper']->identifier(),
+    $form_state['source'],
+    $form_state['values']['id'],
+  ));
+  return capx_tamper_load_tampers(array('id' => $id));
+}
+
+/**
+ * Ajax callback for add plugin form.
+ */
+function capx_tamper_ajax_callback($form, $form_state) {
+  return $form['plugin'];
+}
+
+/**
+ * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param null $tamper_id
+ */
+function capx_tamper_breadcrumb($mapper, $tamper_id = NULL) {
+  $breadcrumb = array(
+    l(t('Home'), '/'),
+    l(t('Administration'), '/admin'),
+    l(t('Configuration'), '/admin/config'),
+    l(t('CAPx'), '/admin/config/capx'),
+    l(t('Map'), '/admin/config/capx/mapper'),
+    l(t($mapper->title), CAPX_TAMPER . "/edit/{$mapper->getMachineName()}"),
+
+  );
+  if ($tamper_id) {
+    $breadcrumb[] = l(t('Tamper'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper");
+  }
+  drupal_set_breadcrumb($breadcrumb);
 }

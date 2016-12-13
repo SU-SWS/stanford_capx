@@ -59,6 +59,15 @@ function capx_tamper_menu() {
   return $items;
 }
 
+/**
+ * Loader for menu & pages.
+ *
+ * @param string $mapper_id
+ *   Machine name of the Capx Mapper.
+ *
+ * @return \CAPx\Drupal\Entities\CFEntity
+ *   CAPx Mapper.
+ */
 function capx_tamper_mapper_load($mapper_id) {
   $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
   if (!$mapper) {
@@ -68,6 +77,15 @@ function capx_tamper_mapper_load($mapper_id) {
   return $mapper;
 }
 
+/**
+ * Takes the configurations of the CAPx Mapper and gives the available sources.
+ *
+ * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ *   CAPx Mapper to collect available sources.
+ *
+ * @return array
+ *   Associative array of keys as json paths. Values as an array of targets.
+ */
 function capx_tamper_get_mapper_sources($mapper) {
   $sources = array();
   foreach ($mapper->fields as $field_key => $field_settings) {
@@ -87,11 +105,27 @@ function capx_tamper_get_mapper_sources($mapper) {
  * Implements hook_entity_delete().
  */
 function capx_tamper_entity_delete($entity, $type) {
-  if ($type == 'capx_cfe') {
+  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     db_delete('capx_tamper')
       ->condition('mapper', $entity->getMachineName())
       ->execute();
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function capx_tamper_entity_update($entity, $type) {
+  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
+    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
+    $sources = capx_tamper_get_mapper_sources($entity);
+    $tampers = capx_tamper_load_tampers(array('mapper' => $entity->getMachineName()));
+    foreach ($tampers as $id => $tamper) {
+      if (!isset($sources[$tamper->source])) {
+        capx_tamper_delete_instance($tamper);
+      }
+    }
   }
 }
 
@@ -139,6 +173,7 @@ function capx_tamper_save_instance($tamper) {
 function capx_tamper_delete_instance($tamper) {
   db_delete('capx_tamper')
     ->condition('id', $tamper->id)
+    ->condition('mapper', $tamper->mapper)
     ->execute();
 }
 
@@ -156,10 +191,15 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   $result = new stdClass();
   $items = array();
   foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path => $targets) {
-    $items[0][$path] = $mapper->getRemoteDataByJsonPath($data, $path);
-    if (strpos($path, '*') !== FALSE) {
+    $item = $mapper->getRemoteDataByJsonPath($data, $path);
+    if (strpos($path, '*') !== FALSE && isset($items[0][$path][$mapper->getIndex()])) {
       $items[0][$path] = $items[0][$path][$mapper->getIndex()];
     }
+    if (is_array($item) && count($item)) {
+      $item = reset($item);
+    }
+
+    $items[0][$path] = $item;
   }
   $result->items = $items;
 
@@ -182,7 +222,15 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
       }
 
       if ($field) {
-        $plugin['callback']($result, 0, $path, $field, $tamper->settings, $tamper->source);
+
+        $pre_callback = 'capx_tamper_' . $plugin['callback'];
+        $key = 0;
+        if (function_exists($pre_callback)) {
+          $pre_callback($result, $key, $path, $field, $tamper->settings, $tamper->source);
+        }
+
+
+        $plugin['callback']($result, $key, $path, $field, $tamper->settings, $tamper->source);
         capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
       }
     }
@@ -192,7 +240,34 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
 }
 
 /**
- * Given the object's data array, change a single value.
+ * Special handler for "Copy To" tamper.
+ *
+ * Switches it to a "Copy From" and flips the sources.
+ *
+ * @param object $result
+ *   Results object with items property.
+ * @param int $item_key
+ *   Index of the item. Normally 0.
+ * @param string $path
+ *   JSON path string.
+ * @param mixed $field
+ *   String for most field results to manipulate.
+ * @param array $settings
+ *   CAPx Tamper settings.
+ * @param string $source
+ *   Original source.
+ */
+function capx_tamper_feeds_tamper_copy_callback(&$result, &$item_key, &$path, &$field, &$settings, &$source) {
+  if ($settings['to_from'] == 'to') {
+    $settings['to_from'] = 'from';
+    $a = $path;
+    $path = $settings['source'];
+    $settings['source'] = $a;
+  }
+}
+
+/**
+ * Recursive function, given the object's data array, change a single value.
  *
  * @param array $data
  *   Object array from json response from API.
@@ -204,15 +279,14 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
  *   For wildcard items, change the correct indexed item.
  */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
-  if (!is_array($data)) {
-    if (is_array($value)) {
-      $value = reset($value);
-    }
-    $data = $value;
-    return;
-  }
-
   $paths = explode('.', $path);
+  // End of path.
+  if (count($paths) == 1) {
+    if (isset($data[$path])) {
+      $data[$path] = $value;
+      return;
+    }
+  }
   $piece = array_shift($paths);
 
   // Beginning of the JSON path.
@@ -225,7 +299,9 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
     $piece = $index;
   }
 
-  capx_tamper_set_data_by_json_path($data[$piece], implode('.', $paths), $value);
+  if (isset($data[$piece])) {
+    capx_tamper_set_data_by_json_path($data[$piece], implode('.', $paths), $value);
+  }
 }
 
 /**
