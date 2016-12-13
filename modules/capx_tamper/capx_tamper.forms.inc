@@ -15,15 +15,14 @@
  * @return array
  *   Renderable array.
  */
-function capx_tamper_list($mapper_id) {
+function capx_tamper_list($mapper) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
-  $mapper = capx_tamper_check_mapper($mapper_id);
-
   drupal_set_title(t('!mapper Tamper Plugins', array('!mapper' => $mapper->title)));
+  capx_tamper_breadcrumb($mapper);
   $output = array();
 
   $output['goback'] = array(
-    "#markup" => "<p>" . l(t("Manage Mapping Configuration ->"), "admin/config/capx/mapper/edit/" . $mapper_id) . "</p>",
+    "#markup" => "<p>" . l(t("Manage Mapping Configuration ->"), "admin/config/capx/mapper/edit/" . $mapper->getMachineName()) . "</p>",
   );
 
   $header = array(
@@ -33,24 +32,30 @@ function capx_tamper_list($mapper_id) {
     t('Operations'),
     t('Enabled'),
   );
-  $fields = array();
-  foreach ($mapper->fields as $field_key => $field_settings) {
-    $field_settings = array_filter($field_settings);
-    if ($field_settings) {
-      $fields[$field_key] = $field_settings[key($field_settings)];
-    }
-  }
+  $sources = capx_tamper_get_mapper_sources($mapper);
 
-  $sources = array_merge($mapper->properties, $fields);
-
-  foreach ($sources as $field_key => $path) {
+  foreach ($sources as $path => $field_keys) {
     $rows = array();
 
-    $instance = field_info_instance($mapper->entity_type, $field_key, $mapper->bundle_type);
-    $conditions = array('mapper' => $mapper_id, 'source' => $field_key);
+    $destination = array();
+    foreach ($field_keys as $field_key) {
+      if ($instance = field_info_instance($mapper->entity_type, $field_key, $mapper->bundle_type)) {
+        $destination[] = $instance['label'];
+      }
+      else {
+        $destination[] = $field_key;
+      }
+    }
+    $conditions = array(
+      'mapper' => $mapper->getMachineName(),
+      'source' => $path,
+    );
+
+
     foreach (capx_tamper_load_tampers($conditions) as $tamper) {
-      $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/edit";
-      $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/delete";
+      $hex = bin2hex($tamper->id);
+      $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/$hex/edit";
+      $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/$hex/delete";
       $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
 
       $status = '';
@@ -72,7 +77,7 @@ function capx_tamper_list($mapper_id) {
         $delete = l(t('Revert'), $delete_url);
       }
 
-      if($delete){
+      if ($delete) {
         $edit .= " | $delete";
       }
       $rows[] = array(
@@ -95,15 +100,15 @@ function capx_tamper_list($mapper_id) {
 
     $rows[] = array(
       array(
-        'data' => l(t('Add Plugin'), CAPX_TAMPER . "/$mapper_id/tamper/add/$field_key"),
+        'data' => l(t('Add Plugin'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/add/" . bin2hex($path)),
         'colspan' => count($header),
       ),
     );
-    $output[$field_key] = array(
+    $output[$path] = array(
       '#theme' => 'table',
       '#caption' => t('!from -> !to', array(
         '!from' => $path,
-        '!to' => $instance ? $instance['label'] : $field_key,
+        '!to' => implode(', ', $destination),
       )),
       '#header' => $header,
       '#rows' => $rows,
@@ -115,15 +120,37 @@ function capx_tamper_list($mapper_id) {
 }
 
 /**
+ * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param null $tamper_id
+ */
+function capx_tamper_breadcrumb($mapper, $tamper_id = NULL) {
+  $breadcrumb = array(
+    l(t('Home'), '/'),
+    l(t('Administration'), '/admin'),
+    l(t('Configuration'), '/admin/config'),
+    l(t('CAPx'), '/admin/config/capx'),
+    l(t('Map'), '/admin/config/capx/mapper'),
+    l(t($mapper->title), CAPX_TAMPER . "/edit/{$mapper->getMachineName()}"),
+
+  );
+  if ($tamper_id) {
+    $breadcrumb[] = l(t('Tamper'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper");
+  }
+  drupal_set_breadcrumb($breadcrumb);
+}
+
+/**
  * Tamper add form.
  */
 function capx_tamper_add($form, &$form_state, $mapper_id, $source) {
   drupal_set_title(t('Add Tamper Plugin'));
+  $source = hex2bin($source);
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
-  $mapper = capx_tamper_check_mapper($mapper_id);
+  $mapper = capx_tamper_mapper_load($mapper_id);
 
   $form_state['mapper'] = $mapper;
   $form_state['source'] = $source;
+
   $form['#attached']['css'][] = drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css';
 
   // Build plugin select list.
@@ -187,7 +214,7 @@ function capx_tamper_add($form, &$form_state, $mapper_id, $source) {
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-  $importer = new stdClass();
+  $importer = new CapxTamper($mapper);
 
   $form['plugin']['settings'] += $plugin['form']($importer, $source, array(), $form_state);
   $form['add'] = array(
@@ -278,9 +305,10 @@ function capx_tamper_ajax_callback($form, $form_state) {
  * Confirmation of delete tamper.
  */
 function capx_tamper_delete($form, &$form_state, $mapper_id, $tamper_id) {
-  $mapper = capx_tamper_check_mapper($mapper_id);
-
-  $tamper = reset(capx_tamper_load_tampers(array('id' => $tamper_id)));
+  $tamper_id = hex2bin($tamper_id);
+  $mapper = capx_tamper_mapper_load($mapper_id);
+  $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
+  $tamper = reset($tamper);
   $form_state['tamper'] = $tamper;
   $form_state['mapper'] = $mapper;
 
@@ -292,7 +320,6 @@ function capx_tamper_delete($form, &$form_state, $mapper_id, $tamper_id) {
     $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
     $button_label = t('Delete');
   }
-
 
   return confirm_form(
     $form,
@@ -329,25 +356,21 @@ function capx_tamper_delete_submit($form, &$form_state) {
 }
 
 /**
- * Checks for valid capx mapper and throws 404 if invalid.
- */
-function capx_tamper_check_mapper($mapper_id) {
-  $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
-  if (!$mapper) {
-    drupal_not_found();
-    drupal_exit();
-  }
-  return $mapper;
-}
-
-/**
  * Tamper plugin edit form.
  */
 function capx_tamper_edit($form, &$form_state, $mapper_id, $tamper_id) {
+  $tamper_id = hex2bin($tamper_id);
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
-  $mapper = capx_tamper_check_mapper($mapper_id);
+  $mapper = capx_tamper_mapper_load($mapper_id);
+  $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
+  $tamper = reset($tamper);
+  if (!$tamper) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  capx_tamper_breadcrumb($mapper, $tamper_id);
   $form_state['mapper'] = $mapper;
-  $tamper = reset(capx_tamper_load_tampers(array('id' => $tamper_id)));
   $form_state['tamper'] = $tamper;
 
   drupal_set_title(t('Edit !title', array('!title' => $tamper->description)));
@@ -366,7 +389,7 @@ function capx_tamper_edit($form, &$form_state, $mapper_id, $tamper_id) {
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-  $importer = new stdClass();
+  $importer = new CapxTamper($mapper);
   $form['settings'] += $plugin['form']($importer, $tamper->source, $tamper->settings, $form_state);
 
   $form['save'] = array(

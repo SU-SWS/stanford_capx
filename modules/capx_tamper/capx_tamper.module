@@ -4,7 +4,7 @@
  * CAPx Tamper Module.
  */
 
-define('CAPX_TAMPER', 'admin/config/capx/mapper/edit');
+define('CAPX_TAMPER', 'admin/config/capx/mapper');
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -20,10 +20,10 @@ function capx_tamper_ctools_plugin_api($owner, $api) {
  */
 function capx_tamper_menu() {
   $items = array();
-  $items[CAPX_TAMPER . '/%/tamper'] = array(
+  $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper'] = array(
     'title' => 'Tampers',
     'page callback' => 'capx_tamper_list',
-    'page arguments' => array(5),
+    'page arguments' => array(4),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
@@ -32,7 +32,7 @@ function capx_tamper_menu() {
   $items[CAPX_TAMPER . '/%/tamper/add/%'] = array(
     'title' => 'Add Tamper',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_add', 5, 8),
+    'page arguments' => array('capx_tamper_add', 4, 7),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_LOCAL_ACTION,
@@ -41,7 +41,7 @@ function capx_tamper_menu() {
   $items[CAPX_TAMPER . '/%/tamper/%/edit'] = array(
     'title' => 'Tampers',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_edit', 5, 7),
+    'page arguments' => array('capx_tamper_edit', 4, 6),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
@@ -50,13 +50,37 @@ function capx_tamper_menu() {
   $items[CAPX_TAMPER . '/%/tamper/%/delete'] = array(
     'title' => 'Tampers',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_delete', 5, 7),
+    'page arguments' => array('capx_tamper_delete', 4, 6),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
   );
 
   return $items;
+}
+
+function capx_tamper_mapper_load($mapper_id) {
+  $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+  if (!$mapper) {
+    drupal_not_found();
+    drupal_exit();
+  }
+  return $mapper;
+}
+
+function capx_tamper_get_mapper_sources($mapper) {
+  $sources = array();
+  foreach ($mapper->fields as $field_key => $field_settings) {
+    $field_settings = array_filter($field_settings);
+    if ($field_settings) {
+      $path = $field_settings[key($field_settings)];
+      $sources[$path][] = $field_key;
+    }
+  }
+  foreach ($mapper->properties as $property => $path) {
+    $sources[$path][] = $property;
+  }
+  return $sources;
 }
 
 /**
@@ -130,38 +154,25 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   $cfe_mapper = $mapper->getMapper();
 
   foreach (capx_tamper_load_tampers(array('mapper' => $cfe_mapper->machine_name)) as $tamper) {
-    $path = NULL;
-    $plugin = feeds_tamper_get_plugin($tamper['plugin_id']);
+    $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
     if (function_exists($plugin['callback'])) {
-
-      if (isset($cfe_mapper->fields[$tamper->source])) {
-        $temp = array_filter($cfe_mapper->fields[$tamper->source]);
-        $path = $temp[key($temp)];
-      }
-      else {
-        if (isset($cfe_mapper->properties[$tamper->source])) {
-          $path = $cfe_mapper->properties[$tamper->source];
-        }
-      }
-
-      if ($path) {
-        $field = $mapper->getRemoteDataByJsonPath($data, $path);
-        if (strpos($path, '*') !== FALSE) {
-          if (isset($field[$mapper->getIndex()])) {
-            $field = $field[$mapper->getIndex()];
-          }
-          else {
-            $field = NULL;
-          }
+      $path = $tamper->source;
+      $field = $mapper->getRemoteDataByJsonPath($data, $path);
+      if (strpos($path, '*') !== FALSE) {
+        if (isset($field[$mapper->getIndex()])) {
+          $field = $field[$mapper->getIndex()];
         }
         else {
-          $field = reset($field);
+          $field = NULL;
         }
+      }
+      else {
+        $field = reset($field);
+      }
 
-        if ($field) {
-          $plugin['callback'](NULL, NULL, NULL, $field, $tamper->settings, $tamper->source);
-          capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
-        }
+      if ($field) {
+        $plugin['callback'](NULL, NULL, NULL, $field, $tamper->settings, $tamper->source);
+        capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
       }
     }
   }
@@ -189,21 +200,61 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
 
   $paths = explode('.', $path);
   $piece = array_shift($paths);
-  switch ($piece) {
-    case '$':
-      capx_tamper_set_data_by_json_path($data, implode('.', $paths), $value);
-      break;
 
-    case '*':
-      capx_tamper_set_data_by_json_path($data[$index], implode('.', $paths), $value);
-      break;
-
-    default:
-      if (isset($data[$piece])) {
-        capx_tamper_set_data_by_json_path($data[$piece], implode('.', $paths), $value);
-      }
-      break;
+  // Beginning of the JSON path.
+  if ($piece == '$') {
+    $piece = array_shift($paths);
   }
+
+  // Wildcard, replace the piece with the index value.
+  if ($piece == '*') {
+    $piece = $index;
+  }
+
+  capx_tamper_set_data_by_json_path($data[$piece], implode('.', $paths), $value);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function capx_tamper_form_stanford_capx_mapper_form_alter(&$form, &$form_state, $form_id) {
+  $mapper_name = FALSE;
+
+  if ($form['naming']['machine-name']['#default_value']) {
+    $mapper_name = $form['naming']['machine-name']['#default_value'];
+  }
+
+  $form['tampers'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Tamper'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 1,
+    '#tree' => TRUE,
+  );
+
+  // Move the submit buttons to the bottom.
+  $form['actions']['#weight'] = 100;
+
+  if (!$mapper_name) {
+    $form['tampers']['info'] = array(
+      '#markup' => t('Configure and save the mapper before configuring tampers.'),
+    );
+    return;
+  }
+
+  $form['tampers']['intro'] = array(
+    '#markup' => "<p>" . t("Tampers allow you to manipulate items from the API before saving the data. For example, you can create a tamper that would strip html tags, or replace strings etc.") . "<p>",
+  );
+
+  $cta = "<br/><p>";
+  $cta .= l(t('Manage Tampers'), CAPX_TAMPER . "/$mapper_name/tamper", array("attributes" => array("class" => 'button')));
+  $cta .= "</p>";
+  $cta .= "<span><em>" . t("Clicking this button will navigate you away to a new page. Please save your work first.") . "</em></span>";
+
+  $form['tampers']['cta'] = array(
+    '#markup' => $cta,
+  );
 }
 
 

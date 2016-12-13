@@ -3,6 +3,8 @@ core = 7.x
 version = 7.x-1.0-dev
 package = Stanford CAPx
 
+files[] = CapxTamper.inc
+
 dependencies[] = ctools
 dependencies[] = stanford_capx
 dependencies[] = feeds_tamper
