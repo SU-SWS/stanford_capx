@@ -20,37 +20,38 @@ function capx_tamper_ctools_plugin_api($owner, $api) {
  */
 function capx_tamper_menu() {
   $items = array();
+
   $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper'] = array(
     'title' => 'Tampers',
     'page callback' => 'capx_tamper_list',
     'page arguments' => array(4),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_NORMAL_ITEM,
   );
 
-  $items[CAPX_TAMPER . '/%/tamper/add/%'] = array(
+  $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper/add/%'] = array(
     'title' => 'Add Tamper',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_add', 4, 7),
-    'file' => 'capx_tamper.forms.inc',
-    'access arguments' => array('administer capx'),
-    'type' => MENU_LOCAL_ACTION,
-  );
-
-  $items[CAPX_TAMPER . '/%/tamper/%/edit'] = array(
-    'title' => 'Tampers',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_edit', 4, 6),
+    'page callback' => 'capx_tamper_build_form',
+    'page arguments' => array(6, 4, 7),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
   );
 
-  $items[CAPX_TAMPER . '/%/tamper/%/delete'] = array(
+  $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper/%/edit'] = array(
     'title' => 'Tampers',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('capx_tamper_delete', 4, 6),
+    'page callback' => 'capx_tamper_build_form',
+    'page arguments' => array(7, 4, 6),
+    'file' => 'capx_tamper.forms.inc',
+    'access arguments' => array('administer capx'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper/%/delete'] = array(
+    'title' => 'Tampers',
+    'page callback' => 'capx_tamper_build_form',
+    'page arguments' => array(7, 4, 6),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_CALLBACK,
@@ -103,6 +104,8 @@ function capx_tamper_get_mapper_sources($mapper) {
 
 /**
  * Implements hook_entity_delete().
+ *
+ * Deletes any CAPx Tamper plugins when the mapper is deleted.
  */
 function capx_tamper_entity_delete($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper') {
@@ -115,6 +118,9 @@ function capx_tamper_entity_delete($entity, $type) {
 
 /**
  * Implements hook_entity_update().
+ *
+ * If the source does not exist after saving the mapper, delete any CAPx Tamper
+ * plugins that are attached.
  */
 function capx_tamper_entity_update($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper') {
@@ -179,6 +185,8 @@ function capx_tamper_delete_instance($tamper) {
 
 /**
  * Implements hook_capx_pre_entity_create_alter().
+ *
+ * Change the entries in the $values['data'] according to the tamper plugins.
  */
 function capx_tamper_capx_pre_entity_create_alter(&$values) {
   /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
@@ -188,6 +196,9 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   /** @var \CAPx\Drupal\Entities\CFEntity $cfe_mapper */
   $cfe_mapper = $mapper->getMapper();
 
+
+  // Sets an object to be used for particular tamper plugins.
+  // @see feeds_tamper_copy_callback().
   $result = new stdClass();
   $items = array();
   foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path => $targets) {
@@ -198,17 +209,19 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
     if (is_array($item) && count($item)) {
       $item = reset($item);
     }
-
     $items[0][$path] = $item;
   }
   $result->items = $items;
 
 
+  // Loop through tamper plugins on the mapper.
   foreach (capx_tamper_load_tampers(array('mapper' => $cfe_mapper->machine_name)) as $tamper) {
     $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
     if (function_exists($plugin['callback'])) {
       $path = $tamper->source;
       $field = $mapper->getRemoteDataByJsonPath($data, $path);
+
+      // Gets the index item.
       if (strpos($path, '*') !== FALSE) {
         if (isset($field[$mapper->getIndex()])) {
           $field = $field[$mapper->getIndex()];
@@ -223,13 +236,15 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
 
       if ($field) {
 
+        // Call any functions that have to alter the tamper before using
+        // the feeds tamper plugin directly.
         $pre_callback = 'capx_tamper_' . $plugin['callback'];
         $key = 0;
         if (function_exists($pre_callback)) {
           $pre_callback($result, $key, $path, $field, $tamper->settings, $tamper->source);
         }
 
-
+        // Call the feeds tamper. Then set that value back into the data array.
         $plugin['callback']($result, $key, $path, $field, $tamper->settings, $tamper->source);
         capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
       }
@@ -280,6 +295,7 @@ function capx_tamper_feeds_tamper_copy_callback(&$result, &$item_key, &$path, &$
  */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
   $paths = explode('.', $path);
+
   // End of path.
   if (count($paths) == 1) {
     if (isset($data[$path])) {
@@ -287,6 +303,7 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
       return;
     }
   }
+
   $piece = array_shift($paths);
 
   // Beginning of the JSON path.
@@ -345,14 +362,4 @@ function capx_tamper_form_stanford_capx_mapper_form_alter(&$form, &$form_state, 
   $form['tampers']['cta'] = array(
     '#markup' => $cta,
   );
-}
-
-
-/**
- * Implements hook_node_insert().
- */
-function capx_tamper_node_insert($node) {
-  // For quick deletion during development period.
-  // todo: Delete after finished developing.
-  node_delete($node->nid);
 }
