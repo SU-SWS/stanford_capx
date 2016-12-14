@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * CAPx Tamper Forms.
@@ -13,7 +14,7 @@ use \CAPx\Drupal\Entities\CFEntity;
  *
  * @param string $action
  *   Add, Edit, or Delete.
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param CFEntity $mapper
  *   CAPx Mapper.
  * @param string|null $source
  *   JSON Path string.
@@ -21,7 +22,7 @@ use \CAPx\Drupal\Entities\CFEntity;
  * @return array
  *   Form render array.
  */
-function capx_tamper_build_form($action, $mapper, $source = NULL) {
+function capx_tamper_build_form($action, CFEntity $mapper, $source = NULL) {
   $form_name = "capx_tamper_{$action}_form";
   return drupal_get_form($form_name, $mapper, $source);
 }
@@ -29,8 +30,14 @@ function capx_tamper_build_form($action, $mapper, $source = NULL) {
 /**
  * Shows the current tampers in table format for the given CAPx Mapper.
  *
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State.
+ * @param CFEntity $mapper
  *   Mapper to apply tamper to.
+ * @param null $source
+ *   Null source since we want all sources.
  *
  * @return array
  *   Renderable array.
@@ -106,6 +113,11 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
           'class' => array(capx_tamper_table_id($path) . '-weight'),
         ),
       );
+      $form['tampers'][$path][$tamper->id]['enabled'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Enabled'),
+        '#default_value' => !$tamper->disabled,
+      );
     }
   }
 
@@ -114,24 +126,37 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
     '#value' => t('Save'),
   );
 
+  $form['#attached']['css'] = array(drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css');
   return $form;
 }
 
+/**
+ * List form submit. Sets weights & enabled/disabled.
+ */
 function capx_tamper_list_form_submit($form, &$form_state) {
+  $disabled = variable_get('capx_tamper_disabled', array());
   foreach ($form_state['values']['tampers'] as $path => $tampers) {
-    foreach ($tampers as $id => $weight) {
+    foreach ($tampers as $id => $settings) {
       $tamper = capx_tamper_load_tampers(array('id' => $id));
       $tamper = reset($tamper);
-      $tamper->weight = $weight['weight'];
+      $tamper->weight = $settings['weight'];
       capx_tamper_save_instance($tamper);
+
+      if (!$settings['enabled']) {
+        $disabled[$tamper->id] = TRUE;
+      }
+      else {
+        unset($disabled[$tamper->id]);
+      }
     }
   }
+  variable_set('capx_tamper_disabled', $disabled);
 }
 
 /**
  * Tamper add form.
  *
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param CFEntity $mapper
  *   CAPx Mapper used for the tamper.
  * @param string $source
  *   JSON string path.
@@ -139,8 +164,7 @@ function capx_tamper_list_form_submit($form, &$form_state) {
  * @return array
  *   Form render array.
  */
-function capx_tamper_add_form($form, &$form_state, $mapper, $source) {
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $source) {
   drupal_set_title(t('Add Tamper Plugin'));
   capx_tamper_breadcrumb($mapper, TRUE);
   $source = hex2bin($source);
@@ -228,6 +252,11 @@ function capx_tamper_add_form($form, &$form_state, $mapper, $source) {
 
 /**
  * Tamper add form validation.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
  */
 function capx_tamper_add_form_validate($form, &$form_state) {
   if ($form_state['triggering_element']['#value'] == t('Add')) {
@@ -249,10 +278,15 @@ function capx_tamper_add_form_validate($form, &$form_state) {
 
 /**
  * Tamper add form submit to save to table.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
  */
 function capx_tamper_add_form_submit($form, &$form_state) {
   if ($form_state['triggering_element']['#value'] == t('Add')) {
-    /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+    /** @var CFEntity $mapper */
     $mapper = $form_state['mapper'];
     $id = implode('-', array(
       $mapper->identifier(),
@@ -269,7 +303,6 @@ function capx_tamper_add_form_submit($form, &$form_state) {
     $tamper->weight = '0';
     $tamper->description = $form_state['values']['description'];
 
-
     capx_tamper_save_instance($tamper);
     $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
 
@@ -285,7 +318,11 @@ function capx_tamper_add_form_submit($form, &$form_state) {
 /**
  * Tamper plugin edit form.
  *
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
+ * @param CFEntity $mapper
  *   CAPx Mapper used for the tamper.
  * @param string $tamper_id
  *   CAPx Tamper id.
@@ -294,7 +331,6 @@ function capx_tamper_add_form_submit($form, &$form_state) {
  *   Form render array.
  */
 function capx_tamper_edit_form($form, &$form_state, CFEntity $mapper, $tamper_id) {
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
   $tamper = reset($tamper);
   if (!$tamper) {
@@ -336,9 +372,14 @@ function capx_tamper_edit_form($form, &$form_state, CFEntity $mapper, $tamper_id
 
 /**
  * Tamper edit validation.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
  */
 function capx_tamper_edit_form_validate($form, &$form_state) {
-  $plugin_id = $form_state['instance']->plugin_id;
+  $plugin_id = $form_state['tamper']->plugin_id;
   $plugin = feeds_tamper_get_plugin($plugin_id);
   if ($plugin['validate']) {
     $plugin['validate']($form_state['values']['settings']);
@@ -347,6 +388,11 @@ function capx_tamper_edit_form_validate($form, &$form_state) {
 
 /**
  * Tamper plugin edit submit.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
  */
 function capx_tamper_edit_form_submit($form, &$form_state) {
   $mapper = $form_state['mapper'];
@@ -364,7 +410,11 @@ function capx_tamper_edit_form_submit($form, &$form_state) {
 /**
  * Confirmation of delete tamper.
  *
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
+ * @param CFEntity $mapper
  *   CAPx Mapper used for the tamper.
  * @param string $tamper_id
  *   CAPx Tamper id.
@@ -402,7 +452,7 @@ function capx_tamper_delete_form($form, &$form_state, CFEntity $mapper, $tamper_
  */
 function capx_tamper_delete_form_submit($form, &$form_state) {
   $tamper = $form_state['tamper'];
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+  /** @var CFEntity $mapper */
   $mapper = $form_state['mapper'];
   capx_tamper_delete_instance($tamper);
 
@@ -424,14 +474,24 @@ function capx_tamper_delete_form_submit($form, &$form_state) {
 
 /**
  * Checks for existing machine name.
+ *
+ * @param string $id
+ *   Machine name of the new plugin.
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
+ *
+ * @return array
+ *   Array of the existing tamper or an empty array.
  */
 function capx_tamper_machine_name_callback($id, $form, &$form_state) {
-  $id = implode('-', array(
+  $check_id = implode('-', array(
     $form_state['mapper']->identifier(),
     $form_state['source'],
     $form_state['values']['id'],
   ));
-  return capx_tamper_load_tampers(array('id' => $id));
+  return capx_tamper_load_tampers(array('id' => $check_id));
 }
 
 /**
@@ -444,12 +504,12 @@ function capx_tamper_ajax_callback($form, $form_state) {
 /**
  * Sets the breadcrumb links for the page.
  *
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ * @param CFEntity $mapper
  *   CAPx Mapper in use.
  * @param bool $show_tamper
  *   Show the tamper page in the breadcrumb.
  */
-function capx_tamper_breadcrumb($mapper, $show_tamper = FALSE) {
+function capx_tamper_breadcrumb(CFEntity $mapper, $show_tamper = FALSE) {
   $breadcrumb = array(
     l(t('Home'), '/'),
     l(t('Administration'), '/admin'),
