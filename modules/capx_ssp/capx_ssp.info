@@ -6,5 +6,3 @@ version = 7.x-2.0-dev
 project = capx_ssp
 dependencies[] = stanford_capx
 dependencies[] = stanford_ssp
-; stylesheets[all][] = css/stanford_module.css
-; scripts[] = js/stanford_module.js
