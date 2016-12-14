@@ -6,6 +6,26 @@
  * Mostly taken from feeds_tamper_ui.admin.inc.
  */
 
+use \CAPx\Drupal\Entities\CFEntity;
+
+/**
+ * Form builder. Calls the correct form for the action.
+ *
+ * @param string $action
+ *   Add, Edit, or Delete.
+ * @param \CAPx\Drupal\Entities\CFEntity $mapper
+ *   CAPx Mapper.
+ * @param string|null $source
+ *   JSON Path string.
+ *
+ * @return array
+ *   Form render array.
+ */
+function capx_tamper_build_form($action, $mapper, $source = NULL) {
+  $form_name = "capx_tamper_{$action}_form";
+  return drupal_get_form($form_name, $mapper, $source);
+}
+
 /**
  * Shows the current tampers in table format for the given CAPx Mapper.
  *
@@ -15,47 +35,33 @@
  * @return array
  *   Renderable array.
  */
-function capx_tamper_list($mapper) {
+function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = NULL) {
   drupal_set_title(t('!mapper Tamper Plugins', array('!mapper' => $mapper->title)));
   capx_tamper_breadcrumb($mapper);
-  $output = array();
 
-  $output['goback'] = array(
+  $form['#tree'] = TRUE;
+  $form['mapper'] = array(
+    '#type' => 'hidden',
+    '#value' => $mapper->getMachineName(),
+  );
+
+  $form['goback'] = array(
     "#markup" => "<p>" . l(t("Manage Mapping Configuration ->"), "admin/config/capx/mapper/edit/" . $mapper->getMachineName()) . "</p>",
   );
 
-  $header = array(
-    t('Description'),
-    t('Plugin'),
-    t('Status'),
-    t('Operations'),
-    t('Enabled'),
-  );
   $sources = capx_tamper_get_mapper_sources($mapper);
 
-  foreach ($sources as $path => $field_keys) {
-    $rows = array();
-
-    $destination = array();
-    foreach ($field_keys as $field_key) {
-      if ($instance = field_info_instance($mapper->entity_type, $field_key, $mapper->bundle_type)) {
-        $destination[] = $instance['label'];
-      }
-      else {
-        $destination[] = $field_key;
-      }
-    }
-    $conditions = array(
+  foreach ($sources as $path => $targets) {
+    $path_tampers = capx_tamper_load_tampers(array(
       'mapper' => $mapper->getMachineName(),
       'source' => $path,
-    );
+    ));
 
+    $form['tampers'][$path] = array();
 
-    foreach (capx_tamper_load_tampers($conditions) as $tamper) {
-      $edit_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/edit";
-      $delete_url = CAPX_TAMPER . "/{$mapper->identifier()}/tamper/{$tamper->id}/delete";
-      $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
-
+    foreach ($path_tampers as $tamper) {
+      $edit_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/edit";
+      $delete_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/delete";
       $status = '';
       $edit = '';
       $delete = '';
@@ -75,64 +81,51 @@ function capx_tamper_list($mapper) {
         $delete = l(t('Revert'), $delete_url);
       }
 
-      if ($delete) {
+      if (!empty($delete)) {
         $edit .= " | $delete";
       }
-      $rows[] = array(
-        $tamper->description,
-        $plugin['name'],
-        $status,
-        $edit,
-        '&#x2705',
-      );
-    }
 
-    if (!$rows) {
-      $rows[] = array(
-        array(
-          'data' => t('No plugins defined'),
-          'colspan' => count($header),
+      $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
+      $form['tampers'][$path][$tamper->id]['description'] = array(
+        '#markup' => t($tamper->description),
+      );
+      $form['tampers'][$path][$tamper->id]['plugin_id'] = array(
+        '#markup' => t($plugin['name']),
+      );
+      $form['tampers'][$path][$tamper->id]['status'] = array(
+        '#markup' => $status,
+      );
+      $form['tampers'][$path][$tamper->id]['operations'] = array(
+        '#markup' => $edit,
+      );
+      $form['tampers'][$path][$tamper->id]['weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#default_value' => $tamper->weight,
+        '#attributes' => array(
+          'class' => array(capx_tamper_table_id($path) . '-weight'),
         ),
       );
     }
-
-    $rows[] = array(
-      array(
-        'data' => l(t('Add Plugin'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/add/" . bin2hex($path)),
-        'colspan' => count($header),
-      ),
-    );
-    $output[$path] = array(
-      '#theme' => 'table',
-      '#caption' => t('!from -> !to', array(
-        '!from' => $path,
-        '!to' => implode(', ', $destination),
-      )),
-      '#header' => $header,
-      '#rows' => $rows,
-    );
-
   }
 
-  return $output;
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+
+  return $form;
 }
 
-/**
- * Form builder. Calls the correct form for the action.
- *
- * @param string $action
- *   Add, Edit, or Delete.
- * @param \CAPx\Drupal\Entities\CFEntity $mapper
- *   CAPx Mapper.
- * @param string $source
- *   JSON Path string.
- *
- * @return array
- *   Form render array.
- */
-function capx_tamper_build_form($action, $mapper, $source) {
-  $form_name = "capx_tamper_{$action}_form";
-  return drupal_get_form($form_name, $mapper, $source);
+function capx_tamper_list_form_submit($form, &$form_state) {
+  foreach ($form_state['values']['tampers'] as $path => $tampers) {
+    foreach ($tampers as $id => $weight) {
+      $tamper = capx_tamper_load_tampers(array('id' => $id));
+      $tamper = reset($tamper);
+      $tamper->weight = $weight['weight'];
+      capx_tamper_save_instance($tamper);
+    }
+  }
 }
 
 /**
@@ -149,6 +142,7 @@ function capx_tamper_build_form($action, $mapper, $source) {
 function capx_tamper_add_form($form, &$form_state, $mapper, $source) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   drupal_set_title(t('Add Tamper Plugin'));
+  capx_tamper_breadcrumb($mapper, TRUE);
   $source = hex2bin($source);
 
   $form_state['mapper'] = $mapper;
@@ -299,7 +293,7 @@ function capx_tamper_add_form_submit($form, &$form_state) {
  * @return array
  *   Form render array.
  */
-function capx_tamper_edit_form($form, &$form_state, $mapper, $tamper_id) {
+function capx_tamper_edit_form($form, &$form_state, CFEntity $mapper, $tamper_id) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
   $tamper = reset($tamper);
@@ -307,8 +301,8 @@ function capx_tamper_edit_form($form, &$form_state, $mapper, $tamper_id) {
     drupal_not_found();
     drupal_exit();
   }
+  capx_tamper_breadcrumb($mapper, TRUE);
 
-  capx_tamper_breadcrumb($mapper, $tamper_id);
   $form_state['mapper'] = $mapper;
   $form_state['tamper'] = $tamper;
 
@@ -337,7 +331,6 @@ function capx_tamper_edit_form($form, &$form_state, $mapper, $tamper_id) {
   );
 
   $form['#attached']['css'][] = drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css';
-
   return $form;
 }
 
@@ -379,7 +372,8 @@ function capx_tamper_edit_form_submit($form, &$form_state) {
  * @return array
  *   Form render array.
  */
-function capx_tamper_delete_form($form, &$form_state, $mapper, $tamper_id) {
+function capx_tamper_delete_form($form, &$form_state, CFEntity $mapper, $tamper_id) {
+  capx_tamper_breadcrumb($mapper, TRUE);
   $tamper = capx_tamper_load_tampers(array('id' => $tamper_id));
   $tamper = reset($tamper);
   $form_state['tamper'] = $tamper;
@@ -452,10 +446,10 @@ function capx_tamper_ajax_callback($form, $form_state) {
  *
  * @param \CAPx\Drupal\Entities\CFEntity $mapper
  *   CAPx Mapper in use.
- * @param null|string $tamper_id
- *   Tamper ID. IF provided, the breadcrumb will go one step further.
+ * @param bool $show_tamper
+ *   Show the tamper page in the breadcrumb.
  */
-function capx_tamper_breadcrumb($mapper, $tamper_id = NULL) {
+function capx_tamper_breadcrumb($mapper, $show_tamper = FALSE) {
   $breadcrumb = array(
     l(t('Home'), '/'),
     l(t('Administration'), '/admin'),
@@ -463,9 +457,9 @@ function capx_tamper_breadcrumb($mapper, $tamper_id = NULL) {
     l(t('CAPx'), '/admin/config/capx'),
     l(t('Map'), '/admin/config/capx/mapper'),
     l(t($mapper->title), CAPX_TAMPER . "/edit/{$mapper->getMachineName()}"),
-
   );
-  if ($tamper_id) {
+
+  if ($show_tamper) {
     $breadcrumb[] = l(t('Tamper'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper");
   }
   drupal_set_breadcrumb($breadcrumb);

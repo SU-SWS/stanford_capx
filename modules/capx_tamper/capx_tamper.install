@@ -60,7 +60,7 @@ function capx_tamper_schema() {
       'weight' => array(
         'type' => 'int',
         'not null' => TRUE,
-        'unsigned' => TRUE,
+        'unsigned' => FALSE,
         'description' => 'The weight of a plugin instance. Plugins are executed in order.',
       ),
       'description' => array(

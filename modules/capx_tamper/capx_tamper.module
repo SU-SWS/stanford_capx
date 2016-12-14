@@ -16,6 +16,18 @@ function capx_tamper_ctools_plugin_api($owner, $api) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function capx_tamper_theme($existing, $type, $theme, $path) {
+  return array(
+    'capx_tamper_list_form' => array(
+      'render element' => 'form',
+      'file' => 'capx_tamper.theme.inc',
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function capx_tamper_menu() {
@@ -23,8 +35,8 @@ function capx_tamper_menu() {
 
   $items[CAPX_TAMPER . '/%capx_tamper_mapper/tamper'] = array(
     'title' => 'Tampers',
-    'page callback' => 'capx_tamper_list',
-    'page arguments' => array(4),
+    'page callback' => 'capx_tamper_build_form',
+    'page arguments' => array('list', 4),
     'file' => 'capx_tamper.forms.inc',
     'access arguments' => array('administer capx'),
     'type' => MENU_NORMAL_ITEM,
@@ -150,9 +162,17 @@ function capx_tamper_entity_update($entity, $type) {
 function capx_tamper_load_tampers($conditions = array()) {
   ctools_include('export');
   if ($conditions) {
-    return ctools_export_load_object('capx_tamper', 'conditions', $conditions);
+    $items = ctools_export_load_object('capx_tamper', 'conditions', $conditions);
   }
-  return ctools_export_load_object('capx_tamper');
+  else {
+    $items = ctools_export_load_object('capx_tamper');
+  }
+
+  usort($items, function ($a, $b) {
+    return $a->weight - $b->weight;
+  });
+
+  return $items;
 }
 
 /**
@@ -362,4 +382,18 @@ function capx_tamper_form_stanford_capx_mapper_form_alter(&$form, &$form_state, 
   $form['tampers']['cta'] = array(
     '#markup' => $cta,
   );
+}
+
+/**
+ * Creates an HTML id/class attribute name.
+ *
+ * @param string $path
+ *   JSON path.
+ *
+ * @return string
+ *   HTML ready id/class converted from the path.
+ */
+function capx_tamper_table_id($path) {
+  $path = trim($path, '$.');
+  return preg_replace("/[^A-Za-z0-9 ]/", '-', $path);
 }
