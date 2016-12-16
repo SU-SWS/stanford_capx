@@ -27,6 +27,7 @@ function stanford_capx_entity_info() {
       'controller class' => '\CAPx\Drupal\Entities\CFEControllerExportable',
       'base table' => 'capx_cfe',
       'fieldable' => TRUE,
+      'exportable' => TRUE,
       'entity keys' => array(
         'id' => 'cfid',
         'bundle' => 'type',
@@ -61,7 +62,6 @@ function stanford_capx_entity_info() {
     'base table' => 'capx_cfe_type',
     'fieldable' => FALSE,
     'bundle of' => 'capx_cfe',
-    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
       'name' => 'type',
