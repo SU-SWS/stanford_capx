@@ -823,7 +823,12 @@ function stanford_capx_preset_export($type, $machine_name) {
 
   $object_title = $cfe->title;
   // $code = ctools_export_crud_export("capx_cfe", $cfe);
-  $code = ctools_export_object("capx_cfe", $cfe);
+  $export = ctools_export_object("capx_cfe", $cfe);
+
+  // HACK to change the class.
+  $code = "\$cfe = new stdClass();" . PHP_EOL;
+  $code .= preg_replace('/^.+\n/', '', $export);
+
   $output['ctools'] = drupal_get_form('ctools_export_form', $code, $object_title);
   return $output;
 }
@@ -834,6 +839,70 @@ function stanford_capx_preset_export($type, $machine_name) {
  */
 function stanford_capx_preset_import() {
   $output = array();
-  $output['content']['#markup'] = "<h2> Hey </h2>";
+  $output['import'] = drupal_get_form('stanford_capx_preset_import_form');
   return $output;
+}
+
+/**
+ * [stanford_capx_preset_import_form description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form($form, &$form_state) {
+
+  $form['code'] = array(
+    '#title' => t('Code'),
+    '#description' => t('Paste the code from the export in to this field.'),
+    '#type' => 'textarea',
+    '#rows' => 20,
+  );
+
+  $form['override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Replace existing.'),
+    '#description' => t('Check this box to override an existing preset on import.'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+
+  return $form;
+}
+
+/**
+ * [stanford_capx_preset_import_form_validate description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form_validate($form, &$form_state) {
+
+}
+
+/**
+ * [stanford_capx_preset_import_form_submit description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form_submit($form, &$form_state) {
+  $code = $form_state['values']['code'];
+  $item = ctools_export_crud_import('capx_cfe', $code);
+
+  if (!is_object($item)) {
+    drupal_set_message("Could not import item.", "error");
+    return;
+  }
+
+  // Cast item to an array.
+  $values = (array) $item;
+
+  // Create a CFE.
+  $cfe = new \CAPx\Drupal\Entities\CFEntity($values, $item->type);
+
+  // Patch up some bits.
+  $cfe->entityType = "capx_cfe";
+  $cfe->entityInfo = entity_get_info('capx_cfe');
+
+  capx_cfe_save($cfe);
 }
