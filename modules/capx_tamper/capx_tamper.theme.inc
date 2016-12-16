@@ -38,7 +38,7 @@ function theme_capx_tamper_list_form($vars) {
     t('Enabled'),
   );
 
-  $output = drupal_render($form['goback']);
+  $output = drupal_render($form['mapper']);
 
   foreach (element_children($form['tampers']) as $path) {
     $paths[] = $path;

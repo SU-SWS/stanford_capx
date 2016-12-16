@@ -5,6 +5,8 @@
  * CAPx Tamper Module.
  */
 
+include_once 'views/capx_tamper.views_default_alter.inc';
+
 use \CAPx\Drupal\Util\CAPx;
 use \CAPx\Drupal\Entities\CFEntity;
 use \CAPx\Drupal\Mapper\EntityMapper;
@@ -28,6 +30,20 @@ function capx_tamper_theme($existing, $type, $theme, $path) {
     'capx_tamper_list_form' => array(
       'render element' => 'form',
       'file' => 'capx_tamper.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function capx_tamper_views_data_alter(&$data) {
+  // Tampers link.
+  $data['capx_cfe']['tamper_link'] = array(
+    'title' => t('Manage Tampers link'),
+    'help' => t('Manage Tampers link for mappings'),
+    'field' => array(
+      'handler' => 'views_handler_tamper_link',
     ),
   );
 }
@@ -137,12 +153,11 @@ function capx_tamper_entity_load($entities, $type) {
  * Implements hook_entity_insert().
  */
 function capx_tamper_entity_insert($entity, $type) {
-  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
-    if (isset($entity->tampers) && $entity->tampers) {
-      foreach ($entity->tampers as $tamper) {
-        capx_tamper_save_instance($tamper);
-      }
+  if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
+    foreach ($entity->tampers as $tamper) {
+      capx_tamper_save_instance($tamper);
     }
+
   }
 }
 
@@ -153,7 +168,7 @@ function capx_tamper_entity_insert($entity, $type) {
  * plugins that are attached.
  */
 function capx_tamper_entity_update($entity, $type) {
-  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
+  if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     $sources = capx_tamper_get_mapper_sources($entity);
     foreach ($entity->tampers as $id => $tamper) {
@@ -170,7 +185,7 @@ function capx_tamper_entity_update($entity, $type) {
  * Deletes any CAPx Tamper plugins when the mapper is deleted.
  */
 function capx_tamper_entity_delete($entity, $type) {
-  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
+  if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     foreach ($entity->tampers as $tamper) {
       capx_tamper_delete_instance($tamper);
@@ -431,7 +446,7 @@ function capx_tamper_form_stanford_capx_mapper_form_alter(&$form, &$form_state, 
   );
 
   $cta = "<br/><p>";
-  $cta .= l(t('Manage Tampers'), CAPX_TAMPER . "/$mapper_name/tamper", array("attributes" => array("class" => 'button')));
+  $cta .= l(t('Manage "!name" Tampers', array('!name' => $form_state['build_info']['args'][0]->title)), CAPX_TAMPER . "/$mapper_name/tamper", array("attributes" => array("class" => 'button')));
   $cta .= "</p>";
   $cta .= "<span><em>" . t("Clicking this button will navigate you away to a new page. Please save your work first.") . "</em></span>";
 

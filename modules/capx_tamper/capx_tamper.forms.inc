@@ -52,10 +52,6 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
     '#value' => $mapper->getMachineName(),
   );
 
-  $form['goback'] = array(
-    "#markup" => "<p>" . l(t("Manage Mapping Configuration ->"), "admin/config/capx/mapper/edit/" . $mapper->getMachineName()) . "</p>",
-  );
-
   $sources = capx_tamper_get_mapper_sources($mapper);
 
   foreach ($sources as $path => $targets) {
@@ -151,6 +147,7 @@ function capx_tamper_list_form_submit($form, &$form_state) {
     }
   }
   variable_set('capx_tamper_disabled', $disabled);
+  drupal_set_message(t('Settings saved'));
 }
 
 /**

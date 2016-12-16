@@ -4,6 +4,7 @@ version = 7.x-1.0-dev
 package = Stanford CAPx
 
 files[] = CapxTamper.inc
+files[] = views/views_handler_tamper_link.inc
 
 dependencies[] = ctools
 dependencies[] = stanford_capx
