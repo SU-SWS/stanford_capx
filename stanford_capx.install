@@ -148,6 +148,7 @@ function stanford_capx_schema() {
         'description' => 'ID of Drupal user creator.',
         'type' => 'int',
         'not null' => TRUE,
+        'no export' => TRUE,
       ),
       'created' => array(
         'description' => 'The Unix timestamp when the cfe was created.',
