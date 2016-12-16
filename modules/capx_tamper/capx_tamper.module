@@ -121,16 +121,27 @@ function capx_tamper_get_mapper_sources(CFEntity $mapper) {
 }
 
 /**
- * Implements hook_entity_delete().
- *
- * Deletes any CAPx Tamper plugins when the mapper is deleted.
+ * Implements hook_entity_load().
  */
-function capx_tamper_entity_delete($entity, $type) {
+function capx_tamper_entity_load($entities, $type) {
+  if ($type == 'capx_cfe') {
+    foreach ($entities as &$entity) {
+      if ($entity->type == 'mapper') {
+        $entity->tampers = capx_tamper_load_tampers(array('mapper' => $entity->machine_name));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function capx_tamper_entity_insert($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper') {
-    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
-    $tampers = capx_tamper_load_tampers(array('mapper' => $entity->getMachineName()));
-    foreach ($tampers as $tamper) {
-      capx_tamper_delete_instance($tamper);
+    if (isset($entity->tampers) && $entity->tampers) {
+      foreach ($entity->tampers as $tamper) {
+        capx_tamper_save_instance($tamper);
+      }
     }
   }
 }
@@ -145,11 +156,24 @@ function capx_tamper_entity_update($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper') {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     $sources = capx_tamper_get_mapper_sources($entity);
-    $tampers = capx_tamper_load_tampers(array('mapper' => $entity->getMachineName()));
-    foreach ($tampers as $id => $tamper) {
+    foreach ($entity->tampers as $id => $tamper) {
       if (!isset($sources[$tamper->source])) {
         capx_tamper_delete_instance($tamper);
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Deletes any CAPx Tamper plugins when the mapper is deleted.
+ */
+function capx_tamper_entity_delete($entity, $type) {
+  if ($type == 'capx_cfe' && $entity->type == 'mapper') {
+    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
+    foreach ($entity->tampers as $tamper) {
+      capx_tamper_delete_instance($tamper);
     }
   }
 }
@@ -286,7 +310,7 @@ function capx_tamper_capx_pre_entity_create_alter(&$values) {
   $result->items = $items;
 
   // Loop through tamper plugins on the mapper.
-  foreach (capx_tamper_load_tampers(array('mapper' => $cfe_mapper->machine_name)) as $tamper) {
+  foreach ($cfe_mapper->tampers as $tamper) {
     if ($tamper->disabled) {
       continue;
     }
