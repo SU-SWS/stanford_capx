@@ -154,12 +154,14 @@ function stanford_capx_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
+        'no export' => TRUE,
       ),
       'changed' => array(
         'description' => 'The Unix timestamp when the cfe was most recently saved.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
+        'no export' => TRUE,
       ),
       'settings' => array(
         'description' => 'The configuration settings',

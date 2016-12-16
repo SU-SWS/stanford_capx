@@ -25,6 +25,7 @@ function stanford_capx_entity_info() {
       'plural label' => t('Configuration Entities'),
       'entity class' => '\CAPx\Drupal\Entities\CFEntity',
       'controller class' => '\CAPx\Drupal\Entities\CFEControllerExportable',
+      'features controller class' => 'CFEFeaturesController',
       'base table' => 'capx_cfe',
       'fieldable' => TRUE,
       'exportable' => TRUE,

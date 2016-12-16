@@ -109,6 +109,46 @@ function stanford_capx_views_api() {
 }
 
 /**
+ * Implements hook_features_api().
+ *
+ * Define the components that we want to make exportable, in this case
+ * CFE Entities.
+ */
+function stanford_capx_features_api() {
+  return array(
+    'capx_cfe' => array(
+      'name' => 'CAPx Mappers & Importers',
+      // CANNOT implement file as it conflicts with entity API.
+      // 'file' => drupal_get_path('module', 'stanford_capx') . '/stanford_capx.features.inc',
+      'feature_source' => TRUE,
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+    ),
+  );
+}
+
+/**
+ * Something is wrong here.
+ *
+ * This is a patch up function for duplication on the component array.
+ */
+function stanford_capx_features_api_alter(&$components) {
+
+  // It seems that the Entity API is fighting with me and is duplicating my
+  // efforts here. Pop off my items in the array.
+
+  if (!isset($components['capx_cfe'])) {
+    return;
+  }
+
+  foreach ($components['capx_cfe'] as $key => $value) {
+    if (is_array($value)) {
+      $components['capx_cfe'][$key] = array_pop($value);
+    }
+  }
+
+}
+
+/**
  * Implements hook_menu().
  */
 function stanford_capx_menu() {
@@ -494,6 +534,22 @@ function stanford_capx_autocomplete_orgs($string) {
 // END AUTOCOMPLETE
 // /////////////////////////////////////////////////////////////////////////////
 
+// FEATURES & CTOOLS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Implements hook_features_export().
+ */
+function stanford_capx_features_export($data, &$export, $module_name) {
+  $pipe = array();
+
+  $export['dependencies']['stanford_capx'] = 'stanford_capx';
+  foreach ($data as $component) {
+    $export['features']['stanford_capx'][$component] = $component;
+  }
+
+  return $pipe;
+}
 
 // SCHEMA (API)
 // /////////////////////////////////////////////////////////////////////////////
