@@ -13,10 +13,8 @@ dependencies[] = encrypt (>= 2.0-beta3)
 dependencies[] = views
 dependencies[] = ctools
 
-; Feature Controllers
 files[] = includes/features/CFEFeaturesController.inc
 
-; View Handlers
 files[] = includes/views/views_handler_filter_importer.inc
 files[] = includes/views/views_handler_field_configuration_settings.inc
 files[] = includes/views/views_handler_field_configuration_metadata.inc
