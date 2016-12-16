@@ -194,14 +194,17 @@ function stanford_capx_admin_config_help() {
  */
 function stanford_capx_admin_config_mapper() {
   $output = array();
-  
+
   // Management Menu.
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;
 
   // Body content.
   $output['content']['body']['#markup'] = "<p>" . t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields") . ".</p>";
-  $output['content']['body']['#markup'] .= "<p><b>" . l(t('Create new mapping'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn'))) . "</b></p>";
+  $output['content']['body']['#markup'] .= "<p><b>";
+  $output['content']['body']['#markup'] .= l(t('Create new mapping'), 'admin/config/capx/mapper/new', array('attributes' => array('class' => 'new-button button btn')));
+  $output['content']['body']['#markup'] .= l(t('Import mapping'), 'admin/config/capx/preset/import', array('attributes' => array('class' => 'new-button button btn')));
+  $output['content']['body']['#markup'] .= "</b></p>";
 
   // The mapper view.
   $output['content']['mapper_view']['#markup'] = views_embed_view('capx_mappers');

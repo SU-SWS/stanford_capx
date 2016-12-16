@@ -40,7 +40,7 @@ class views_handler_field_mapper_export_link extends views_handler_field_entity 
   function render_link($mapper) {
 
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "admin/config/capx/preset/export/" . $mapper->getMachineName();
+    $this->options['alter']['path'] = "admin/config/capx/preset/export/mapper/" . $mapper->getMachineName();
     $this->options['alter']['query'] = drupal_get_destination();
     $text = !empty($this->options['text']) ? $this->options['text'] : t('Export');
     return $text;

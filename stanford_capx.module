@@ -81,7 +81,7 @@ function stanford_capx_permission() {
     ),
     'capx advanced administrator' => array(
       'title' => t('Administer Advanced CAPx settings'),
-      'description' => t('Administer and Ccnfigure CAPx advanced settings.'),
+      'description' => t('Administer and Configure CAPx advanced settings.'),
     ),
   );
 }
@@ -296,6 +296,28 @@ function stanford_capx_menu() {
   // ---------------------------------------------------------------------------
 
   // In views now...
+
+  // Exportables / Presets
+  // ---------------------------------------------------------------------------
+
+  $items['admin/config/capx/preset/export/%/%'] = array(
+    'title' => 'Export Configuration',
+    'page callback' => 'stanford_capx_preset_export',
+    'page arguments' => array(5, 6),
+    'access arguments' => array(
+      'capx advanced administrator',
+    ),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/capx/preset/import'] = array(
+    'title' => 'Import Configuration',
+    'page callback' => 'stanford_capx_preset_import',
+    'access arguments' => array(
+      'capx advanced administrator',
+    ),
+    'type' => MENU_CALLBACK,
+  );
 
   // MISC
   // ---------------------------------------------------------------------------
@@ -777,4 +799,41 @@ function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
   if ($user->uid != 1 && isset($form_state['term']->capx) && !empty($form_state['term']->capx['sync'])) {
     $form['actions']['delete']['#disabled'] = TRUE;
   }
+}
+
+// IMPORT / EXPORT / PRESETS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [stanford_capx_preset_export description]
+ * @param  [type] $type         [description]
+ * @param  [type] $machine_name [description]
+ * @return [type]               [description]
+ */
+function stanford_capx_preset_export($type, $machine_name) {
+  $output = array();
+  $code = "";
+  $cfe = capx_cfe_load_by_machine_name($machine_name, $type);
+
+  // Failed to load. Show a 404.
+  if (!$cfe) {
+    drupal_not_found();
+    return;
+  }
+
+  $object_title = $cfe->title;
+  // $code = ctools_export_crud_export("capx_cfe", $cfe);
+  $code = ctools_export_object("capx_cfe", $cfe);
+  $output['ctools'] = drupal_get_form('ctools_export_form', $code, $object_title);
+  return $output;
+}
+
+/**
+ * [stanford_capx_exportables_import description]
+ * @return [type] [description]
+ */
+function stanford_capx_preset_import() {
+  $output = array();
+  $output['content']['#markup'] = "<h2> Hey </h2>";
+  return $output;
 }
