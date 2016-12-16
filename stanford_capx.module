@@ -822,12 +822,12 @@ function stanford_capx_preset_export($type, $machine_name) {
   }
 
   $object_title = $cfe->title;
-  // $code = ctools_export_crud_export("capx_cfe", $cfe);
-  $export = ctools_export_object("capx_cfe", $cfe);
-
-  // HACK to change the class.
-  $code = "\$cfe = new stdClass();" . PHP_EOL;
-  $code .= preg_replace('/^.+\n/', '', $export);
+  if ($cfe->type == "mapper") {
+    foreach ($cfe->settings as $key => $v) {
+      unset($cfe->{$key});
+    }
+  }
+  $code = entity_export('capx_cfe', $cfe);
 
   $output['ctools'] = drupal_get_form('ctools_export_form', $code, $object_title);
   return $output;
@@ -887,7 +887,7 @@ function stanford_capx_preset_import_form_validate($form, &$form_state) {
  */
 function stanford_capx_preset_import_form_submit($form, &$form_state) {
   $code = $form_state['values']['code'];
-  $item = ctools_export_crud_import('capx_cfe', $code);
+  $item = entity_import('capx_cfe', $code);
 
   if (!is_object($item)) {
     drupal_set_message("Could not import item.", "error");
@@ -895,7 +895,8 @@ function stanford_capx_preset_import_form_submit($form, &$form_state) {
   }
 
   // Cast the object in to an array so we can create the cfe and save.
-  $values = (array) $item;
-  $cfe = entity_create('capx_cfe', $values);
-  capx_cfe_save($cfe);
+  // $values = (array) $item;
+  // $cfe = entity_create('capx_cfe', $values);
+  
+  capx_cfe_save($item);
 }

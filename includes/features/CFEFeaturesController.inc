@@ -19,15 +19,9 @@ class CFEFeaturesController extends EntityDefaultFeaturesController {
       // We add addtional data to the top level of the entity when we don't
       // really need it for the export.
       if ($entity->type == "mapper") {
-        unset($entity->fields);
-        unset($entity->properties);
-        unset($entity->collections);
-        unset($entity->references);
-        unset($entity->entity_type);
-        unset($entity->bundle_type);
-        unset($entity->multiple);
-        unset($entity->subquery);
-        unset($entity->guuidquery);
+        foreach ($entity->settings as $key => $v) {
+          unset($entity->{$key});
+        }
       }
 
       $export  = "  \$items['$name'] = entity_import('{$this->type}', '";
