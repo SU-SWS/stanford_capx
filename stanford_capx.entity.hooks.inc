@@ -29,6 +29,7 @@ function stanford_capx_entity_info() {
       'base table' => 'capx_cfe',
       'fieldable' => TRUE,
       'exportable' => TRUE,
+      'default hook' => 'default_capx_cfe',
       'entity keys' => array(
         'id' => 'cfid',
         'bundle' => 'type',
