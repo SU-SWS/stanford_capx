@@ -71,17 +71,17 @@ function stanford_capx_permission() {
       'title' => t('Administer CAPx'),
       'description' => t('Administer and configure CAPx settings.'),
     ),
-    // 'capx administer importers' => array(
-    //   'title' => t('Administer CAPx Importers'),
-    //   'description' => t('Administer and configure CAPx importers.'),
-    // ),
-    // 'capx administer mappers' => array(
-    //   'title' => t('Administer CAPx Mappers'),
-    //   'description' => t('Administer and configure CAPx mappers.'),
-    // ),
+    'capx administer importers' => array(
+      'title' => t('Administer CAPx Importers'),
+      'description' => t('Administer and configure CAPx importers.'),
+    ),
+    'capx administer mappers' => array(
+      'title' => t('Administer CAPx Mappers'),
+      'description' => t('Administer and configure CAPx mappers.'),
+    ),
     'capx advanced administrator' => array(
       'title' => t('Administer Advanced CAPx settings'),
-      'description' => t('Administer and Ccnfigure CAPx advanced settings.'),
+      'description' => t('Administer and Configure CAPx advanced settings.'),
     ),
   );
 }
@@ -106,6 +106,49 @@ function stanford_capx_node_access($node, $op, $account) {
  */
 function stanford_capx_views_api() {
   return array("version" => "3.0");
+}
+
+/**
+ * Implements hook_features_api().
+ *
+ * Define the components that we want to make exportable, in this case
+ * CFE Entities.
+ */
+function stanford_capx_features_api() {
+  return array(
+    'capx_cfe' => array(
+      'name' => 'CAPx Mappers & Importers',
+      // CANNOT implement file as it conflicts with entity API.
+      // 'file' => drupal_get_path('module', 'stanford_capx') . '/stanford_capx.features.inc',
+      'feature_source' => TRUE,
+      // Can't seem to get the below setting to work. Ctools is not loading it
+      // and the default hook never gets fired.
+      // 'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'default_hook' => 'default_capx_cfe',
+    ),
+  );
+}
+
+/**
+ * Something is wrong here.
+ *
+ * This is a patch up function for duplication on the component array.
+ */
+function stanford_capx_features_api_alter(&$components) {
+
+  // It seems that the Entity API is fighting with me and is duplicating my
+  // efforts here. Pop off my items in the array.
+
+  if (!isset($components['capx_cfe'])) {
+    return;
+  }
+
+  foreach ($components['capx_cfe'] as $key => $value) {
+    if (is_array($value)) {
+      $components['capx_cfe'][$key] = array_pop($value);
+    }
+  }
+
 }
 
 /**
@@ -253,6 +296,28 @@ function stanford_capx_menu() {
   // ---------------------------------------------------------------------------
 
   // In views now...
+
+  // Exportables / Presets
+  // ---------------------------------------------------------------------------
+
+  $items['admin/config/capx/preset/export/%/%'] = array(
+    'title' => 'Export Configuration',
+    'page callback' => 'stanford_capx_preset_export',
+    'page arguments' => array(5, 6),
+    'access arguments' => array(
+      'capx advanced administrator',
+    ),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/capx/preset/import'] = array(
+    'title' => 'Import Configuration',
+    'page callback' => 'stanford_capx_preset_import',
+    'access arguments' => array(
+      'capx advanced administrator',
+    ),
+    'type' => MENU_CALLBACK,
+  );
 
   // MISC
   // ---------------------------------------------------------------------------
@@ -494,6 +559,22 @@ function stanford_capx_autocomplete_orgs($string) {
 // END AUTOCOMPLETE
 // /////////////////////////////////////////////////////////////////////////////
 
+// FEATURES & CTOOLS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Implements hook_features_export().
+ */
+function stanford_capx_features_export($data, &$export, $module_name) {
+  $pipe = array();
+
+  $export['dependencies']['stanford_capx'] = 'stanford_capx';
+  foreach ($data as $component) {
+    $export['features']['stanford_capx'][$component] = $component;
+  }
+
+  return $pipe;
+}
 
 // SCHEMA (API)
 // /////////////////////////////////////////////////////////////////////////////
@@ -718,4 +799,104 @@ function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
   if ($user->uid != 1 && isset($form_state['term']->capx) && !empty($form_state['term']->capx['sync'])) {
     $form['actions']['delete']['#disabled'] = TRUE;
   }
+}
+
+// IMPORT / EXPORT / PRESETS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [stanford_capx_preset_export description]
+ * @param  [type] $type         [description]
+ * @param  [type] $machine_name [description]
+ * @return [type]               [description]
+ */
+function stanford_capx_preset_export($type, $machine_name) {
+  $output = array();
+  $code = "";
+  $cfe = capx_cfe_load_by_machine_name($machine_name, $type);
+
+  // Failed to load. Show a 404.
+  if (!$cfe) {
+    drupal_not_found();
+    return;
+  }
+
+  $object_title = $cfe->title;
+  if ($cfe->type == "mapper") {
+    foreach ($cfe->settings as $key => $v) {
+      unset($cfe->{$key});
+    }
+  }
+  $code = entity_export('capx_cfe', $cfe);
+
+  $output['ctools'] = drupal_get_form('ctools_export_form', $code, $object_title);
+  return $output;
+}
+
+/**
+ * [stanford_capx_exportables_import description]
+ * @return [type] [description]
+ */
+function stanford_capx_preset_import() {
+  $output = array();
+  $output['import'] = drupal_get_form('stanford_capx_preset_import_form');
+  return $output;
+}
+
+/**
+ * [stanford_capx_preset_import_form description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form($form, &$form_state) {
+
+  $form['code'] = array(
+    '#title' => t('Code'),
+    '#description' => t('Paste the code from the export in to this field.'),
+    '#type' => 'textarea',
+    '#rows' => 20,
+  );
+
+  $form['override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Replace existing.'),
+    '#description' => t('Check this box to override an existing preset on import.'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+
+  return $form;
+}
+
+/**
+ * [stanford_capx_preset_import_form_validate description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form_validate($form, &$form_state) {
+
+}
+
+/**
+ * [stanford_capx_preset_import_form_submit description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_import_form_submit($form, &$form_state) {
+  $code = $form_state['values']['code'];
+  $item = entity_import('capx_cfe', $code);
+
+  if (!is_object($item)) {
+    drupal_set_message("Could not import item.", "error");
+    return;
+  }
+
+  // Cast the object in to an array so we can create the cfe and save.
+  // $values = (array) $item;
+  // $cfe = entity_create('capx_cfe', $values);
+  
+  capx_cfe_save($item);
 }

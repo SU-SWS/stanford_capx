@@ -25,8 +25,11 @@ function stanford_capx_entity_info() {
       'plural label' => t('Configuration Entities'),
       'entity class' => '\CAPx\Drupal\Entities\CFEntity',
       'controller class' => '\CAPx\Drupal\Entities\CFEControllerExportable',
+      'features controller class' => 'CFEFeaturesController',
       'base table' => 'capx_cfe',
       'fieldable' => TRUE,
+      'exportable' => TRUE,
+      'default hook' => 'default_capx_cfe',
       'entity keys' => array(
         'id' => 'cfid',
         'bundle' => 'type',
@@ -61,7 +64,6 @@ function stanford_capx_entity_info() {
     'base table' => 'capx_cfe_type',
     'fieldable' => FALSE,
     'bundle of' => 'capx_cfe',
-    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
       'name' => 'type',
