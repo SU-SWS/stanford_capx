@@ -894,15 +894,8 @@ function stanford_capx_preset_import_form_submit($form, &$form_state) {
     return;
   }
 
-  // Cast item to an array.
+  // Cast the object in to an array so we can create the cfe and save.
   $values = (array) $item;
-
-  // Create a CFE.
-  $cfe = new \CAPx\Drupal\Entities\CFEntity($values, $item->type);
-
-  // Patch up some bits.
-  $cfe->entityType = "capx_cfe";
-  $cfe->entityInfo = entity_get_info('capx_cfe');
-
+  $cfe = entity_create('capx_cfe', $values);
   capx_cfe_save($cfe);
 }
