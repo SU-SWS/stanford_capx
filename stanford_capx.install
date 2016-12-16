@@ -126,6 +126,7 @@ function stanford_capx_schema() {
       'can disable' => FALSE,
       'object' => 'CFEntity',
       'load callback' => 'capx_cfe_load_by_machine_name',
+      'export type string' => 'export_type',
       'api' => array(
         'current_version' => 1,
         'minimum_version' => 1,
