@@ -116,6 +116,23 @@ function stanford_capx_schema() {
   // Configuration Entity.
   $schema['capx_cfe'] = array(
     'description' => 'The base table for configuration entities.',
+    'export' => array(
+      'key' => 'machine_name',
+      'key name' => 'Machine Name',
+      'primary key' => 'cfid',
+      'identifier' => 'cfe',
+      'default hook' => 'default_capx_cfe',
+      'admin_title' => 'title',
+      'can disable' => FALSE,
+      'object' => 'CFEntity',
+      'load callback' => 'capx_cfe_load_by_machine_name',
+      'api' => array(
+        'current_version' => 1,
+        'minimum_version' => 1,
+        'owner' => 'stanford_capx',
+        'api' => 'capx_cfe',
+      ),
+    ),
     'fields' => array(
       'cfid' => array(
         'description' => 'The primary identifier for the cfe.',
@@ -148,21 +165,18 @@ function stanford_capx_schema() {
         'description' => 'ID of Drupal user creator.',
         'type' => 'int',
         'not null' => TRUE,
-        'no export' => TRUE,
       ),
       'created' => array(
         'description' => 'The Unix timestamp when the cfe was created.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'no export' => TRUE,
       ),
       'changed' => array(
         'description' => 'The Unix timestamp when the cfe was most recently saved.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'no export' => TRUE,
       ),
       'settings' => array(
         'description' => 'The configuration settings',

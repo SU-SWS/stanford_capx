@@ -194,7 +194,7 @@ function stanford_capx_admin_config_help() {
  */
 function stanford_capx_admin_config_mapper() {
   $output = array();
-
+  
   // Management Menu.
   $menu_block = stanford_capx_management_menu_block();
   $output['content']['capx_menu_block'] = $menu_block;

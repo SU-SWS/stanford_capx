@@ -92,7 +92,7 @@ function stanford_capx_views_data() {
     'title' => t('Export Status'),
     'help' => t('The exportable status of the entity.'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'views_handler_field_cfe_status',
       'click sortable' => TRUE,
     ),
     'filter' => array(

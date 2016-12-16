@@ -26,5 +26,6 @@ files[] = includes/views/views_handler_field_importer_edit_link.inc
 files[] = includes/views/views_handler_field_importer_sync_profiles.inc
 files[] = includes/views/views_handler_field_importer_orphan_profiles.inc
 files[] = includes/views/views_handler_field_capx_profile_id.inc
+files[] = includes/views/views_handler_field_cfe_status.inc
 
 project status url = https://github.com/SU-SWS/stanford_capx
