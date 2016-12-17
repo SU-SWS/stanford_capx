@@ -12,12 +12,27 @@
  */
 class views_handler_field_mapper_export_link extends views_handler_field_entity {
 
+  /**
+   * Restrict access to this file to advanced users only.
+   * @return bool
+   */
+  function access() {
+    return user_access('capx advanced administrator');
+  }
+
+  /**
+   * @return array
+   */
   function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array('default' => '', 'translatable' => TRUE);
     return $options;
   }
 
+  /**
+   * @param $form
+   * @param $form_state
+   */
   function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
@@ -31,12 +46,20 @@ class views_handler_field_mapper_export_link extends views_handler_field_entity 
     $form['alter']['external'] = array('#access' => FALSE);
   }
 
+  /**
+   * @param $values
+   * @return null|string
+   */
   function render($values) {
     if ($entity = $this->get_value($values)) {
       return $this->render_link($entity);
     }
   }
 
+  /**
+   * @param $mapper
+   * @return null|string
+   */
   function render_link($mapper) {
 
     $this->options['alter']['make_link'] = TRUE;

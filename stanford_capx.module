@@ -822,7 +822,7 @@ function stanford_capx_preset_export($type, $machine_name) {
   }
 
   $object_title = $cfe->title;
-  if ($cfe->type == "mapper") {
+  if (is_array($cfe->settings)) {
     foreach ($cfe->settings as $key => $v) {
       unset($cfe->{$key});
     }
@@ -855,6 +855,7 @@ function stanford_capx_preset_import_form($form, &$form_state) {
     '#description' => t('Paste the code from the export in to this field.'),
     '#type' => 'textarea',
     '#rows' => 20,
+    '#default_value' => isset($form_state['values']['code']) ? $form_state['values']['code'] : "",
   );
 
   $form['override'] = array(
@@ -872,11 +873,81 @@ function stanford_capx_preset_import_form($form, &$form_state) {
 }
 
 /**
- * [stanford_capx_preset_import_form_validate description]
+ * Validate a few items before saving.
  * @param [type] $form       [description]
  * @param [type] $form_state [description]
  */
 function stanford_capx_preset_import_form_validate($form, &$form_state) {
+
+  // Try to convert the code in to an object.
+  $code = $form_state['values']['code'];
+  $item = entity_import('capx_cfe', $code);
+
+  // Does the code turn in to an object?
+  if (!is_object($item)) {
+    form_set_error('code', "Invalid code supplied. Please check the syntax.");
+    return;
+  }
+
+  // Check for a couple of fields...
+  if (!isset($item->type) || !isset($item->machine_name)) {
+    form_set_error('code', "Missing properties type or machine name");
+    return;
+  }
+
+  // It is one of our bundles?
+  $bundles = stanford_capx_default_capx_cfe_type();
+  if (!in_array($item->type, array_keys($bundles))) {
+    form_set_error('code', "Invalid bundle type.");
+    return;
+  }
+
+  // Does it already exist?
+  if (!$form_state['values']['override']) {
+    $exists = capx_cfe_load_by_machine_name($item->machine_name, $item->type);
+    if ($exists) {
+      form_set_error("code", "Cannot import. Item already exists. Please check the override option to force import.");
+      return;
+    }
+  }
+
+  // If importing an importer one must check for the existance of the mapper.
+  if ($item->type == "importer") {
+    $mapper = capx_cfe_load_by_machine_name($item->settings['mapper'], "mapper");
+    if (!$mapper) {
+      form_set_error("code", "Could not find the mapper: " . $item->settings['mapper'] . ". Please import that item first.");
+      return;
+    }
+  }
+
+  // MAPPER Validation.
+  if ($item->type == "mapper") {
+
+    // If it is a mapper validate that the entity and bundle is available.
+    $info = entity_get_info($item->settings['entity_type']);
+    if (!$info) {
+      form_set_error("code", "Mapper entity type does not exist.");
+      return;
+    }
+
+    if (!isset($info['bundles']) || !in_array($item->settings['bundle_type'], array_keys($info['bundles']))) {
+      form_set_error("code", $item->settings['bundle_type'] . " bundle type does not exist.");
+      return;
+    }
+
+  }
+
+  // If there are filters that are attached ensure the module is enabled.
+  if (isset($item->filters) && !module_exists("capx_filters")) {
+    form_set_error("code", "This importer includes filters. Please enable the capx_filters module before importing.");
+    return;
+  }
+
+  // If there are filters that are attached ensure the module is enabled.
+  if (isset($item->tamper) && !module_exists("capx_tamper")) {
+    form_set_error("code", "This mapper includes tampers. Please enable the capx_tamper module before importing.");
+    return;
+  }
 
 }
 
@@ -894,9 +965,8 @@ function stanford_capx_preset_import_form_submit($form, &$form_state) {
     return;
   }
 
-  // Cast the object in to an array so we can create the cfe and save.
-  // $values = (array) $item;
-  // $cfe = entity_create('capx_cfe', $values);
-  
+  // entity_import does not actually save the item.
   capx_cfe_save($item);
+
+  drupal_set_message("Item imported successfully", "status");
 }
