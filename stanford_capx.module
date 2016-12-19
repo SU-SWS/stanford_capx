@@ -892,6 +892,15 @@ function stanford_capx_preset_import_form_validate($form, &$form_state) {
   // Try to convert the code in to an object.
   $code = $form_state['values']['code'];
   $item = entity_import('capx_cfe', $code);
+  $info = entity_get_info();
+  $entities = array_keys($info);
+  $bundles = array();
+  foreach ($info as $entity) {
+    if (isset($entity['bundles'])) {
+      $keys = array_keys($entity['bundles']);
+      $bundles = array_merge($bundles, $keys);
+    }
+  }
 
   // Does the code turn in to an object?
   if (!is_object($item)) {
@@ -906,7 +915,6 @@ function stanford_capx_preset_import_form_validate($form, &$form_state) {
   }
 
   // It is one of our bundles?
-  $bundles = stanford_capx_default_capx_cfe_type();
   if (!in_array($item->type, array_keys($bundles))) {
     form_set_error('code', "Invalid bundle type.");
     return;

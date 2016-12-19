@@ -286,7 +286,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['importer_orphan_profiles']['label'] = '';
   $handler->display->display_options['fields']['importer_orphan_profiles']['exclude'] = TRUE;
   $handler->display->display_options['fields']['importer_orphan_profiles']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['importer_orphan_profiles']['text'] = 'Check for orphans';
+  $handler->display->display_options['fields']['importer_orphan_profiles']['text'] = 'Orphan Sync';
   /* Field: Configuration Entity: Importer sync profiles action link */
   $handler->display->display_options['fields']['importer_sync_profiles']['id'] = 'importer_sync_profiles';
   $handler->display->display_options['fields']['importer_sync_profiles']['table'] = 'capx_cfe';
@@ -294,7 +294,7 @@ function stanford_capx_views_default_views() {
   $handler->display->display_options['fields']['importer_sync_profiles']['label'] = '';
   $handler->display->display_options['fields']['importer_sync_profiles']['exclude'] = TRUE;
   $handler->display->display_options['fields']['importer_sync_profiles']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['importer_sync_profiles']['text'] = 'Update profiles now';
+  $handler->display->display_options['fields']['importer_sync_profiles']['text'] = 'Import Now';
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_2']['id'] = 'nothing_2';
   $handler->display->display_options['fields']['nothing_2']['table'] = 'views';
