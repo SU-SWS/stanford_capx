@@ -5,7 +5,7 @@
  */
 namespace CAPx\Drupal\Entities;
 
-class CFEntityTypeController extends \EntityAPIController {
+class CFEntityTypeController extends \EntityAPIControllerExportable {
 
   /**
    * Create method for the TypeController.
