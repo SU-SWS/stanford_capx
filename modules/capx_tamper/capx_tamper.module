@@ -438,49 +438,6 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function capx_tamper_form_stanford_capx_mapper_form_alter(&$form, &$form_state, $form_id) {
-  $mapper_name = FALSE;
-
-  if ($form['naming']['machine-name']['#default_value']) {
-    $mapper_name = $form['naming']['machine-name']['#default_value'];
-  }
-
-  $form['tampers'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Tamper'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#weight' => 1,
-    '#tree' => TRUE,
-  );
-
-  // Move the submit buttons to the bottom.
-  $form['actions']['#weight'] = 100;
-
-  if (!$mapper_name) {
-    $form['tampers']['info'] = array(
-      '#markup' => t('Configure and save the mapper before configuring tampers.'),
-    );
-    return;
-  }
-
-  $form['tampers']['intro'] = array(
-    '#markup' => "<p>" . t("Tampers allow you to manipulate items from the API before saving the data. For example, you can create a tamper that would strip html tags, or replace strings etc.") . "<p>",
-  );
-
-  $cta = "<br/><p>";
-  $cta .= l(t('Manage "!name" Tampers', array('!name' => $form_state['build_info']['args'][0]->title)), CAPX_TAMPER . "/$mapper_name/tamper", array("attributes" => array("class" => 'button')));
-  $cta .= "</p>";
-  $cta .= "<span><em>" . t("Clicking this button will navigate you away to a new page. Please save your work first.") . "</em></span>";
-
-  $form['tampers']['cta'] = array(
-    '#markup' => $cta,
-  );
-}
-
-/**
  * Creates an HTML id/class attribute name.
  *
  * @param string $path
