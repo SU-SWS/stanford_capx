@@ -32,7 +32,6 @@ function theme_capx_tamper_list_form($vars) {
   $header = array(
     t('Description'),
     t('Plugin'),
-    t('Status'),
     t('Operations'),
     t('Weight'),
     t('Enabled'),
@@ -48,7 +47,6 @@ function theme_capx_tamper_list_form($vars) {
         'data' => array(
           drupal_render($form['tampers'][$path][$tamper_id]['description']),
           drupal_render($form['tampers'][$path][$tamper_id]['plugin_id']),
-          drupal_render($form['tampers'][$path][$tamper_id]['status']),
           drupal_render($form['tampers'][$path][$tamper_id]['operations']),
           drupal_render($form['tampers'][$path][$tamper_id]['weight']),
           drupal_render($form['tampers'][$path][$tamper_id]['enabled']),

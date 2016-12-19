@@ -21,17 +21,6 @@ function capx_tamper_schema() {
   $schema = array();
   $schema['capx_tamper'] = array(
     'description' => 'Table storing CAPx tamper instances.',
-    'export' => array(
-      'key' => 'id',
-      'identifier' => 'plugin',
-      'default hook' => 'capx_tamper_plugins',
-      'api' => array(
-        'owner' => 'capx_tamper',
-        'api' => 'capx_tamper_plugins',
-        'minimum_version' => 1,
-        'current_version' => 1,
-      ),
-    ),
     'fields' => array(
       'id' => array(
         'type' => 'varchar',

@@ -154,10 +154,12 @@ function capx_tamper_entity_load($entities, $type) {
  */
 function capx_tamper_entity_insert($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
+    /** @var CFEntity $entity */
     foreach ($entity->tampers as $tamper) {
+      $tamper = (array) $tamper;
+      $tamper['mapper'] = $entity->machine_name;
       capx_tamper_save_instance($tamper);
     }
-
   }
 }
 
@@ -206,12 +208,18 @@ function capx_tamper_entity_delete($entity, $type) {
  *   Single or all tampers configured.
  */
 function capx_tamper_load_tampers($conditions = array()) {
-  ctools_include('export');
-  if ($conditions) {
-    $items = ctools_export_load_object('capx_tamper', 'conditions', $conditions);
+  $items = array();
+  $query = db_select('capx_tamper', 'c')
+    ->fields('c');
+
+  foreach ($conditions as $key => $value) {
+    $query->condition($key, $value);
   }
-  else {
-    $items = ctools_export_load_object('capx_tamper');
+  $results = $query->execute();
+
+  while ($item = $results->fetchAssoc()) {
+    $item['settings'] = unserialize($item['settings']);
+    $items[] = (object) $item;
   }
 
   $disabled = variable_get('capx_tamper_disabled', array());
@@ -232,17 +240,34 @@ function capx_tamper_load_tampers($conditions = array()) {
 /**
  * Saves the tamper plugin and settings.
  *
- * @param object $tamper
+ * @param object|array $tamper
  *   CAPx Tamper object.
+ *
+ * @return bool
+ *   TRUE if successful. FALSE otherwise.
  */
 function capx_tamper_save_instance($tamper) {
-  if (capx_tamper_load_tampers(array('id' => $tamper->id))) {
+  $tamper = (array) $tamper;
+
+  // Validity check.
+  list($mapper_id) = explode('-', $tamper['id']);
+  if ($mapper_id != $tamper['mapper'] || !capx_tamper_mapper_load($mapper_id)) {
+    drupal_set_message(t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
+      '%mapper' => $mapper_id,
+      '%description' => $tamper['description'],
+    )), 'error');
+    return FALSE;
+  }
+
+
+  if (capx_tamper_load_tampers(array('id' => $tamper['id']))) {
     drupal_write_record('capx_tamper', $tamper, 'id');
   }
   else {
     drupal_write_record('capx_tamper', $tamper);
   }
-  capx_tamper_invalidate_etags($tamper->mapper);
+  capx_tamper_invalidate_etags($tamper['mapper']);
+  return TRUE;
 }
 
 /**

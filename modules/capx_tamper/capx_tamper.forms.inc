@@ -65,28 +65,9 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
     foreach ($path_tampers as $tamper) {
       $edit_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/edit";
       $delete_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/delete";
-      $status = '';
-      $edit = '';
-      $delete = '';
-      if ($tamper->export_type == EXPORT_IN_CODE) {
-        $status = t('Default');
-        $edit = l(t('Override'), $edit_url);
-        $delete = '';
-      }
-      elseif ($tamper->export_type == EXPORT_IN_DATABASE) {
-        $status = t('Normal');
-        $edit = l(t('Edit'), $edit_url);
-        $delete = l(t('Delete'), $delete_url);
-      }
-      elseif ($tamper->export_type == (EXPORT_IN_CODE | EXPORT_IN_DATABASE)) {
-        $status = t('Overridden');
-        $edit = l(t('Edit'), $edit_url);
-        $delete = l(t('Revert'), $delete_url);
-      }
 
-      if (!empty($delete)) {
-        $edit .= " | $delete";
-      }
+      $edit = l(t('Edit'), $edit_url);
+      $edit .= " | " . l(t('Delete'), $delete_url);
 
       $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
       $form['tampers'][$path][$tamper->id]['description'] = array(
@@ -94,9 +75,6 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
       );
       $form['tampers'][$path][$tamper->id]['plugin_id'] = array(
         '#markup' => t($plugin['name']),
-      );
-      $form['tampers'][$path][$tamper->id]['status'] = array(
-        '#markup' => $status,
       );
       $form['tampers'][$path][$tamper->id]['operations'] = array(
         '#markup' => $edit,
@@ -300,14 +278,14 @@ function capx_tamper_add_form_submit($form, &$form_state) {
     $tamper->weight = '0';
     $tamper->description = $form_state['values']['description'];
 
-    capx_tamper_save_instance($tamper);
-    $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
-
-    drupal_set_message(t('Plugin %description was successfully added to %source.', array(
-      '%description' => $form_state['values']['description'],
-      '%source' => $form_state['source'],
-    )));
-    return;
+    if (capx_tamper_save_instance($tamper)) {
+      $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
+      drupal_set_message(t('Plugin %description was successfully added to %source.', array(
+        '%description' => $form_state['values']['description'],
+        '%source' => $form_state['source'],
+      )));
+      return;
+    }
   }
   $form_state['rebuild'] = TRUE;
 }
@@ -399,9 +377,10 @@ function capx_tamper_edit_form_submit($form, &$form_state) {
   }
   $tamper->description = $form_state['values']['description'];
 
-  capx_tamper_save_instance($tamper);
-  drupal_set_message(t('The plugin %plugin has been updated.', array('%plugin' => $tamper->description)));
-  $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
+  if (capx_tamper_save_instance($tamper)) {
+    drupal_set_message(t('The plugin %plugin has been updated.', array('%plugin' => $tamper->description)));
+    $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
+  }
 }
 
 /**
