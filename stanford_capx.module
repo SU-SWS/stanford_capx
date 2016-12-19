@@ -310,6 +310,16 @@ function stanford_capx_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/capx/preset/revert/%/%'] = array(
+    'title' => 'Export Configuration',
+    'page callback' => 'stanford_capx_preset_revert',
+    'page arguments' => array(5, 6),
+    'access arguments' => array(
+      'capx advanced administrator',
+    ),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['admin/config/capx/preset/import'] = array(
     'title' => 'Import Configuration',
     'page callback' => 'stanford_capx_preset_import',
@@ -969,4 +979,74 @@ function stanford_capx_preset_import_form_submit($form, &$form_state) {
   capx_cfe_save($item);
 
   drupal_set_message("Item imported successfully", "status");
+}
+
+/**
+ * [stanford_capx_preset_revert description]
+ * @param [type] $type         [description]
+ * @param [type] $machine_name [description]
+ */
+function stanford_capx_preset_revert($type, $machine_name) {
+  $output = array();
+  $code = "";
+  $cfe = capx_cfe_load_by_machine_name($machine_name, $type);
+
+  // Failed to load. Show a 404.
+  if (!$cfe) {
+    drupal_not_found();
+    return;
+  }
+
+  $output['form'] = drupal_get_form("stanford_capx_preset_revert_form", $type, $machine_name);
+
+  return $output;
+}
+
+/**
+ * [stanford_capx_preset_revert_form description]
+ * @param [type] $form         [description]
+ * @param [type] $form_sate    [description]
+ * @param [type] $type         [description]
+ * @param [type] $machine_name [description]
+ */
+function stanford_capx_preset_revert_form($form, $form_sate, $type, $machine_name) {
+
+  $cfe = capx_cfe_load_by_machine_name($machine_name, $type);
+  $label = $cfe->title;
+
+  // Always save a few of these values.
+  $form['bundle_type'] = array(
+    '#type' => 'value',
+    '#value' => $type,
+  );
+
+  $form['machine_name'] = array(
+    '#type' => 'value',
+    '#value' => $machine_name,
+  );
+
+  $form['label'] = array(
+    '#type' => 'value',
+    '#value' => $label,
+  );
+
+  $confirm_question = t('Are you sure you want to revert %label?', array('%label' => $label));
+  return confirm_form($form, $confirm_question, "admin/config/capx/$type");
+}
+
+/**
+ * [stanford_capx_preset_revert_submit description]
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function stanford_capx_preset_revert_form_submit($form, $form_state) {
+  $type = $form_state['values']['bundle_type'];
+  $machine_name = $form_state['values']['machine_name'];
+  $label = $form_state['values']['label'];
+
+  $cfe = capx_cfe_load_by_machine_name($machine_name, $type);
+  capx_cfe_delete($cfe);
+
+  watchdog($type, 'Reverted %label to the defaults.', array('%label' => $label), WATCHDOG_NOTICE);
+  drupal_set_message(t('Reverted %label to the defaults.', array('%label' => $label)), 'status');
 }

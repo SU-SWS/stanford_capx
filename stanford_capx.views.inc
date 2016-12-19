@@ -167,6 +167,14 @@ function stanford_capx_views_data() {
     ),
   );
 
+  $data['capx_cfe']['mapper_revert_link'] = array(
+    'title' => t('Mapping revert link'),
+    'help' => t('Revert link for mappings'),
+    'field' => array(
+      'handler' => 'views_handler_field_mapper_revert_link',
+    ),
+  );
+
   // Importer edit link.
   $data['capx_cfe']['importer_edit_link'] = array(
     'title' => t('Importer edit link'),
