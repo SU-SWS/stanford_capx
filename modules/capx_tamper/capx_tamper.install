@@ -5,16 +5,6 @@
  */
 
 /**
- * Implements hook_install().
- */
-function capx_tamper_install() {
-  db_update('system')
-    ->fields(array('weight' => -10))
-    ->condition('name', 'capx_tamper', '=')
-    ->execute();
-}
-
-/**
  * Implements hook_schema().
  */
 function capx_tamper_schema() {
@@ -38,10 +28,17 @@ function capx_tamper_schema() {
       ),
       'source' => array(
         'type' => 'varchar',
-        'length' => 128,
+        'length' => 255,
         'not null' => TRUE,
         'default' => '',
         'description' => 'The source field of the importer.',
+      ),
+      'target' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The target field of the importer.',
       ),
       'plugin_id' => array(
         'type' => 'varchar',

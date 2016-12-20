@@ -54,52 +54,68 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
 
   $sources = capx_tamper_get_mapper_sources($mapper);
 
-  foreach ($sources as $path => $targets) {
+  foreach ($sources as $target => $path) {
     $path_tampers = capx_tamper_load_tampers(array(
       'mapper' => $mapper->getMachineName(),
-      'source' => $path,
+      'target' => $target,
     ));
 
-    $form['tampers'][$path] = array();
+    if ($instance = field_info_instance($mapper->entity_type, $target, $mapper->bundle_type)) {
+      $target_label = $instance['label'];
+    }
+    else {
+      $target_label = ucwords($target);
+    }
+
+    $form['tampers'][$target] = array(
+      'caption' => array(
+        '#markup' => t('!from -> !to', array(
+          '!from' => $path,
+          '!to' => $target_label,
+        )),
+      ),
+    );
 
     foreach ($path_tampers as $tamper) {
       $edit_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/edit";
       $delete_url = CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/{$tamper->id}/delete";
-
-      $edit = l(t('Edit'), $edit_url);
-      $edit .= " | " . l(t('Delete'), $delete_url);
-
+      $operations = l(t('Edit'), $edit_url) . " | " . l(t('Delete'), $delete_url);
       $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
-      $form['tampers'][$path][$tamper->id]['description'] = array(
+
+      $form['tampers'][$target][$tamper->id]['description'] = array(
         '#markup' => t($tamper->description),
       );
-      $form['tampers'][$path][$tamper->id]['plugin_id'] = array(
+      $form['tampers'][$target][$tamper->id]['plugin_id'] = array(
         '#markup' => t($plugin['name']),
       );
-      $form['tampers'][$path][$tamper->id]['operations'] = array(
-        '#markup' => $edit,
+      $form['tampers'][$target][$tamper->id]['operations'] = array(
+        '#markup' => $operations,
       );
-      $form['tampers'][$path][$tamper->id]['weight'] = array(
+      $form['tampers'][$target][$tamper->id]['weight'] = array(
         '#type' => 'weight',
         '#title' => t('Weight'),
         '#default_value' => $tamper->weight,
         '#attributes' => array(
-          'class' => array(capx_tamper_table_id($path) . '-weight'),
+          'class' => array(capx_tamper_table_id($target) . '-weight'),
         ),
       );
-      $form['tampers'][$path][$tamper->id]['enabled'] = array(
+      $form['tampers'][$target][$tamper->id]['enabled'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enabled'),
         '#default_value' => !$tamper->disabled,
       );
     }
+    $form['tampers'][$target]['add_link'] = array(
+      '#markup' => l(t('Add Plugin'), CAPX_TAMPER . "/{$mapper->getMachineName()}/tamper/add/" . bin2hex("$target:$path")),
+      '#prefix' => '<ul class="feeds-tamper-add action-links"><li>',
+      '#suffix' => '</li></ul>',
+    );
   }
 
   $form['save'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
-
   $form['#attached']['css'] = array(drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css');
   return $form;
 }
@@ -109,7 +125,7 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
  */
 function capx_tamper_list_form_submit($form, &$form_state) {
   $disabled = variable_get('capx_tamper_disabled', array());
-  foreach ($form_state['values']['tampers'] as $path => $tampers) {
+  foreach ($form_state['values']['tampers'] as $tampers) {
     foreach ($tampers as $id => $settings) {
       $tamper = capx_tamper_load_tampers(array('id' => $id));
       $tamper = reset($tamper);
@@ -139,15 +155,18 @@ function capx_tamper_list_form_submit($form, &$form_state) {
  * @return array
  *   Form render array.
  */
-function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $source) {
-  drupal_set_title(t('Add Tamper Plugin'));
+function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $target_source) {
+  list($target, $source) = explode(':', hex2bin($target_source), 2);
+
+  drupal_set_title(t('Add Tamper Plugin for !from -> !to', array(
+    '!from' => $source,
+    '!to' => $target,
+  )));
   capx_tamper_breadcrumb($mapper, TRUE);
-  $source = hex2bin($source);
 
   $form_state['mapper'] = $mapper;
   $form_state['source'] = $source;
-
-  $form['#attached']['css'][] = drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css';
+  $form_state['target'] = $target;
 
   // Build plugin select list.
   $capx_tamper_plugins = feeds_tamper_get_plugins();
@@ -222,6 +241,8 @@ function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $source) {
     '#value' => t('Add'),
   );
 
+  $form['#attached']['css'][] = drupal_get_path('module', 'capx_tamper') . '/css/capx_tamper.css';
+
   return $form;
 }
 
@@ -266,6 +287,7 @@ function capx_tamper_add_form_submit($form, &$form_state) {
     $id = implode('-', array(
       $mapper->identifier(),
       $form_state['source'],
+      $form_state['target'],
       $form_state['values']['id'],
     ));
 
@@ -273,6 +295,7 @@ function capx_tamper_add_form_submit($form, &$form_state) {
     $tamper->id = $id;
     $tamper->mapper = $mapper->identifier();
     $tamper->source = $form_state['source'];
+    $tamper->target = $form_state['target'];
     $tamper->plugin_id = $form_state['values']['plugin_id'];
     $tamper->settings = $form_state['values']['settings'];
     $tamper->weight = '0';
@@ -404,15 +427,8 @@ function capx_tamper_delete_form($form, &$form_state, CFEntity $mapper, $tamper_
   $tamper = reset($tamper);
   $form_state['tamper'] = $tamper;
   $form_state['mapper'] = $mapper;
-
-  if ($tamper->export_type & EXPORT_IN_CODE) {
-    $question = t('Would you really like to revert the plugin @tamper?', array('@tamper' => $tamper->description));
-    $button_label = t('Revert');
-  }
-  else {
-    $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
-    $button_label = t('Delete');
-  }
+  $question = t('Would you really like to delete the plugin @tamper?', array('@tamper' => $tamper->description));
+  $button_label = t('Delete');
 
   return confirm_form(
     $form,
@@ -431,20 +447,10 @@ function capx_tamper_delete_form_submit($form, &$form_state) {
   /** @var CFEntity $mapper */
   $mapper = $form_state['mapper'];
   capx_tamper_delete_instance($tamper);
-
-  switch ($tamper->export_type) {
-    case EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
-        '%plugin' => $tamper->description,
-        '%source' => $tamper->source,
-      )));
-      break;
-
-    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $tamper->description)));
-      break;
-  }
-
+  drupal_set_message(t('The plugin %plugin has been deleted from %source.', array(
+    '%plugin' => $tamper->description,
+    '%source' => $tamper->source,
+  )));
   $form_state['redirect'] = CAPX_TAMPER . "/{$mapper->identifier()}/tamper";
 }
 
@@ -465,6 +471,7 @@ function capx_tamper_machine_name_callback($id, $form, &$form_state) {
   $check_id = implode('-', array(
     $form_state['mapper']->identifier(),
     $form_state['source'],
+    $form_state['target'],
     $form_state['values']['id'],
   ));
   return capx_tamper_load_tampers(array('id' => $check_id));

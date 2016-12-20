@@ -82,10 +82,10 @@ class CapxTamperProcessor {
   public function getMappings() {
     $mapper_sources = capx_tamper_get_mapper_sources($this->mapper);
     $sources = array();
-    foreach ($mapper_sources as $path => $targets) {
+    foreach ($mapper_sources as $target => $path) {
       $sources[] = array(
         'source' => $path,
-        'target' => implode(':', $targets),
+        'target' => $target,
         'unique' => FALSE,
         'language' => LANGUAGE_NONE,
       );

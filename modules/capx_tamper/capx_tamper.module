@@ -104,10 +104,10 @@ function capx_tamper_menu() {
  */
 function capx_tamper_mapper_load($mapper_id) {
   $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
-  if (!$mapper) {
-    drupal_not_found();
-    drupal_exit();
-  }
+//  if (!$mapper) {
+//    drupal_not_found();
+//    drupal_exit();
+//  }
   return $mapper;
 }
 
@@ -121,16 +121,12 @@ function capx_tamper_mapper_load($mapper_id) {
  *   Associative array of keys as json paths. Values as an array of targets.
  */
 function capx_tamper_get_mapper_sources(CFEntity $mapper) {
-  $sources = array();
-  foreach ($mapper->properties as $property => $path) {
-    $sources[$path][] = $property;
-  }
-
+  $sources = $mapper->properties;
   foreach ($mapper->fields as $field_key => $field_settings) {
     $field_settings = array_filter($field_settings);
     if ($field_settings) {
       $path = $field_settings[key($field_settings)];
-      $sources[$path][] = $field_key;
+      $sources[$field_key] = $path;
     }
   }
   return $sources;
@@ -174,7 +170,7 @@ function capx_tamper_entity_update($entity, $type) {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     $sources = capx_tamper_get_mapper_sources($entity);
     foreach ($entity->tampers as $id => $tamper) {
-      if (!isset($sources[$tamper->source])) {
+      if (!isset($sources[$tamper->target]) || $sources[$tamper->target] != $tamper->source) {
         capx_tamper_delete_instance($tamper);
       }
     }
@@ -208,31 +204,31 @@ function capx_tamper_entity_delete($entity, $type) {
  *   Single or all tampers configured.
  */
 function capx_tamper_load_tampers($conditions = array()) {
-  $items = array();
+  $disabled = variable_get('capx_tamper_disabled', array());
+
   $query = db_select('capx_tamper', 'c')
     ->fields('c');
-
   foreach ($conditions as $key => $value) {
-    $query->condition($key, $value);
-  }
-  $results = $query->execute();
-
-  while ($item = $results->fetchAssoc()) {
-    $item['settings'] = unserialize($item['settings']);
-    $items[] = (object) $item;
-  }
-
-  $disabled = variable_get('capx_tamper_disabled', array());
-  foreach ($items as &$tamper) {
-    $tamper->disabled = FALSE;
-    if (isset($disabled[$tamper->id])) {
-      $tamper->disabled = TRUE;
+    if (db_field_exists('capx_tamper', $key)) {
+      if (is_array($value)) {
+        $query->condition($key, $value, 'IN');
+      }
+      else {
+        $query->condition($key, $value);
+      }
     }
   }
+  $query->orderBy('weight', 'ASC');
+  $results = $query->execute();
 
-  usort($items, function ($a, $b) {
-    return $a->weight - $b->weight;
-  });
+  $items = array();
+  while ($item = $results->fetchAssoc()) {
+    $item['settings'] = unserialize($item['settings']);
+    if (isset($disabled[$item['id']])) {
+      $item['disabled'] = TRUE;
+    }
+    $items[] = (object) $item;
+  }
 
   return $items;
 }
@@ -259,15 +255,14 @@ function capx_tamper_save_instance($tamper) {
     return FALSE;
   }
 
-
   if (capx_tamper_load_tampers(array('id' => $tamper['id']))) {
-    drupal_write_record('capx_tamper', $tamper, 'id');
+    $success = drupal_write_record('capx_tamper', $tamper, 'id');
   }
   else {
-    drupal_write_record('capx_tamper', $tamper);
+    $success = drupal_write_record('capx_tamper', $tamper);
   }
   capx_tamper_invalidate_etags($tamper['mapper']);
-  return TRUE;
+  return $success;
 }
 
 /**
@@ -298,82 +293,6 @@ function capx_tamper_invalidate_etags($mapper_id) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $mapper = capx_tamper_mapper_load($mapper_id);
   CAPx::invalidateEtags('mapper', $mapper);
-}
-
-/**
- * Implements hook_capx_pre_update_entity_alter().
- */
-function capx_tamper_capx_pre_update_entity_alter(&$entity, &$data, EntityMapper &$mapper) {
-  $values = array(
-    'data' => $data,
-    'mapper' => $mapper,
-  );
-  capx_tamper_capx_pre_entity_create_alter($values);
-  $data = $values['data'];
-}
-
-/**
- * Implements hook_capx_pre_entity_create_alter().
- *
- * Change the entries in the $values['data'] according to the tamper plugins.
- */
-function capx_tamper_capx_pre_entity_create_alter(&$values) {
-  /** @var EntityMapper $mapper */
-  $mapper = NULL;
-  $data = array();
-  extract($values);
-  /** @var CFEntity $cfe_mapper */
-  $cfe_mapper = $mapper->getMapper();
-  // Sets an object to be used for particular tamper plugins.
-  // @see feeds_tamper_copy_callback().
-  $result = new stdClass();
-  $items = array();
-  foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path => $targets) {
-    $item = $mapper->getRemoteDataByJsonPath($data, $path);
-    if (strpos($path, '*') !== FALSE) {
-      $index = $mapper->getIndex();
-      if (isset($item[$index])) {
-        $item = $item[$index];
-      }
-    }
-
-    if (is_array($item)) {
-      if (array_filter($item)) {
-        $item = reset($item);
-      }
-      else {
-        $item = NULL;
-      }
-    }
-    $items[0][$path] = $item;
-  }
-  $result->items = $items;
-
-  // Loop through tamper plugins on the mapper.
-  foreach ($cfe_mapper->tampers as $tamper) {
-    if ($tamper->disabled) {
-      continue;
-    }
-
-    $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
-    if (function_exists($plugin['callback']) && isset($result->items[0][$tamper->source])) {
-      $path = $tamper->source;
-      $field = &$result->items[0][$path];
-
-      // Call any functions that have to alter the tamper before using
-      // the feeds tamper plugin directly.
-      $pre_callback = 'capx_tamper_' . $plugin['callback'];
-      $key = 0;
-      if (function_exists($pre_callback)) {
-        $pre_callback($result, $key, $path, $field, $tamper->settings, $tamper->source);
-      }
-
-      // Call the feeds tamper. Then set that value back into the data array.
-      $plugin['callback']($result, $key, $path, $field, $tamper->settings, $tamper->source);
-      capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
-    }
-  }
-  $values['data'] = $data;
 }
 
 /**
@@ -449,4 +368,123 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
 function capx_tamper_table_id($path) {
   $path = trim($path, '$.');
   return preg_replace("/[^A-Za-z0-9 ]/", '-', $path);
+}
+
+/**
+ * Implements hook_capx_pre_property_set_alter().
+ */
+function capx_tamper_capx_pre_property_set_alter($entity, &$data, &$property_name) {
+  capx_tamper_alter_data($entity, $data, $property_name);
+}
+
+/**
+ * Implements hook_capx_pre_map_field_alter().
+ */
+function capx_tamper_capx_pre_map_field_alter(&$entity, &$field_name, &$remote_data_paths, &$data) {
+  capx_tamper_alter_data($entity, $data, $field_name);
+}
+
+/**
+ * Alters the data object as configured from the tampers.
+ *
+ * @param object $entity
+ *   Entity to be operated on.
+ * @param array $data
+ *   Json data array.
+ * @param string $field_name
+ *   Field machine name or entity property.
+ */
+function capx_tamper_alter_data($entity, &$data, $field_name) {
+  $e = $entity->raw();
+  /** @var EntityMapper $mapper */
+  $mapper = $e->capxMapper;
+  /** @var CFEntity $cfe_mapper */
+  $cfe_mapper = $mapper->getMapper();
+
+
+  // Sets an object to be used for particular tamper plugins.
+  // @see feeds_tamper_copy_callback().
+  $result = new stdClass();
+  $items = array();
+  foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path) {
+    $item = $mapper->getRemoteDataByJsonPath($data, $path);
+    if (strpos($path, '*') !== FALSE) {
+      $index = $mapper->getIndex();
+      if (isset($item[$index])) {
+        $item = $item[$index];
+      }
+    }
+
+    if (is_array($item)) {
+      if (array_filter($item)) {
+        $item = reset($item);
+      }
+      else {
+        $item = NULL;
+      }
+    }
+    $items[0][$path] = $item;
+  }
+  $result->items = $items;
+
+  // Loop through tamper plugins on the mapper.
+  foreach ($cfe_mapper->tampers as $tamper) {
+    if ($tamper->disabled || $tamper->target !== $field_name) {
+      continue;
+    }
+    $plugin = feeds_tamper_get_plugin($tamper->plugin_id);
+    if (function_exists($plugin['callback']) && isset($result->items[0][$tamper->source])) {
+      $path = $tamper->source;
+      $field = &$result->items[0][$path];
+
+      // Call any functions that have to alter the tamper before using
+      // the feeds tamper plugin directly.
+      $pre_callback = 'capx_tamper_' . $plugin['callback'];
+      $key = 0;
+      if (function_exists($pre_callback)) {
+        $pre_callback($result, $key, $path, $field, $tamper->settings, $tamper->source);
+      }
+      // Call the feeds tamper. Then set that value back into the data array.
+      $plugin['callback']($result, $key, $path, $field, $tamper->settings, $tamper->source);
+      capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
+    }
+  }
+}
+
+/**
+ * Add a validation function to the import form.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
+ */
+function capx_tamper_form_stanford_capx_preset_import_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = "capx_tamper_form_stanford_capx_preset_import_form_alter_validate";
+}
+
+/**
+ * Do some validation prior to saving.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param array $form_state
+ *   Form State Array.
+ */
+function capx_tamper_form_stanford_capx_preset_import_form_alter_validate($form, &$form_state) {
+  $code = $form_state['values']['code'];
+  $cfe = entity_import('capx_cfe', $code);
+
+  if (isset($cfe->tampers)) {
+    foreach ($cfe->tampers as $tamper) {
+      // Validity check.
+      list($mapper_id) = explode('-', $tamper['id']);
+      if ($mapper_id !== $tamper['mapper'] || $mapper_id !== $cfe->machine_name) {
+        form_set_error('code', t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
+          '%mapper' => $mapper_id,
+          '%description' => $tamper['description'],
+        )));
+      }
+    }
+  }
 }

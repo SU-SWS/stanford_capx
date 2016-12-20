@@ -719,34 +719,3 @@ function stanford_capx_form_taxonomy_form_term_alter(&$form, &$form_state) {
     $form['actions']['delete']['#disabled'] = TRUE;
   }
 }
-
-/**
- * Add a validation function to the import form.
- */
-function capx_tamper_form_stanford_capx_preset_import_form_alter(&$form, &$form_state) {
-  $form['#validate'][] = "capx_tamper_form_stanford_capx_preset_import_form_alter_validate";
-}
-
-/**
- * Do some validation prior to saving.
- * @param [type] $form       [description]
- * @param [type] $form_state [description]
- */
-function capx_tamper_form_stanford_capx_preset_import_form_alter_validate($form, &$form_state) {
-  $code = $form_state['values']['code'];
-  $cfe = entity_import('capx_cfe', $code);
-
-  if (isset($cfe->tampers)) {
-    foreach($cfe->tampers as $tamper) {
-      // Validity check.
-      list($mapper_id) = explode('-', $tamper['id']);
-      if ($mapper_id !== $tamper['mapper'] || $mapper_id !== $cfe->machine_name) {
-        form_set_error('code', t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
-          '%mapper' => $mapper_id,
-          '%description' => $tamper['description'],
-        )));
-      }
-    }
-  }
-
-}
