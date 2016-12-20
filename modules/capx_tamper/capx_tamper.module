@@ -259,7 +259,6 @@ function capx_tamper_save_instance($tamper) {
     return FALSE;
   }
 
-
   if (capx_tamper_load_tampers(array('id' => $tamper['id']))) {
     drupal_write_record('capx_tamper', $tamper, 'id');
   }
@@ -449,4 +448,35 @@ function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
 function capx_tamper_table_id($path) {
   $path = trim($path, '$.');
   return preg_replace("/[^A-Za-z0-9 ]/", '-', $path);
+}
+
+/**
+ * Add a validation function to the import form.
+ */
+function capx_tamper_form_stanford_capx_preset_import_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = "capx_tamper_form_stanford_capx_preset_import_form_alter_validate";
+}
+
+/**
+ * Do some validation prior to saving.
+ * @param [type] $form       [description]
+ * @param [type] $form_state [description]
+ */
+function capx_tamper_form_stanford_capx_preset_import_form_alter_validate($form, &$form_state) {
+  $code = $form_state['values']['code'];
+  $cfe = entity_import('capx_cfe', $code);
+
+  if (isset($cfe->tampers)) {
+    foreach($cfe->tampers as $tamper) {
+      // Validity check.
+      list($mapper_id) = explode('-', $tamper['id']);
+      if ($mapper_id != $tamper['mapper'] || !capx_tamper_mapper_load($mapper_id)) {
+        form_set_error('code', t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
+          '%mapper' => $mapper_id,
+          '%description' => $tamper['description'],
+        )));
+      }
+    }
+  }
+
 }

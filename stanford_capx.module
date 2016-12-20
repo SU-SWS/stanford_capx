@@ -837,6 +837,9 @@ function stanford_capx_preset_export($type, $machine_name) {
       unset($cfe->{$key});
     }
   }
+  unset($cfe->uid);
+  unset($cfe->created);
+  unset($cfe->changed);
   $code = entity_export('capx_cfe', $cfe);
 
   $output['ctools'] = drupal_get_form('ctools_export_form', $code, $object_title);
