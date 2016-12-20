@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of views_handler_field_node_link.
+ * Definition of views_handler_filters_link.
  */
 
 /**
@@ -10,7 +10,7 @@
  *
  * @ingroup views_field_handlers
  */
-class views_handler_field_mapper_edit_link extends views_handler_field_entity {
+class views_handler_filters_link extends views_handler_field_entity {
 
   function option_definition() {
     $options = parent::option_definition();
@@ -38,9 +38,9 @@ class views_handler_field_mapper_edit_link extends views_handler_field_entity {
   }
 
   function render_link($mapper) {
+
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "admin/config/capx/mapper/edit/" . $mapper->getMachineName();
-    $this->options['alter']['query'] = drupal_get_destination();
+    $this->options['alter']['path'] = "admin/config/capx/importer/" . $mapper->getMachineName() . '/filters';
     $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');
     return $text;
   }

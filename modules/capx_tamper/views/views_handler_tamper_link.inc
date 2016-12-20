@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of views_handler_field_node_link.
+ * Definition of views_handler_tamper_link.
  */
 
 /**
@@ -10,15 +10,21 @@
  *
  * @ingroup views_field_handlers
  */
-class views_handler_field_mapper_edit_link extends views_handler_field_entity {
+class views_handler_tamper_link extends views_handler_field_entity {
 
-  function option_definition() {
+  /**
+   * {@inheritdoc}
+   */
+  public function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array('default' => '', 'translatable' => TRUE);
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
@@ -31,17 +37,23 @@ class views_handler_field_mapper_edit_link extends views_handler_field_entity {
     $form['alter']['external'] = array('#access' => FALSE);
   }
 
-  function render($values) {
+  /**
+   * {@inheritdoc}
+   */
+  public function render($values) {
     if ($entity = $this->get_value($values)) {
       return $this->render_link($entity);
     }
   }
 
-  function render_link($mapper) {
+  /**
+   * {@inheritdoc}
+   */
+  public function render_link($mapper) {
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "admin/config/capx/mapper/edit/" . $mapper->getMachineName();
-    $this->options['alter']['query'] = drupal_get_destination();
+    $this->options['alter']['path'] = "admin/config/capx/mapper/" . $mapper->getMachineName() . '/tamper';
     $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');
     return $text;
   }
+
 }
