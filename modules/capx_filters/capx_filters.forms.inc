@@ -8,6 +8,19 @@
 use \CAPx\Drupal\Util\CAPx;
 use \CAPx\Drupal\Entities\CFEntity;
 
+/**
+ * Form builder factory function.
+ *
+ * @param string $action
+ *   The filter action.
+ * @param object $importer
+ *   The importer object.
+ * @param int $filter_id
+ *   The id of the filter.
+ *
+ * @return array
+ *   The form array.
+ */
 function capx_filters_build_form($action, $importer, $filter_id = -1) {
   $form_id = "capx_filters_$action";
   return drupal_get_form($form_id, $importer, $filter_id);
@@ -16,11 +29,17 @@ function capx_filters_build_form($action, $importer, $filter_id = -1) {
 /**
  * Menu Callback to display current filters active on the CAPx mapper.
  *
- * @param CFEntity $mapper_id
- *   Machine name of the capx mapper.
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ * @param object $importer
+ *   An instance of a CFEntity importer object.
+ * @param int $filter_id
+ *   The integer id (key/order) of the filter.
  *
  * @return array
- *   Render array of the table.
+ *   The form array.
  */
 function capx_filters_list($form, &$form_state, CFEntity $importer, $filter_id = NULL) {
   // Set the page title.
@@ -82,17 +101,43 @@ function capx_filters_list($form, &$form_state, CFEntity $importer, $filter_id =
   return $form;
 }
 
+/**
+ * Submit handler for the filters list form.
+ *
+ * Saves and sets variables for the filter form on an importer.
+ *
+ * @param array $form
+ *   The form.
+ * @param array $form_state
+ *   The form state array from submission.
+ */
 function capx_filters_list_submit($form, &$form_state) {
+
+  // Set a global variable so that other hooks can patch up the entity save.
   global $_capx_filters_updated;
   $_capx_filters_updated = TRUE;
+
   $importer = $form_state['build_info']['args'][0];
   $importer->settings['filters_delete'] = $form_state['values']['filters_delete'];
   entity_save('capx_cfe', $importer);
+
   drupal_set_message(t('Settings Saved'));
 }
 
 /**
- * Form to create or edit a filter for the given CAPx Mapper.
+ * Form to create or edit a filter for the given CAPx Importer.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ * @param object $importer
+ *   An instance of a CFEntity importer object.
+ * @param int $filter_id
+ *   The integer id (key/order) of the filter.
+ *
+ * @return array
+ *   The form array.
  */
 function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id = -1) {
   $key = '';
@@ -114,6 +159,8 @@ function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id =
       drupal_exit();
     }
   }
+
+  // Filter exists and is valid. Carry on and generate a form.
   $form = array();
 
   $form['mapper_id'] = array(
@@ -176,10 +223,14 @@ function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id =
 }
 
 /**
- * [capx_filters_edit_validate description]
- * @param  [type] $form       [description]
- * @param  [type] $form_state [description]
- * @return [type]             [description]
+ * Validation function for filter create/edit form.
+ *
+ * Sets a form error if there is a validation issue.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
  */
 function capx_filters_edit_validate($form, &$form_state) {
   if ($form_state['values']['comparison'] == 'before' || $form_state['values']['comparison'] == 'after') {
@@ -197,7 +248,7 @@ function capx_filters_edit_submit($form, &$form_state) {
   global $_capx_filters_updated;
   $_capx_filters_updated = TRUE;
 
-  /** @var CFEntity $importer */
+  // @var CFEntity $importer.
   $importer = $form_state['build_info']['args'][0];
 
   $filter = array(
@@ -206,6 +257,7 @@ function capx_filters_edit_submit($form, &$form_state) {
     'comparison' => $form_state['values']['comparison'],
     'exclude' => $form_state['values']['exclude'],
   );
+
   if (!isset($importer->settings['filters'])) {
     $importer->settings['filters'] = array();
   }
@@ -219,17 +271,30 @@ function capx_filters_edit_submit($form, &$form_state) {
 
   $importer->settings['filters'] = array_values($importer->settings['filters']);
   capx_mapper_save($importer);
+
+  // When filters change we must invalidate the etags to ensure that profiles
+  // get updated again.
   CAPx::invalidateEtags('importer', $importer);
+
   $form_state['redirect'] = CAPX_FILTERS_PAGE . "/{$importer->getMachineName()}/filters";
 }
 
 /**
  * Form to confirm the deletion of the filter.
  *
- * @param CFEntity $importer
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state array.
+ * @param object $importer
+ *   An instance of a CFEntity importer object.
+ * @param int $filter_id
+ *   The integer id (key/order) of the filter.
+ *
+ * @return array
+ *   The form array.
  */
 function capx_filters_delete($form, &$form_state, CFEntity $importer, $filter_id) {
-
 
   $form = array();
   $form['disclaimer'] = array(
@@ -266,10 +331,12 @@ function capx_filters_delete($form, &$form_state, CFEntity $importer, $filter_id
  * Removes the filter from the CAPx mapper settings array.
  */
 function capx_filters_delete_submit($form, &$form_state) {
+
+  // Used in entity save functions elsewhere.
   global $_capx_filters_updated;
   $_capx_filters_updated = TRUE;
 
-  /** @var CFEntity $importer */
+  // @var CFEntity $importer.
   $importer = $form_state['build_info']['args'][0];
 
   $form_state['redirect'] = CAPX_FILTERS_PAGE . "/{$importer->getMachineName()}/filters";
@@ -280,5 +347,8 @@ function capx_filters_delete_submit($form, &$form_state) {
   unset($importer->settings['filters'][$form_state['values']['filter_id']]);
   $importer->settings['filters'] = array_values($importer->settings['filters']);
   capx_mapper_save($importer);
+
+  // When filters change we must invalidate the etags to ensure profiles get
+  // updated on the next sync.
   CAPx::invalidateEtags('importer', $importer);
 }

@@ -12,18 +12,25 @@
  */
 class views_handler_filters_link extends views_handler_field_entity {
 
+  /**
+   * @see parent
+   */
   function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array('default' => '', 'translatable' => TRUE);
     return $options;
   }
 
+  /**
+   * @see parent
+   */
   function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
       '#default_value' => $this->options['text'],
     );
+
     parent::options_form($form, $form_state);
 
     // The path is set by render_link function so don't allow to set it.
@@ -31,17 +38,29 @@ class views_handler_filters_link extends views_handler_field_entity {
     $form['alter']['external'] = array('#access' => FALSE);
   }
 
+  /**
+   * @see parent
+   */
   function render($values) {
     if ($entity = $this->get_value($values)) {
       return $this->render_link($entity);
     }
   }
 
-  function render_link($mapper) {
-
+  /**
+   * Render a link to the importer filters page.
+   *
+   * @param object $importer
+   *   The importer object.
+   *
+   * @return string
+   *   The url to the filters edit page.
+   */
+  function render_link($importer) {
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "admin/config/capx/importer/" . $mapper->getMachineName() . '/filters';
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');
+    $this->options['alter']['path'] = "admin/config/capx/importer/" . $importer->getMachineName() . '/filters';
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('Filters');
     return $text;
   }
+
 }

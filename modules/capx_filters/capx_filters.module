@@ -7,7 +7,7 @@
 
 include_once 'views/capx_filters.views_default_alter.inc';
 
-use \CAPx\Drupal\Entities\CFEntity;
+use CAPx\Drupal\Entities\CFEntity;
 use CAPx\Drupal\Mapper\EntityMapper;
 
 define('CAPX_FILTERS_PAGE', 'admin/config/capx/importer');
@@ -57,6 +57,19 @@ function capx_filters_menu() {
   return $items;
 }
 
+/**
+ * Load a filter by machine name.
+ *
+ * CAREFUL: If the item is not found drupal returns a 404. Please use this
+ * function only when the page is loading one importer object and is expecting
+ * it to exist or it cannot continue.
+ *
+ * @param string $importer_id
+ *   The filter machine name.
+ *
+ * @return object
+ *   The loaded importer object.
+ */
 function capx_filters_importer_load($importer_id) {
   $importer = capx_cfe_load_by_machine_name($importer_id, 'importer');
   if (!$importer) {
@@ -83,15 +96,30 @@ function capx_filters_views_data_alter(&$data) {
 
 /**
  * Implements hook_capx_pre_entity_create_alter().
+ *
+ * Before a new entity is created validate that it meets the filter criteria.
+ * If it does not set the no create flag so that it doesn't get saved. The flag
+ * is set so that other hooks can change it again later.
+ *
+ * @param array $values
+ *   \CAPx\Drupal\Mapper\EntityMapper $mapper.
  */
 function capx_filters_capx_pre_entity_create_alter(&$values) {
-  /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
+  // @var \CAPx\Drupal\Mapper\EntityMapper $mapper.
   $mapper = NULL;
   $data = array();
   extract($values);
 
-  /** @var CFEntity $importer */
-  $importer = capx_filters_importer_load($mapper->getImporter());
+  // @var CFEntity $importer.
+  // If the importer fails to load throw an error.
+  $importer = capx_cfe_load_by_machine_name($mapper->getImporter(), 'importer');
+
+  // If the importer fails to load for some reason fire off an exception.
+  if (!$importer) {
+    throw new \Exception("Could not load importer: " . $mapper->getImporter());
+  }
+
+  // We have what we need, validate the data.
   if (!capx_filters_valid($data, $mapper, $importer)) {
     $values['properties']['no_create'] = TRUE;
   }
@@ -99,14 +127,36 @@ function capx_filters_capx_pre_entity_create_alter(&$values) {
 
 /**
  * Implements hook_capx_pre_update_entity_alter().
+ *
+ * On update of an exiting entity validate that the filters still pass. If they
+ * do not perform an action on the entity. The action is either to leave the
+ * entity alone or to delete it.
+ *
+ * @param object $entity
+ *   The entity being updated.
+ * @param array $data
+ *   The response data from the api.
+ * @param object $mapper
+ *   The mapper object performing the mapping action on the $entity.
  */
 function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
-  /** @var CFEntity $importer */
-  $importer = capx_filters_importer_load($mapper->getImporter());
+
+  $importer = capx_cfe_load_by_machine_name($mapper->getImporter(), 'importer');
+
+  // If the importer fails to load for some reason fire off an exception.
+  if (!$importer) {
+    throw new \Exception("Could not load importer: " . $mapper->getImporter());
+  }
+
+  // Perform the validation of the filters.
   if (!capx_filters_valid($data, $mapper, $importer)) {
+
+    // If the configuration option on the importer is set to delete do so.
     if (isset($importer->filters_delete) && $importer->filters_delete) {
       $entity->delete();
     }
+
+    // Otherwise just clear it out so we don't update.
     $entity->clear();
   }
 }
@@ -126,23 +176,35 @@ function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
  */
 function capx_filters_valid($data, EntityMapper $entity_mapper, CFEntity $importer) {
   $pass = TRUE;
+
+  // If there are no filters we can just pass and move along.
   if (empty($importer->filters)) {
     return $pass;
   }
+
+  // Loop through each of the filters executing them on the data.
   foreach ($importer->filters as $i => $filter) {
-    // Already failed a filter.
+
+    // Already failed a filter; We can stop.
     if (!$pass) {
       break;
     }
 
+    // Fetch the info out of the API response data so we can compare it against
+    // the filter operation.
     $item = $entity_mapper->getRemoteDataByJsonPath($data, $filter['key']);
-    if (strpos($filter['key'], '*') !== FALSE) {
+
+    // Special case handling for multiple item creation as we will have to
+    // validate against a specific index of the data. Adjust the item if we are
+    // handling a multiple import item.
+    if ($entity_mapper->isMultiple()) {
       $index = $entity_mapper->getIndex();
       if (isset($item[$index])) {
         $item = $item[$index];
       }
     }
 
+    // If we have an array reset any false values and pop out the first one.
     if (is_array($item)) {
       if (array_filter($item)) {
         $item = reset($item);
@@ -162,6 +224,7 @@ function capx_filters_valid($data, EntityMapper $entity_mapper, CFEntity $import
       }
     }
 
+    // If we have a string put the contents to lowercase.
     if (!is_array($item) && $item) {
       $item = strtolower("$item");
     }
@@ -214,6 +277,7 @@ function capx_filters_valid($data, EntityMapper $entity_mapper, CFEntity $import
         break;
     }
 
+    // Set the response to the function caller.
     if (!is_null($temp_pass)) {
       if ($temp_pass) {
         $pass = !$filter['exclude'];
@@ -222,8 +286,9 @@ function capx_filters_valid($data, EntityMapper $entity_mapper, CFEntity $import
         $pass = $filter['exclude'];
       }
     }
-
   }
+
+  // True if passes. False if data did not meet filter criteria.
   return $pass;
 }
 
@@ -242,39 +307,48 @@ function capx_filters_parse_date($string) {
     return $date->getTimestamp();
   }
   catch (Exception $e) {
-    watchdog('capx_filters', t('Unable to parse date value. %type given.', array('%type' => gettype($string))));
+    watchdog('capx_filters', 'Unable to parse date value. %type given.', array('%type' => gettype($string)));
     return FALSE;
-  }
-}
-
-
-/**
- * Implements hook_capx_config_fields_alter().
- */
-function capx_filters_capx_config_fields_alter($mapper, &$fields) {
-  $config = $mapper->getConfig();
-  if (isset($config['filters'])) {
-    foreach ($config['filters'] as $i => $filter) {
-      $fields["capx_filter_$i"] = array($filter['key']);
-    }
   }
 }
 
 /**
  * Implements hook_entity_presave().
+ *
+ * This function is mostly used for when imporing a new importers through the
+ * UI. It is here to capture changes to the filters when the parent importer
+ * entity is saved.
+ *
+ * @param object $entity
+ *   The importer cfe object.
+ * @param string $type
+ *   The type of entity that $entity is.
+ *
+ * @return null|void
+ *   Does not return anything.
  */
 function capx_filters_entity_presave($entity, $type) {
-  if ($type == 'capx_cfe' && $entity->type == 'importer') {
-    global $_capx_filters_updated;
-    if (!$_capx_filters_updated) {
-      /* @param CFEntity $entity */
-      $orig_entity = capx_cfe_load_by_machine_name($entity->machine_name, 'importer');
-      if (isset($orig_entity->filters)) {
-        $entity->settings['filters'] = $orig_entity->filters;
-      }
-      if (isset($orig_entity->filters_delete)) {
-        $entity->settings['filters_delete'] = $orig_entity->filters_delete;
-      }
+
+  // We only want to act on importer cfe entities.
+  if ($type !== 'capx_cfe' && $entity->type !== 'importer') {
+    return NULL;
+  }
+
+  // The filters get dropped in a few different forms. So in order to maintain
+  // them we need to patch them back in. This global var is that flag.
+  global $_capx_filters_updated;
+  if (!$_capx_filters_updated) {
+
+    /* @param CFEntity $entity */
+    $orig_entity = capx_cfe_load_by_machine_name($entity->machine_name, 'importer');
+
+    if (isset($orig_entity->filters)) {
+      $entity->settings['filters'] = $orig_entity->filters;
     }
+
+    if (isset($orig_entity->filters_delete)) {
+      $entity->settings['filters_delete'] = $orig_entity->filters_delete;
+    }
+
   }
 }
