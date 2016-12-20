@@ -4,4 +4,6 @@ package = Stanford CAPx
 project = stanford_capx
 version = 7.x-1.0-dev
 
+files[] = views/views_handler_filters_link.inc
+
 dependencies[] = stanford_capx
