@@ -283,19 +283,3 @@ function capx_filters_entity_presave($entity, $type) {
     }
   }
 }
-
-/**
- * Add a validation function to the import form.
- */
-function capx_filters_form_stanford_capx_preset_import_form_alter(&$form, $form_state) {
-  $form['#validate'][] = "capx_filters_form_stanford_capx_preset_import_form_alter_validate";
-}
-
-/**
- * Do some validation prior to saving.
- * @param [type] $form       [description]
- * @param [type] $form_state [description]
- */
-function capx_filters_form_stanford_capx_preset_import_form_alter_validate($form, &$form_state) {
-
-}

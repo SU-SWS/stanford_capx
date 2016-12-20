@@ -917,6 +917,12 @@ function stanford_capx_preset_import_form_validate($form, &$form_state) {
     return;
   }
 
+  // Do we have the entity?
+  if (!in_array($item->entity_type, array_keys($entities))) {
+    form_set_error('code', "Invalid entity type.");
+    return;
+  }
+
   // It is one of our bundles?
   if (!in_array($item->type, array_keys($bundles))) {
     form_set_error('code', "Invalid bundle type.");

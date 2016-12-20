@@ -470,7 +470,7 @@ function capx_tamper_form_stanford_capx_preset_import_form_alter_validate($form,
     foreach($cfe->tampers as $tamper) {
       // Validity check.
       list($mapper_id) = explode('-', $tamper['id']);
-      if ($mapper_id != $tamper['mapper'] || !capx_tamper_mapper_load($mapper_id)) {
+      if ($mapper_id !== $tamper['mapper'] || $mapper_id !== $cfe->machine_name) {
         form_set_error('code', t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
           '%mapper' => $mapper_id,
           '%description' => $tamper['description'],
