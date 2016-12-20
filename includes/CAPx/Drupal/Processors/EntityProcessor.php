@@ -368,7 +368,6 @@ class EntityProcessor extends ProcessorAbstract {
       drupal_alter('capx_entity_presave', $entity, $mapper);
       $entity->save();
 
-
       // There is a possiblility that a field or property had an error while being
       // processed. These errors are stored for us to get later so that no one
       // field stops the processing of an entity. If there was an error somewhere
@@ -391,6 +390,7 @@ class EntityProcessor extends ProcessorAbstract {
 
       return $entity;
     }
+
     return FALSE;
   }
 

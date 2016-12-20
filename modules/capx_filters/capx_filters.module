@@ -84,9 +84,6 @@ function capx_filters_views_data_alter(&$data) {
 /**
  * Implements hook_capx_pre_entity_create_alter().
  */
-/**
- * Implements hook_capx_pre_entity_create_alter().
- */
 function capx_filters_capx_pre_entity_create_alter(&$values) {
   /** @var \CAPx\Drupal\Mapper\EntityMapper $mapper */
   $mapper = NULL;
