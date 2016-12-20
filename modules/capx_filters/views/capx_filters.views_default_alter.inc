@@ -11,7 +11,7 @@
 function capx_filters_views_default_views_alter(&$views) {
 
   // Only alter the importers view.
-  if (isset($views['capx_importers'])) {
+  if (!isset($views['capx_importers'])) {
     return;
   }
 
