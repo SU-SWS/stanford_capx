@@ -1,8 +1,8 @@
 name = CAPx Filters
 core = 7.x
 package = Stanford CAPx
-project = stanford_capx
-version = 7.x-1.0-dev
+project = capx_filters
+version = 7.x-2.0-dev
 
 files[] = views/views_handler_filters_link.inc
 
