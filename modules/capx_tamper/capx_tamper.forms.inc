@@ -69,7 +69,7 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
 
     $form['tampers'][$target] = array(
       'caption' => array(
-        '#markup' => t('!from -> !to', array(
+        '#markup' => t('!to <- !from', array(
           '!from' => $path,
           '!to' => $target_label,
         )),
@@ -158,7 +158,7 @@ function capx_tamper_list_form_submit($form, &$form_state) {
 function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $target_source) {
   list($target, $source) = explode(':', hex2bin($target_source), 2);
 
-  drupal_set_title(t('Add Tamper Plugin for !from -> !to', array(
+  drupal_set_title(t('Add Tamper Plugin for !to <- !from', array(
     '!from' => $source,
     '!to' => $target,
   )));
@@ -233,7 +233,10 @@ function capx_tamper_add_form($form, &$form_state, CFEntity $mapper, $target_sou
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-  $importer = new CapxTamper($mapper);
+
+  $parser = new CapxTamperParser();
+  $processor = new CapxTamperProcessor($mapper);
+  $importer = new CapxTamper($mapper, $parser, $processor);
 
   $form['plugin']['settings'] += $plugin['form']($importer, $source, array(), $form_state);
   $form['add'] = array(
@@ -356,7 +359,11 @@ function capx_tamper_edit_form($form, &$form_state, CFEntity $mapper, $tamper_id
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-  $importer = new CapxTamper($mapper);
+
+  $parser = new CapxTamperParser();
+  $processor = new CapxTamperProcessor($mapper);
+  $importer = new CapxTamper($mapper, $parser, $processor);
+
   $form['settings'] += $plugin['form']($importer, $tamper->source, $tamper->settings, $form_state);
 
   $form['save'] = array(

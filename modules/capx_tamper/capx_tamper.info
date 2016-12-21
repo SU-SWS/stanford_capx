@@ -1,7 +1,8 @@
 name = CAPx Tamper
 core = 7.x
-version = 7.x-1.0-dev
+version = 7.x-2.0-dev
 package = Stanford CAPx
+project = capx_tamper
 
 files[] = CapxTamper.inc
 files[] = views/views_handler_tamper_link.inc

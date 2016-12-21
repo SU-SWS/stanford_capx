@@ -104,10 +104,6 @@ function capx_tamper_menu() {
  */
 function capx_tamper_mapper_load($mapper_id) {
   $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
-//  if (!$mapper) {
-//    drupal_not_found();
-//    drupal_exit();
-//  }
   return $mapper;
 }
 

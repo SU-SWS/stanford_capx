@@ -6,7 +6,7 @@
  */
 
 /**
- * Field handler to present a link to the node.
+ * Field handler to present a link to the tamper edit form.
  *
  * @ingroup views_field_handlers
  */
@@ -52,7 +52,7 @@ class views_handler_tamper_link extends views_handler_field_entity {
   public function render_link($mapper) {
     $this->options['alter']['make_link'] = TRUE;
     $this->options['alter']['path'] = "admin/config/capx/mapper/" . $mapper->getMachineName() . '/tamper';
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('Tamper');
     return $text;
   }
 
