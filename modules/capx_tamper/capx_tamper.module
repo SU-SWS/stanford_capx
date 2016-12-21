@@ -94,6 +94,20 @@ function capx_tamper_menu() {
 }
 
 /**
+ * Loader for menu & pages.
+ *
+ * @param string $mapper_id
+ *   Machine name of the Capx Mapper.
+ *
+ * @return \CAPx\Drupal\Entities\CFEntity
+ *   CAPx Mapper.
+ */
+function capx_tamper_mapper_load($mapper_id) {
+  $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+  return $mapper;
+}
+
+/**
  * Takes the configurations of the CAPx Mapper and gives the available sources.
  *
  * @param CFEntity $mapper
@@ -229,7 +243,7 @@ function capx_tamper_save_instance($tamper) {
 
   // Validity check.
   list($mapper_id) = explode('-', $tamper['id']);
-  if ($mapper_id != $tamper['mapper'] || !capx_cfe_load_by_machine_name($mapper_id, 'mapper')) {
+  if ($mapper_id != $tamper['mapper'] || !capx_tamper_mapper_load($mapper_id)) {
     drupal_set_message(t('Invalid CAPx Mapper "%mapper" in tamper plugin "%description"', array(
       '%mapper' => $mapper_id,
       '%description' => $tamper['description'],
@@ -273,7 +287,7 @@ function capx_tamper_delete_instance($tamper) {
  */
 function capx_tamper_invalidate_etags($mapper_id) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
-  $mapper = capx_cfe_load_by_machine_name($mapper_id, 'mapper');
+  $mapper = capx_tamper_mapper_load($mapper_id);
   CAPx::invalidateEtags('mapper', $mapper);
 }
 
@@ -382,6 +396,7 @@ function capx_tamper_alter_data($entity, &$data, $field_name) {
   $mapper = $e->capxMapper;
   /** @var CFEntity $cfe_mapper */
   $cfe_mapper = $mapper->getMapper();
+
 
   // Sets an object to be used for particular tamper plugins.
   // @see feeds_tamper_copy_callback().
