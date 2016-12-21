@@ -12,7 +12,7 @@
  * @param  [type] $remote_data_paths [description]
  * @return [type]                    [description]
  */
-function hook_capx_pre_map_field_alter(&$entity, &$field_name, &$remote_data_paths) {
+function hook_capx_pre_map_field_alter(&$entity, &$field_name, &$remote_data_paths, &$data) {
 
 }
 

@@ -43,7 +43,7 @@ class EntityImporter implements ImporterInterface {
    *   The HTTPClient to use. Usually GuzzleClient.
    */
   public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
-
+    $mapper->setImporter($importer->getMachineName());
     $this->setImporter($importer);
     $this->setMapper($mapper);
     $this->setClient($client);
