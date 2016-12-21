@@ -35,6 +35,7 @@ class EntityMapper extends MapperAbstract {
     // Always attach the profileId to the entity
     $raw = $entity->value();
     $raw->capx['profileId'] = $data['profileId'];
+    $raw->capxMapper = $this;
     $entity->set($raw);
 
     // Store this for later.
@@ -100,6 +101,7 @@ class EntityMapper extends MapperAbstract {
     /** @var \EntityDrupalWrapper $entity */
     $entity = $this->getEntity();
     $error = FALSE;
+    $d = $data;
 
     // Loop through each field and run a field processor on it.
     foreach ($config['fields'] as $fieldName => $remoteDataPaths) {
@@ -111,7 +113,7 @@ class EntityMapper extends MapperAbstract {
         if ($fieldInfoInstance) {
           $info = array();
 
-          drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths);
+          drupal_alter('capx_pre_map_field', $entity, $fieldName, $remoteDataPaths, $data);
 
           // Allow just one path as a string.
           // @todo For data structures like files we shouldn't convert data path to array.
@@ -175,6 +177,7 @@ class EntityMapper extends MapperAbstract {
           drupal_alter('capx_post_map_field', $entity, $fieldName);
         }
       }
+      $data = $d;
     }
 
     // Set the entity again for changes.
@@ -205,6 +208,7 @@ class EntityMapper extends MapperAbstract {
 
     // Loop through each property and run a property processor on it.
     foreach ($config['properties'] as $propertyName => $remoteDataPath) {
+      drupal_alter('capx_pre_property_set', $entity, $data, $propertyName);
       try {
         $info = $this->getRemoteDataByJsonPath($data, $remoteDataPath);
       }

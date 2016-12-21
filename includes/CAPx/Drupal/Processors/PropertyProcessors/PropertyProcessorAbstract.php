@@ -34,8 +34,6 @@ abstract class PropertyProcessorAbstract implements PropertyProcessorInterface {
 
     $data = is_array($data) ? array_shift($data) : $data;
 
-    drupal_alter('capx_pre_property_set', $entity, $data, $propertyName);
-
     if (empty($data)) {
       // @todo Do we really need to log this?
       $this->logIssue(new \Exception(t('Got empty property value.')));
