@@ -26,10 +26,10 @@ class CapxTamper {
    * @param \CAPx\Drupal\Entities\CFEntity $mapper
    *   Mapper in use.
    */
-  public function __construct(CFEntity $mapper) {
+  public function __construct(CFEntity $mapper, CapxTamperParser $parser, CapxTamperProcessor $processor) {
     $this->mapper = $mapper;
-    $this->parser = new CapxTamperParser();
-    $this->processor = new CapxTamperProcessor($mapper);
+    $this->parser = $parser;
+    $this->processor = $processor;
   }
 
 }
