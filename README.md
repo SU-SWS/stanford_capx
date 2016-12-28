@@ -1,6 +1,5 @@
 # Stanford CAPx
-#### Version 2.0-PHP54
-
+#### Version 3.0-php54
 
 Stanford CAP Extensible module builds on some great work. This module provides an interface for administrators to pull information directly from the CAP API into Drupal. This allows profile owners to continue to manage their profile information on the CAP web service and have that information automatically reflected into a Drupal website.
 
