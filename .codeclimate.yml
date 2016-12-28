@@ -41,3 +41,6 @@ exclude_paths:
 - "test/**/*"
 - "**/vendor/**/*"
 - "**.min.*"
+- "tests/"
+- "spec/"
+- "**/vendor/"
