@@ -1,12 +1,13 @@
 engines:
   # https://docs.codeclimate.com/docs/eslint
-  # ES Linting is disabled as it requires an .eslintrc to be present. 
-  # eslint:
-  #  enabled: true
+  # ES Linting is disabled as it requires an .eslintrc file to be present. 
+  eslint:
+    enabled: false
   # Turn css lint off because it does not have config to turn off individual 
   # checks. It is far too noisey for us right now.
   csslint:
     enabled: false
+  # We don't lint our coffee. Eew.
   coffeelint:
     enabled: false
   # SCSS Lint requires a .scss-lint.yml file in the repo in order to tweak settings.
