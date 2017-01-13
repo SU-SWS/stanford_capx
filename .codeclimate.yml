@@ -1,24 +1,69 @@
 engines:
-  eslint:
-    enabled: true
+  # https://docs.codeclimate.com/docs/eslint
+  # ES Linting is disabled as it requires an .eslintrc to be present. 
+  # eslint:
+  #  enabled: true
+  # Turn css lint off because it does not have config to turn off individual 
+  # checks. It is far too noisey for us right now.
   csslint:
+    enabled: false
+  coffeelint:
+    enabled: false
+  # SCSS Lint requires a .scss-lint.yml file in the repo in order to tweak settings.
+  # Withouth the .scss-lint.yml file it will run with the defaults.
+  # Defaults file: https://github.com/brigade/scss-lint/blob/master/config/default.yml
+  scss-lint:
     enabled: true
   phpcodesniffer:
     enabled: true
     config:
       file_extensions: "php,inc,install,module,profile"
-      standard: "Drupal"
+      standard: "Drupal,DrupalPractice"
   phpmd:
     enabled: true
     config:
       file_extensions:
-      - inc
-      - module
-      - profile
-      - php
-      - install
-  scss-lint:
+        - inc
+        - module
+        - profile
+        - php
+        - install
+      # https://phpmd.org/rules/index.html
+      # The following sets include everything except the controversial set.
+      # We can configure these further through .xml files. See docs.
+      rulesets: "cleancode,codesize,design,naming,unusedcode"
+  # https://docs.codeclimate.com/docs/phan
+  phan:
     enabled: true
+    config:
+      file_extensions: "php,module,profile,inc"
+      # minimum-severity: 1
+      # ignore-undeclared: true
+      # quick: true
+      # backward-compatiility-checks: true
+      # dead-code-detection: true
+  # https://docs.codeclimate.com/docs/duplication
+  duplication:
+    enabled: true
+    # exclude_paths:
+    #   - examples/
+    config:
+      languages:
+        javascript:
+          mass_threshold: 50
+          # count_threshold: 3
+        php:
+          mass_threshold: 60
+  fixme:
+    enabled: true
+    config:
+      strings:
+      - FIXME
+      - BUG
+      - TODO
+      - todo
+      - dpm
+      - dsm
 ratings:
   paths:
   - "**.inc"
@@ -30,7 +75,7 @@ ratings:
   - "**.scss"
   - "**.sass"
   - "**.js"
-##exclude these files/paths
+# exclude these files/paths
 exclude_paths:
 - "**.features.**"
 - "**.views_default.inc"
