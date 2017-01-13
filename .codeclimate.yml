@@ -27,16 +27,12 @@ engines:
   phpmd:
     enabled: true
     config:
-      file_extensions:
-      - inc
-      - module
-      - profile
-      - php
-      - install
       # https://phpmd.org/rules/index.html
       # The following sets include everything except the controversial set.
       # We can configure these further through .xml files. See docs.
       rulesets: "cleancode,codesize,design,naming,unusedcode"
+      # Include special Drupal file extensions.
+      file_extensions: "inc,module,profile,php,install"
   # https://docs.codeclimate.com/docs/phan
   phan:
     enabled: true
