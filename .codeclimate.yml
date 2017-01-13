@@ -16,6 +16,11 @@ engines:
     enabled: true
   phpcodesniffer:
     enabled: true
+    checks:
+      Drupal Commenting FunctionComment TypeHintMissing:
+        enabled: false
+      DrupalPractice Commenting CommentEmptyLine SpacingAfter:
+        enabled: false
     config:
       file_extensions: "php,inc,install,module,profile"
       standard: "Drupal,DrupalPractice"
