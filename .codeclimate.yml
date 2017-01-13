@@ -38,7 +38,7 @@ engines:
     config:
       file_extensions: "php,module,profile,inc"
       # minimum-severity: 1
-      # ignore-undeclared: true
+      ignore-undeclared: true
       # quick: true
       # backward-compatiility-checks: true
       # dead-code-detection: true
