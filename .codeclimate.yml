@@ -5,6 +5,9 @@ engines:
     enabled: false
   csslint:
     enabled: true
+    checks:
+      overqualified-elements:
+        enabled: false
   # We don't lint our coffee. Eew.
   coffeelint:
     enabled: false
@@ -23,6 +26,10 @@ engines:
       SelectorDepth:
         enabled: false
       QualifyingElement:
+        enabled: false
+      VendorPrefix:
+        enabled: false
+      LeadingZero:
         enabled: false
   phpcodesniffer:
     enabled: true
@@ -53,9 +60,6 @@ engines:
         enabled: false
       CleanCode/ElseExpression:
         enabled: false
-      CyclomaticComplexity:
-        enabled: true
-        reportLevel: 20
       CleanCode/BooleanArgumentFlag:
         enabled: false
     config:
