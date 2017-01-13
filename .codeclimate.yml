@@ -54,6 +54,7 @@ engines:
       CleanCode/ElseExpression:
         enabled: false
       CyclomaticComplexity:
+        enabled: true
         reportLevel: 20
       CleanCode/BooleanArgumentFlag:
         enabled: false
