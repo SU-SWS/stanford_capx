@@ -21,11 +21,20 @@ engines:
         enabled: false
       DrupalPractice Commenting CommentEmptyLine SpacingAfter:
         enabled: false
+      Drupal NamingConventions ValidFunctionName ScopeNotCamelCaps:
+        enabled: false
     config:
       file_extensions: "php,inc,install,module,profile"
       standard: "Drupal,DrupalPractice"
   phpmd:
     enabled: true
+    checks:
+      Design/WeightedMethodCount:
+        enabled: false
+      CleanCode/StaticAccess:
+        enabled: false
+      CleanCode/ElseExpression:
+        enabled: false
     config:
       # https://phpmd.org/rules/index.html
       # The following sets include everything except the controversial set.
