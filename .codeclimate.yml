@@ -48,6 +48,8 @@ engines:
         enabled: false
       DrupalPractice General ClassName ClassPrefix:
         enabled: false
+      Drupal NamingConventions ValidClassName NoUnderscores:
+        enabled: false
     config:
       file_extensions: "php,inc,install,module,profile"
       standard: "Drupal,DrupalPractice"
