@@ -50,7 +50,8 @@ function stanford_capx_entity_info() {
   );
 
   // The type entity allows us to create bundles for the above entity. You can
-  // find additional bundle type information in the stanford_capx_cfe_types hook.
+  // find additional bundle type information in the stanford_capx_cfe_types
+  // hook.
   $return['capx_cfe_type'] = array(
     'label' => t('Configuration Entity Type'),
     'entity class' => '\CAPx\Drupal\Entities\CFEntityType',
@@ -106,9 +107,6 @@ function stanford_capx_default_capx_cfe_type() {
 
 /**
  * Implements hook_entity_info_alter().
- *
- * @param array $entity_info
- *   The entity info as known by drupal.
  */
 function stanford_capx_entity_info_alter(array &$entity_info) {
   foreach (stanford_capx_get_types() as $type => $info) {
@@ -174,7 +172,7 @@ function capx_cfe_load($cfid, $reset = FALSE) {
  * @return mixed
  *   An entity object or false.
  */
-function capx_cfe_load_multiple($cfids = FALSE, $conditions = array(), $reset = FALSE) {
+function capx_cfe_load_multiple($cfids = FALSE, array $conditions = array(), $reset = FALSE) {
   return entity_load('capx_cfe', $cfids, $conditions, $reset);
 }
 
