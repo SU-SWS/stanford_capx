@@ -1,6 +1,6 @@
 engines:
   # https://docs.codeclimate.com/docs/eslint
-  # ES Linting requires an .eslintrc file to tweak checks. 
+  # ES Linting requires an .eslintrc file to tweak checks.
   eslint:
     enabled: false
   csslint:
@@ -128,3 +128,4 @@ exclude_paths:
 - "tests/"
 - "spec/"
 - "**/vendor/"
+- "**.api.php"
