@@ -1,6 +1,34 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta1, 2017-01-16
+---------------------------------
+- Exportables!
+  Yes, you can finally put your configuration in a feature or directly copy a
+  mapper from one site to the next via copy and paste!
+- Code climate updates and some code clean up
+- Upgrade hooks from 2.x -> 3.x to ensure you get the best.
+
+Stanford CAPx 7.x-2.1, 2017-01-16
+---------------------------------
+- Tamper data
+  You can now alter the data before it gets saved to your entity directly
+  through the UI. Very similar to Feeds Tamper Data.
+- Filters for importers
+  Perhaps you didn't want everyone in that organization after all. You can now
+  set conditions on the importers on who to import.
+- Webauth Integration
+  Now when you create user entities you can have them automatically linked up
+  with webauth so they may log in.
+- Simple SAML PHP auth Integration
+  Instead of webauth you can use stanford_ssp to authenticate user entities
+  created through CAPx
+- Performance improvements
+  Wee speed.
+- Orphan processing performance improvements
+- Orphan processing logic enhancements
+- Minor bug fixes
+
 Stanford CAPx 7.x-2.0, 2016-05-27
 ---------------------------------
 - Entity relationships!
