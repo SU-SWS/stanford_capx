@@ -102,7 +102,7 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
       $form['tampers'][$target][$tamper->id]['enabled'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enabled'),
-        '#default_value' => !$tamper->disabled,
+        '#default_value' => @!$tamper->disabled,
       );
     }
     $form['tampers'][$target]['add_link'] = array(
