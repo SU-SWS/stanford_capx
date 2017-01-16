@@ -128,3 +128,4 @@ exclude_paths:
 - "tests/"
 - "spec/"
 - "**/vendor/"
+- "**.api.php"

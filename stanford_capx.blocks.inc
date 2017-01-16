@@ -238,7 +238,7 @@ function stanford_capx_data_browser_launch_block() {
     array(
       'rows' => $rows,
       'header' => $header,
-      'sticky' => FALSE
+      'sticky' => FALSE,
     )
   );
 
