@@ -1,6 +1,6 @@
 name = CAPx Tamper
 core = 7.x
-version = 7.x-3.0-beta1
+version = 7.x-3.0-dev
 package = Stanford CAPx
 project = capx_tamper
 
