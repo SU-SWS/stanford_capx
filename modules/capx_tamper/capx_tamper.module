@@ -288,7 +288,13 @@ function capx_tamper_delete_instance($tamper) {
 function capx_tamper_invalidate_etags($mapper_id) {
   /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
   $mapper = capx_tamper_mapper_load($mapper_id);
-  CAPx::invalidateEtags('mapper', $mapper);
+
+  // Check to be sure the mapper can be loaded. This is getting fired on a
+  // delete mapper function.
+  if ($mapper) {
+    CAPx::invalidateEtags('mapper', $mapper);
+  }
+
 }
 
 /**
