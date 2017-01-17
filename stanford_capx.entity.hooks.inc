@@ -76,7 +76,7 @@ function stanford_capx_entity_info() {
  * List of task Types.
  */
 function stanford_capx_get_types($type_name = NULL) {
-  $types = entity_load_multiple_by_name('capx_cfe_type', isset($type_name) ? array($type_name) : FALSE);
+  $types = entity_load_multiple_by_name('capx_cfe_type', isset($type_name) ? array($type_name) : array());
   return isset($type_name) ? reset($types) : $types;
 }
 
@@ -129,8 +129,13 @@ function stanford_capx_entity_info_alter(array &$entity_info) {
  *   A CFE or false.
  */
 function capx_cfe_load_by_machine_name($machine_name, $type = NULL) {
+
   if (is_null($type)) {
     throw new Exception("\$type is required in capx_cfe_load_by_machine_name");
+  }
+
+  if (!is_string($machine_name)) {
+    throw new Exception("Machine name required for loading by machine name");
   }
 
   $cfes = entity_load_multiple_by_name('capx_cfe', array($machine_name), array('type' => $type));

@@ -166,7 +166,21 @@ function capx_tamper_entity_update($entity, $type) {
     /** @var \CAPx\Drupal\Entities\CFEntity $entity */
     $sources = capx_tamper_get_mapper_sources($entity);
     foreach ($entity->tampers as $id => $tamper) {
-      if (!isset($sources[$tamper->target]) || $sources[$tamper->target] != $tamper->source) {
+
+      // Somewhere along the ling the tamper is getting chagned in to an array.
+      // This has something to do with clearing caches, features rebuild, and
+      // the dark nebulous core that is the entity loading api, ctools, and
+      // features. We need to ensure it is an object.
+      if (!is_object($tamper) && !is_array($tamper)) {
+        throw new Exception("Cannot have a tamper that is not an object or an array.");
+      }
+
+      // Make it great again.
+      if (is_array($tamper)) {
+        $tamper = (object) $tamper;
+      }
+
+      if (!isset($sources[$tamper->target]) || $sources[$tamper->target] !== $tamper->source) {
         capx_tamper_delete_instance($tamper);
       }
     }
