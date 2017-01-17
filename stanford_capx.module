@@ -987,9 +987,16 @@ function stanford_capx_preset_import_form_submit($form, &$form_state) {
   }
 
   // entity_import does not actually save the item.
-  capx_cfe_save($item);
+  // Check to see if this is a replace or a new item.
+  $cfe = capx_cfe_load_by_machine_name($item->machine_name, $item->type);
+  if ($cfe) {
+    capx_cfe_delete($cfe);
+  }
 
+  capx_cfe_save($item);
   drupal_set_message("Item imported successfully", "status");
+
+  $form_state['redirect'] = "admin/config/capx/mapper";
 }
 
 /**

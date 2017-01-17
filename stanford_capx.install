@@ -369,3 +369,30 @@ function stanford_capx_update_7202() {
     $mapper->save();
   }
 }
+
+/**
+ * Upgrade path from 2.x - 3.x
+ */
+function stanford_capx_update_7300() {
+  // db_add_field($table, $field, $spec, $keys_new = array())
+  $status_spec = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0x01,
+    'size' => 'tiny',
+    'description' => 'The exportable status of the entity.',
+  );
+
+  $module_spec = array(
+    'description' => 'The name of the providing module if the entity has been defined in code.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  );
+
+  db_add_field("capx_cfe", "status", $status_spec);
+  db_add_field("capx_cfe", "module", $module_spec);
+  db_add_field("capx_cfe_type", "status", $status_spec);
+  db_add_field("capx_cfe_type", "module", $module_spec);
+
+}
