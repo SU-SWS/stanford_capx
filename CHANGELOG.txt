@@ -3,9 +3,27 @@ Stanford CAPx x.x-x.x, xxxx-xx-xx
 
 php54, 2015-10-19
 ---------------------------------
-
 - Guzzle downgraded to 5.3 to support PHP 5.4
 
+Stanford CAPx 7.x-2.1-php54, 2017-01-16
+---------------------------------
+- Tamper data
+  You can now alter the data before it gets saved to your entity directly
+  through the UI. Very similar to Feeds Tamper Data.
+- Filters for importers
+  Perhaps you didn't want everyone in that organization after all. You can now
+  set conditions on the importers on who to import.
+- Webauth Integration
+  Now when you create user entities you can have them automatically linked up
+  with webauth so they may log in.
+- Simple SAML PHP auth Integration
+  Instead of webauth you can use stanford_ssp to authenticate user entities
+  created through CAPx
+- Performance improvements
+  Wee speed.
+- Orphan processing performance improvements
+- Orphan processing logic enhancements
+- Minor bug fixes
 
 Stanford CAPx 7.x-2.0-php54, 2016-05-27
 ---------------------------------
