@@ -2,7 +2,7 @@
 
 /**
  * @file
- * A collection of forms
+ * A collection of forms.
  */
 
 use CAPx\Drupal\Util\CAPx;
@@ -24,7 +24,6 @@ function stanford_capx_forms_connect_form_validate($form, &$form_state) {
 
   $username = $form_state['values']['stanford_capx_username'];
   $password = $form_state['values']['stanford_capx_password'];
-  $endpoint = $form_state['values']['stanford_capx_api_base_url'];
   $authpoint = $form_state['values']['stanford_capx_api_auth_uri'];
 
   // Do not process a change on an empty password. Re-apply the password from
@@ -207,7 +206,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
   $form['entity-mapping']['entity-type'] = array(
     '#type' => 'select',
     '#title' => t("Select entity type"),
-    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
+    '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : '',
     '#options' => $entity_options,
     '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
     '#disabled' => isset($mapper->machine_name),
@@ -219,7 +218,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
     $form['entity-mapping']['bundle-' . $entity_name] = array(
       '#type' => 'select',
       '#title' => t('Select bundle'),
-      '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
+      '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : '',
       '#options' => $bundle_opts,
       '#default_value' => isset($mapper->bundle_type) ? $mapper->bundle_type : 'stanford_person',
       '#states' => array(
@@ -275,7 +274,7 @@ function stanford_capx_mapper_form_get_entity_mapping_form($form, &$form_state, 
  * @return array
  *   The form array.
  *
- * @todo: Refactor this stupidly long function.
+ * @todo: Refactor this stupidly long function. NPath complexity of 118340. :( .
  */
 function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $mapper = NULL) {
 
@@ -291,7 +290,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
   $form['field-mapping'] = array(
     '#type' => 'fieldset',
     '#title' => t('Field Mapping'),
-    '#description' => t(''),
+    '#description' => '',
     '#collapsed' => FALSE,
     '#collapsible' => FALSE,
     '#tree' => TRUE,
@@ -324,7 +323,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
     $form['field-mapping'][$property_container] = array(
       '#type' => 'fieldset',
       '#title' => t('@name Properties', array("@name" => $entity_machine_name)),
-      '#description' => t(''),
+      '#description' => '',
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       '#states' => array(
@@ -403,7 +402,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       $form['field-mapping'][$field_container] = array(
         '#type' => 'fieldset',
         '#title' => t("@var Fields", array("@var" => $bundle_machine_name)),
-        '#description' => t(''),
+        '#description' => '',
         '#collapsed' => TRUE,
         '#collapsible' => TRUE,
         '#states' => array(
@@ -463,7 +462,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
         $form['field-mapping'][$collection_container][$field_machine_name] = array(
           '#type' => 'fieldset',
           '#title' => t('@name Field Collection', array("@name" => $field_machine_name)),
-          '#description' => t(''),
+          '#description' => '',
           '#collapsed' => TRUE,
           '#collapsible' => TRUE,
           '#states' => array(
@@ -508,7 +507,7 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
       $form['field-mapping'][$reference_container] = array(
         '#type' => 'fieldset',
         '#title' => t('Entity References', array("@name" => $field_machine_name)),
-        '#description' => t(''),
+        '#description' => '',
         '#collapsed' => TRUE,
         '#collapsible' => TRUE,
         '#states' => array(
@@ -560,9 +559,6 @@ function stanford_capx_mapper_form_get_field_mapping_form($form, &$form_state, $
  *   The name of the field.
  * @param object $mapper
  *   The mapper if this is not a new mapper form.
- *
- * @return mixed
- *   The form array or void if something is off.
  */
 function stanford_capx_mapper_form_get_fields_fields(&$form_tree, &$form_state, $field_info_field, $field_instance_info, $field_machine_name, $mapper) {
 
@@ -695,7 +691,7 @@ function stanford_capx_mapper_machine_name_exits($name) {
  * @return array
  *   An array of allowed properties.
  */
-function stanford_capx_filter_properties($entity_type = Null, $properties = array()) {
+function stanford_capx_filter_properties($entity_type = NULL, $properties = array()) {
 
   $blacklist = array();
   $property_keys = array_keys($properties);
@@ -1180,6 +1176,7 @@ function stanford_capx_admin_config_mapper_delete_submit($form, $form_state) {
  * Importer form callback.
  *
  * The main form callback for the importer form ui.
+ * This needs a refactor: NPath complexity of 14155776.
  *
  * @param array $form
  *   The form array.
@@ -1255,7 +1252,7 @@ function stanford_capx_importer_form($form, &$form_state, $importer = NULL) {
     '#empty_option' => t('--Please select--'),
     '#ajax' => array(
       'wrapper' => 'orphan-action-wrapper',
-      'callback' => '_stanford_capx_importer_form_mapper_ajax_callback'
+      'callback' => '_stanford_capx_importer_form_mapper_ajax_callback',
     ),
   );
 
@@ -1844,9 +1841,6 @@ function _stanford_capx_entity_form_get_entity(&$form, &$form_state, $form_id) {
  *   The entity type name.
  * @param object $entity
  *   The entity object.
- *
- * @return mixed
- *   void if something bad happened. The form array if good.
  */
 function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $entity) {
 
@@ -1865,12 +1859,12 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
   // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
-    '#title' => t('CAPx Information'),
+    '#title' => ')'CAPx Information'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#tree' => TRUE,
     '#weight' => -99,
-    '#description' => t(''),
+    '#description' => '',
     '#summary' => t('summary'),
     // The #group value must match the name of the vertical tabs element.
     // In most cases, this is 'additional_settings'.
@@ -1894,8 +1888,8 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
   $mapper_label = entity_label('capx_cfe', $mapper);
   $mapper_path = 'admin/config/capx/mapper/edit/' . $importer->mapper;
   $vars = array(
-    '!importer' => l(check_plain($importer_label), $importer_path),
-    '!mapper' => l(check_plain($mapper_label), $mapper_path),
+    '!importer' => l($importer_label, $importer_path),
+    '!mapper' => l($mapper_label, $mapper_path),
   );
   $form['capx_vertical_tab']['importer'] = array(
     '#prefix' => '<p class="importer"><span class="label">' . t('Imported by:') . '</span><span class="info">',
@@ -1954,9 +1948,6 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
  *   The entity type name.
  * @param object $entity
  *   The entity object.
- *
- * @return mixed
- *   void if something bad happened.
  */
 function stanford_capx_entity_form_disable_mapped_fields(&$form, &$form_state, $entity_type, $entity) {
 
@@ -2077,7 +2068,7 @@ function stanford_capx_form_views_exposed_form_alter(&$form, &$form_state) {
  * @param array $schema
  *   The api endpoint schema.
  *
- * @return string
+ * @return array|string
  *   The formatted schema.
  *
  * @see stanford_capx_mapper_form_validate_element()
