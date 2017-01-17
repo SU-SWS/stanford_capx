@@ -6,6 +6,7 @@
  */
 
 use CAPx\Drupal\Util\CAPx;
+use CAPx\Drupal\Organizations\Orgs as Orgs;
 
 /**
  * Implements hook_entity_info().
@@ -185,8 +186,9 @@ function capx_cfe_save($cfe) {
 
 /**
  * Wrapper function for capx_cfe_save for mappers.
- * @param  [type] $mapper [description]
- * @return [type]         [description]
+ *
+ * @param object $mapper
+ *   The mapper object to save.
  */
 function capx_mapper_save($mapper) {
   capx_cfe_save($mapper);
@@ -194,8 +196,9 @@ function capx_mapper_save($mapper) {
 
 /**
  * Wrapper function for capx_cfe_save for importers.
- * @param  [type] $mapper [description]
- * @return [type]         [description]
+ *
+ * @param object $importer
+ *   The importer object to save.
  */
 function capx_importer_save($importer) {
   capx_cfe_save($importer);
@@ -203,6 +206,9 @@ function capx_importer_save($importer) {
 
 /**
  * Delete single task.
+ *
+ * @param object $cfe
+ *   The configuration entity to delete.
  */
 function capx_cfe_delete($cfe) {
   entity_delete('capx_cfe', entity_id('capx_cfe', $cfe));
@@ -217,38 +223,14 @@ function capx_cfe_delete_multiple($cfids) {
 
 // hook_entity_[action]()
 // /////////////////////////////////////////////////////////////////////////////
-// /////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////.
 
 /**
- * implements hook_entity_delete
- * @param  [type] $entity [description]
- * @param  [type] $type   [description]
- * @return [type]         [description]
+ * Implements hook_entity_delete().
  */
 function stanford_capx_entity_delete($entity, $type) {
   $entity = entity_metadata_wrapper($type, $entity);
   CAPx::deleteProfileRecord($entity);
-}
-
-/**
- * [stanford_capx_entity_insert description]
- * @param  [type] $entity [description]
- * @param  [type] $type   [description]
- * @return [type]         [description]
- */
-function stanford_capx_entity_insert($entity, $type) {
-
-}
-
-
-/**
- * [stanford_capx_entity_update description]
- * @param  [type] $entity [description]
- * @param  [type] $type   [description]
- * @return [type]         [description]
- */
-function stanford_capx_entity_update($entity, $type) {
-
 }
 
 /**
@@ -258,9 +240,10 @@ function stanford_capx_entity_update($entity, $type) {
  * rather than fields. So instead of making a number of calls. Call once and
  * static cache.
  *
- * @param  [type] $entities [description]
- * @param  [type] $type     [description]
- * @return [type]           [description]
+ * @param array $entities
+ *   An array of entities to load keyed by id.
+ * @param string $type
+ *   The entity type.
  */
 function stanford_capx_entity_load($entities, $type) {
 
@@ -285,36 +268,28 @@ function stanford_capx_entity_load($entities, $type) {
 }
 
 /**
- * [stanford_capx_entity_view description]
- * @param  [type] $entity    [description]
- * @param  [type] $type      [description]
- * @param  [type] $view_mode [description]
- * @param  [type] $langcode  [description]
- * @return [type]            [description]
- */
-function stanford_capx_entity_view($entity, $type, $view_mode, $langcode) {
-
-}
-
-/**
  * Add additional data to the organizations vocabulary terms.
  *
  * We need to track the organization aliases in order to find orphaned profiles.
- * @param  [type] $terms [description]
- * @return [type]        [description]
+ *
+ * @param array $terms
+ *   An array of term objects keyed by the term id.
+ *
+ * @return array
+ *   The same array that was passed in but with capx data amended.
  */
 function stanford_capx_taxonomy_term_load($terms) {
 
   // The tids of all the terms being loaded.
   $keys = array_keys($terms);
-  $aliases = \CAPx\Drupal\Organizations\Orgs::getAliasesByTid($keys);
+  $aliases = Orgs::getAliasesByTid($keys);
 
   // Just end if nothing to do.
   if (empty($aliases)) {
-    return;
+    return $terms;
   }
 
-  $vocab_name = \CAPx\Drupal\Organizations\Orgs::getVocabularyMachineName();
+  $vocab_name = Orgs::getVocabularyMachineName();
   // For each term add the aliases to them if they are a part of the org vocab.
   foreach ($terms as &$term) {
     if ($term->vocabulary_machine_name == $vocab_name) {
@@ -327,9 +302,6 @@ function stanford_capx_taxonomy_term_load($terms) {
 
 /**
  * Implements hook_taxonomy_term_save().
- *
- * @param  [type] $terms [description]
- * @return [type]        [description]
  */
 function stanford_capx_taxonomy_term_insert($term) {
   stanford_capx_taxonomy_term_update($term);
@@ -337,8 +309,6 @@ function stanford_capx_taxonomy_term_insert($term) {
 
 /**
  * Implements hook_taxonomy_term_update.
- * @param  [type] $term [description]
- * @return [type]       [description]
  */
 function stanford_capx_taxonomy_term_update($term) {
   if (empty($term->capx['aliases'])) {
@@ -364,11 +334,13 @@ function stanford_capx_taxonomy_term_update($term) {
 
 // Helper & Util
 // /////////////////////////////////////////////////////////////////////////////
-// /////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////.
 
 /**
  * Wrapper for entity_get_info() with restricted types removed.
- * @return [type] [description]
+ *
+ * @return array
+ *   An array of entity type information.
  */
 function capx_entity_get_info() {
   global $CAP_RESTRICTED_ENTITY_TYPES;
