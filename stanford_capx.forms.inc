@@ -1859,7 +1859,7 @@ function stanford_capx_entity_form_add_vt(&$form, &$form_state, $entity_type, $e
   // Create a fieldset that will be included in the vertical tab.
   $form['capx_vertical_tab'] = array(
     '#type' => 'fieldset',
-    '#title' => ')'CAPx Information'),
+    '#title' => 'CAPx Information',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#tree' => TRUE,
