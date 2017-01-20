@@ -352,3 +352,13 @@ function capx_filters_entity_presave($entity, $type) {
 
   }
 }
+
+/**
+ * Implements hook_page_alter().
+ */
+function capx_filters_page_alter(&$page) {
+  if (isset($page['content']['system_main']['#form_id']) && $page['content']['system_main']['#form_id'] == 'capx_filters_edit') {
+    $block = block_load('stanford_capx', 'data_browser_launch');
+    $page['content']['data_browser_launch'] = _block_get_renderable_array(_block_render_blocks(array($block)));
+  }
+}
