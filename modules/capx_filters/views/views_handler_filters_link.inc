@@ -13,18 +13,18 @@
 class views_handler_filters_link extends views_handler_field_entity {
 
   /**
-   * @see parent
+   * {@inheritdoc}
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array('default' => '', 'translatable' => TRUE);
     return $options;
   }
 
   /**
-   * @see parent
+   * {@inheritdoc}
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
@@ -39,9 +39,9 @@ class views_handler_filters_link extends views_handler_field_entity {
   }
 
   /**
-   * @see parent
+   * {@inheritdoc}
    */
-  function render($values) {
+  public function render($values) {
     if ($entity = $this->get_value($values)) {
       return $this->render_link($entity);
     }
@@ -56,7 +56,7 @@ class views_handler_filters_link extends views_handler_field_entity {
    * @return string
    *   The url to the filters edit page.
    */
-  function render_link($importer) {
+  public function render_link($importer) {
     $this->options['alter']['make_link'] = TRUE;
     $this->options['alter']['path'] = "admin/config/capx/importer/" . $importer->getMachineName() . '/filters';
     $text = !empty($this->options['text']) ? $this->options['text'] : t('Filters');
