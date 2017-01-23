@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-2.2-alpha1, 2017-01-23
+---------------------------------
+- Bug fixes from 2.1
+
 Stanford CAPx 7.x-2.1, 2017-01-16
 ---------------------------------
 - Tamper data
