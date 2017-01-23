@@ -5,6 +5,10 @@ php54, 2015-10-19
 ---------------------------------
 - Guzzle downgraded to 5.3 to support PHP 5.4
 
+Stanford CAPx 7.x-2.2-alpha1-php54, 2017-01-23
+---------------------------------
+- Bug fixes from 7.x-2.1-php54
+
 Stanford CAPx 7.x-2.1-php54, 2017-01-16
 ---------------------------------
 - Tamper data
