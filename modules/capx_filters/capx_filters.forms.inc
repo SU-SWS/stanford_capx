@@ -41,7 +41,7 @@ function capx_filters_build_form($action, $importer, $filter_id = -1) {
  * @return array
  *   The form array.
  */
-function capx_filters_list($form, &$form_state, CFEntity $importer, $filter_id = NULL) {
+function capx_filters_list(array $form, array &$form_state, CFEntity $importer, $filter_id = NULL) {
   // Set the page title.
   drupal_set_title($importer->title . " Filters");
 
@@ -111,7 +111,7 @@ function capx_filters_list($form, &$form_state, CFEntity $importer, $filter_id =
  * @param array $form_state
  *   The form state array from submission.
  */
-function capx_filters_list_submit($form, &$form_state) {
+function capx_filters_list_submit(array $form, array &$form_state) {
 
   // Set a global variable so that other hooks can patch up the entity save.
   global $_capx_filters_updated;
@@ -139,7 +139,7 @@ function capx_filters_list_submit($form, &$form_state) {
  * @return array
  *   The form array.
  */
-function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id = -1) {
+function capx_filters_edit(array $form, array &$form_state, CFEntity $importer, $filter_id = -1) {
   $key = '';
   $value = '';
   $comparison = '=';
@@ -153,12 +153,30 @@ function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id =
       $value = $filter['value'];
       $comparison = $filter['comparison'];
       $exclude = $filter['exclude'];
+
+      drupal_set_title(t('!importer Filter #!id', array(
+        '!importer' => $importer->label(),
+        '!id' => $filter_id + 1,
+      )));
     }
     else {
       drupal_not_found();
       drupal_exit();
     }
   }
+  else {
+    drupal_set_title(t('Add Filter to !importer', array('!importer' => $importer->label())));
+  }
+
+  $breadcrumbs = array(
+    l(t('Home'), '/'),
+    l(t('Administration'), '/admin'),
+    l(t('Configuration'), '/admin/config'),
+    l(t('CAPx'), '/admin/config/capx'),
+    l(t('Import'), '/admin/config/capx/import'),
+    l(t($importer->label()), '/admin/config/capx/importer/' . $importer->getMachineName() . '/filters'),
+  );
+  drupal_set_breadcrumb($breadcrumbs);
 
   // Filter exists and is valid. Carry on and generate a form.
   $form = array();
@@ -217,8 +235,17 @@ function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id =
   $form['save'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
+    '#name' => 'submit',
+  );
+  $form['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+    '#name' => 'cancel',
   );
 
+  $form['#attached']['js'][] = drupal_get_path('module', 'stanford_capx') . '/js/stanford_capx.mapper.form.js';
+  $form['#attached']['css'][] = drupal_get_path('module', 'capx_filters') . '/css/capx_filters.css';
+  $form['#attributes'] = array('id' => array('stanford-capx-mapper-form'));
   return $form;
 }
 
@@ -232,7 +259,11 @@ function capx_filters_edit($form, &$form_state, CFEntity $importer, $filter_id =
  * @param array $form_state
  *   The form state array.
  */
-function capx_filters_edit_validate($form, &$form_state) {
+function capx_filters_edit_validate(array $form, array &$form_state) {
+  if ($form_state['clicked_button']['#name'] == 'cancel') {
+    return;
+  }
+
   if ($form_state['values']['comparison'] == 'before' || $form_state['values']['comparison'] == 'after') {
     $date = capx_filters_parse_date($form_state['values']['value']);
     if (!$date) {
@@ -244,12 +275,17 @@ function capx_filters_edit_validate($form, &$form_state) {
 /**
  * Saves the filter to the given CAPx Mapper.
  */
-function capx_filters_edit_submit($form, &$form_state) {
+function capx_filters_edit_submit(array $form, array &$form_state) {
+  /** @var CFEntity $importer */
+  $importer = $form_state['build_info']['args'][0];
+
+  if ($form_state['clicked_button']['#name'] == 'cancel') {
+    $form_state['redirect'] = CAPX_FILTERS_PAGE . "/{$importer->getMachineName()}/filters";
+    return;
+  }
+
   global $_capx_filters_updated;
   $_capx_filters_updated = TRUE;
-
-  // @var CFEntity $importer.
-  $importer = $form_state['build_info']['args'][0];
 
   $filter = array(
     'key' => $form_state['values']['key'],
@@ -294,8 +330,11 @@ function capx_filters_edit_submit($form, &$form_state) {
  * @return array
  *   The form array.
  */
-function capx_filters_delete($form, &$form_state, CFEntity $importer, $filter_id) {
-
+function capx_filters_delete(array $form, array &$form_state, CFEntity $importer, $filter_id) {
+  drupal_set_title(t('Delete Filter #!id from !label?', array(
+    '!id' => $filter_id + 1,
+    '!label' => $importer->label(),
+  )));
   $form = array();
   $form['disclaimer'] = array(
     '#markup' => t('Are you sure you wish to delete this filter? This action cannot be undone'),
@@ -330,7 +369,7 @@ function capx_filters_delete($form, &$form_state, CFEntity $importer, $filter_id
 /**
  * Removes the filter from the CAPx mapper settings array.
  */
-function capx_filters_delete_submit($form, &$form_state) {
+function capx_filters_delete_submit(array $form, array &$form_state) {
 
   // Used in entity save functions elsewhere.
   global $_capx_filters_updated;
