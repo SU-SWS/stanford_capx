@@ -17,7 +17,6 @@ function capx_filters_views_default_views_alter(&$views) {
 
   // Add the filters link field to the view and patch it in to the global
   // re-write field so that the view has the filters link on it.
-
   // Fetch the handler.
   $handler = &$views['capx_importers']->display['default']->handler;
 
