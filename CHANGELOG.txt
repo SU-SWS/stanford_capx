@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta2, 2017-01-23
+---------------------------------
+- Bug fixes from 7.x-3.0-beta1
+
 Stanford CAPx 7.x-3.0-beta1, 2017-01-16
 ---------------------------------
 - Exportables!
