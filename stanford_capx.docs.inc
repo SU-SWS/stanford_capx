@@ -119,7 +119,7 @@ function stanford_capx_jqTree_get($schema_json) {
 /**
  * Traverse the schema and render the desired schema elements.
  *
- * @param array $schema
+ * @param object $schema
  *   The schema array.
  * @param array $parents
  *   The parents for the schema array.
@@ -127,7 +127,7 @@ function stanford_capx_jqTree_get($schema_json) {
  * @return array
  *   The jqtree renderable data.
  */
-function stanford_capx_jqTree_render(array &$schema, array $parents = array()) {
+function stanford_capx_jqTree_render(&$schema, array $parents = array()) {
   // Initialize variables for collecting the field metadata.
   $branch = array();
   $metadata = array();
