@@ -226,7 +226,7 @@ function stanford_capx_jqTree_render(&$schema, array $parents = array()) {
  * @return mixed
  *   False if there was an error.
  */
-function stanford_capx_sample_data_render(array $sample_data) {
+function stanford_capx_sample_data_render($sample_data) {
   // Is there a boolean value in the $sample_data array?
   if (is_array($sample_data)) {
     if (count($sample_data)) {
