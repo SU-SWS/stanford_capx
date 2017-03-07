@@ -156,8 +156,6 @@ Staff Type | $.titles.*.type
 
 **Note:** The profiles displayed on this page are only profiles imported from the CAPx module.
 
-[Learn more about the Profiles tab »] (profiles.md)
-
 ###Help
 
 Use the Help tab for quick information and helpful tips on using and setting up the CAPx module.
