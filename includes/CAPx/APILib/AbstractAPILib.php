@@ -195,6 +195,11 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
       $options = array_merge($options, $extraOptions);
     }
 
+    // This is bad idea. Need to find a better way to do this.
+    if (variable_get("stanford_capx_ignore_ssl", TRUE)) {
+      $options['verify'] = FALSE;
+    }
+    
     // Build and make the request.
     $response = FALSE;
     try {
