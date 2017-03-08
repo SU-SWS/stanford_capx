@@ -44,6 +44,9 @@ class HTTPClient {
    */
   public function __construct() {
     $client = new GuzzleClient(['defaults' => ['auth' => 'oauth']]);
+    if (variable_get("stanford_capx_ignore_ssl", FALSE)) {
+      $client->setDefaultOption('verify', FALSE);
+    }
     $this->setHttpClient($client);
   }
 
@@ -82,6 +85,9 @@ class HTTPClient {
 
     // If we do not have a client we need to create one.
     $client = new GuzzleClient($this->getEndpoint());
+    if (variable_get("stanford_capx_ignore_ssl", FALSE)) {
+      $client->setDefaultOption('verify', FALSE);
+    }
     $this->setHttpClient($client);
 
     return $client;
