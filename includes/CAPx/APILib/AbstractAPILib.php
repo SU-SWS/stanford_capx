@@ -199,7 +199,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     if (variable_get("stanford_capx_ignore_ssl", TRUE)) {
       $options['verify'] = FALSE;
     }
-    
+
     // Build and make the request.
     $response = FALSE;
     try {
