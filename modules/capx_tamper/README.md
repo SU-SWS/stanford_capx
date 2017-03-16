@@ -1,5 +1,5 @@
 # Stanford CAPx Tampers
-#### Version 3.0-php54
+#### Version 3.0-beta3-php54
 
 CAPx Tampers provide the option to alter the data from the API before saving it to a profile. Much of this functionality is inspired by the feeds_tamper module and additional help can be found at that resource.
 
