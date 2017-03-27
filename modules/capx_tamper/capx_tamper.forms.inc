@@ -55,6 +55,9 @@ function capx_tamper_list_form($form, &$form_state, CFEntity $mapper, $source = 
   $sources = capx_tamper_get_mapper_sources($mapper);
 
   foreach ($sources as $target => $path) {
+    if (!$path) {
+      continue;
+    }
     $path_tampers = capx_tamper_load_tampers(array(
       'mapper' => $mapper->getMachineName(),
       'target' => $target,
