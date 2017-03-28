@@ -58,7 +58,7 @@
 env:
   global:
     - PRODUCT_NAME=""
-    - ENABLE_MODULES="stanford_capx capx_auto_nodetitle capx_filters capx_issue_collector capx_tamper"
+    - ENABLE_MODULES="stanford_person stanford_capx capx_auto_nodetitle capx_filters capx_issue_collector capx_tamper"
     - DISABLE_MODULES="webauth"
     - ONLY_TEST=""
     - DEPLOYER_BRANCH=""
