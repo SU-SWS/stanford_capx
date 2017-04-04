@@ -368,13 +368,7 @@ function stanford_capx_update_7202() {
       $mapper->settings['subquery'] = '';
       $mapper->settings['guuidquery'] = '';
       $mapper->save();
-    } else {
-      $mapper->settings = array();
-      $mapper->settings['multiple'] = FALSE;
-      $mapper->settings['subquery'] = '';
-      $mapper->settings['guuidquery'] = '';
-      $mapper->save();
-    }    
+    }   
   }
 }
 
