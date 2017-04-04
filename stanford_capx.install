@@ -363,10 +363,18 @@ function stanford_capx_update_7201() {
 function stanford_capx_update_7202() {
   $mappers = CAPxMapper::loadAllMappers();
   foreach ($mappers as $mapper) {
-    $mapper->settings['multiple'] = FALSE;
-    $mapper->settings['subquery'] = '';
-    $mapper->settings['guuidquery'] = '';
-    $mapper->save();
+    if(isset($mapper->settings)) {
+      $mapper->settings['multiple'] = FALSE;
+      $mapper->settings['subquery'] = '';
+      $mapper->settings['guuidquery'] = '';
+      $mapper->save();
+    } else {
+      $mapper->settings = array();
+      $mapper->settings['multiple'] = FALSE;
+      $mapper->settings['subquery'] = '';
+      $mapper->settings['guuidquery'] = '';
+      $mapper->save();
+    }    
   }
 }
 
@@ -389,10 +397,17 @@ function stanford_capx_update_7300() {
     'length' => 255,
     'not null' => FALSE,
   );
-
-  db_add_field("capx_cfe", "status", $status_spec);
-  db_add_field("capx_cfe", "module", $module_spec);
-  db_add_field("capx_cfe_type", "status", $status_spec);
-  db_add_field("capx_cfe_type", "module", $module_spec);
-
+  
+  if (!db_field_exists("capx_cfe", "status")) {
+    db_add_field("capx_cfe", "status", $status_spec);
+  }
+  if (!db_field_exists("capx_cfe", "module")) {
+    db_add_field("capx_cfe", "module", $module_spec);
+  }
+  if (!db_field_exists("capx_cfe_type", "status")) {
+    db_add_field("capx_cfe_type", "status", $status_spec);
+  }
+  if (!db_field_exists("capx_cfe_type", "module")) {
+    db_add_field("capx_cfe_type", "module", $module_spec);
+  }
 }
