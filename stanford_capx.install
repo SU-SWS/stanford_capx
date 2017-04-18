@@ -363,12 +363,10 @@ function stanford_capx_update_7201() {
 function stanford_capx_update_7202() {
   $mappers = CAPxMapper::loadAllMappers();
   foreach ($mappers as $mapper) {
-    if(isset($mapper->settings)) {
-      $mapper->settings['multiple'] = FALSE;
-      $mapper->settings['subquery'] = '';
-      $mapper->settings['guuidquery'] = '';
-      $mapper->save();
-    }   
+    $mapper->settings['multiple'] = FALSE;
+    $mapper->settings['subquery'] = '';
+    $mapper->settings['guuidquery'] = '';
+    $mapper->save();  
   }
 }
 
