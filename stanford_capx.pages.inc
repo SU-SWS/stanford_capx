@@ -390,7 +390,7 @@ function stanford_capx_orphan_importer($machine_name) {
   }
 
   // Set the limit.
-  $orphanator->setLimit(variable_get('stanford_capx_batch_limit', 100));
+  $orphanator->setLimit(variable_get('stanford_capx_batch_limit', 50));
 
   // Set the batch items.
   $orphanator->batch();

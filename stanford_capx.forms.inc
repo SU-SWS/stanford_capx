@@ -2191,7 +2191,7 @@ function stanford_capx_config_settings_form($form, &$form_state) {
     '#description' => t('The number of items to process on one sync operation.'),
     '#type' => 'textfield',
     '#required' => TRUE,
-    '#default_value' => variable_get("stanford_capx_batch_limit", 100),
+    '#default_value' => variable_get("stanford_capx_batch_limit", 50),
   );
 
   $options = array();
