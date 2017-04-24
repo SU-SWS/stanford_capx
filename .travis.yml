@@ -62,7 +62,7 @@ env:
     - ONLY_TEST=""
     - DEPLOYER_BRANCH=""
     - DRUPAL_PROFILE_BRANCH=""
-    - CLICKY_BRANCH="HSDO-700-capx"
+    - CLICKY_BRANCH="capx-environment-variables"
     - SCRIPTS_BRANCH=""
 
 language: php
