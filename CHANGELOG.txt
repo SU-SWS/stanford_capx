@@ -1,5 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
+Stanford CAPx 7.x-3.0-beta5, 2017-04-28
+---------------------------------
+- Bug fix in upgrade path from 2.x
+- Upgrade from forked old version of capx_filters
+
 Stanford CAPx 7.x-3.0-beta4, 2017-04-28
 ---------------------------------
 - Bug fix in upgrade path from 2.x
