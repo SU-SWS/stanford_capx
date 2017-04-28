@@ -361,6 +361,10 @@ function stanford_capx_update_7201() {
  * Resave each mapper so they get the new default config keys.
  */
 function stanford_capx_update_7202() {
+  // When updating from before this to 3.x we need to add fields to prevent
+  // errors.
+  stanford_capx_update_7300();
+
   $mappers = CAPxMapper::loadAllMappers();
   foreach ($mappers as $mapper) {
     $mapper->settings['multiple'] = FALSE;
