@@ -5,8 +5,8 @@
  * capx_filters.install
  */
 
-use \CAPx\Drupal\Util\CAPxMapper;
-use \CAPx\Drupal\Util\CAPxImporter;
+use CAPx\Drupal\Util\CAPxMapper;
+use CAPx\Drupal\Util\CAPxImporter;
 
 /**
  * Move filters from mapper to importer.
