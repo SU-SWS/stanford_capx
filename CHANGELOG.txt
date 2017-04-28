@@ -1,5 +1,8 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
+Stanford CAPx 7.x-3.0-beta4-php54, 2017-04-28
+---------------------------------
+- Bug fixes for upgrade path from 2.x
 
 php54, 2015-10-19
 ---------------------------------
