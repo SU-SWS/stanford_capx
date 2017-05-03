@@ -2167,6 +2167,12 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
+  $form['advanced']['stanford_capx_ignore_ssl'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Ignore included certification file'),
+    '#default_value' => variable_get("stanford_capx_ignore_ssl", FALSE),
+  );
+
   $form['#validate'][] = "stanford_capx_forms_connect_form_validate";
   $form['#submit'][] = "stanford_capx_forms_connect_form_submit";
 
