@@ -200,7 +200,7 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     $options['verify'] = drupal_realpath($options['verify']);
 
     // This is bad idea. You should rely on the cert pem above.
-    if (variable_get("stanford_capx_ignore_ssl", FALSE)) {
+    if (variable_get("stanford_capx_ignore_ssl", TRUE)) {
       $options['verify'] = FALSE;
     }
 
