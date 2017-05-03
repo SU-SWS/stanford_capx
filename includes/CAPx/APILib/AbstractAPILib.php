@@ -196,11 +196,25 @@ abstract class AbstractAPILib implements AbstractAPILibInterface {
     }
 
     // Provide a default cert PEM.
-    $options['verify'] = drupal_get_path("module", "stanford_capx") . "/includes/CAPx/APILib/cacert.pem";
-    $options['verify'] = drupal_realpath($options['verify']);
+    $relative_pem_file = drupal_get_path("module", "stanford_capx") . "/includes/CAPx/APILib/cacert.pem";
+    $absolute_pem_file = drupal_realpath($relative_pem_file);
+    $which_pem = variable_get('stanford_capx_verify_pem', FALSE);
+
+    // Allow the option of using the bundled pem file.
+    if ($which_pem !== FALSE) {
+
+      // If the user set the var to a string use that. Otherwise go with the
+      // default.
+      if (is_string($which_pem)) {
+        $options['verify'] = check_plain($which_pem);
+      }
+      else {
+        $options['verify'] = $absolute_pem_file;
+      }
+    }
 
     // This is bad idea. You should rely on the cert pem above.
-    if (variable_get("stanford_capx_ignore_ssl", TRUE)) {
+    if (variable_get("stanford_capx_ignore_ssl", FALSE)) {
       $options['verify'] = FALSE;
     }
 
