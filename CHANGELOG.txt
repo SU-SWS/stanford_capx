@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta6-php54, 2017-05-03
+---------------------------------
+- Allow overriding of cert.pem file
+
 Stanford CAPx 7.x-3.0-beta5-php54, 2017-04-28
 ---------------------------------
 - Bug fix in upgrade path from 2.x
