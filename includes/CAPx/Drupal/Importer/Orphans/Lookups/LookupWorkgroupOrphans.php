@@ -82,8 +82,11 @@ class LookupWorkgroupOrphans implements LookupInterface {
   /**
    * Trims out bloat from a profile and return only the profileId in an array.
    *
-   * @param $results
+   * @param array $results
+   *   An array of results from the API.
+   * 
    * @return array
+   *   An array keyed/valued with profileId => profileId
    */
   private function trimResults($results) {
     $return = array();
@@ -96,4 +99,3 @@ class LookupWorkgroupOrphans implements LookupInterface {
   }
 
 }
-
