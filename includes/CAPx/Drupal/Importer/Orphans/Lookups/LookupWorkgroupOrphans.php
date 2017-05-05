@@ -84,7 +84,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
    *
    * @param array $results
    *   An array of results from the API.
-   * 
+   *
    * @return array
    *   An array keyed/valued with profileId => profileId
    */
