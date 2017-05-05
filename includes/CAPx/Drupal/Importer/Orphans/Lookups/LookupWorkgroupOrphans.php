@@ -50,11 +50,16 @@ class LookupWorkgroupOrphans implements LookupInterface {
     $response = $client->api('profile')->search("privGroups", $groups);
     $results = $response['values'];
 
+    // Trim out the information we don't need so that the php variable doesn't
+    // bloat and cause OOM errors.
+    $results = $this->trimResults($results);
+
     // Pull every existing page from CAPx one by one and merge to the results.
     for ($page = 2; $page <= $response['totalPages']; $page++) {
       $client->setPage($page);
       $response = $client->api('profile')->search("privGroups", $groups);
-      $results = array_merge($results, $response['values']);
+      $trimmed = $this->trimResults($response['values']);
+      $results = array_merge($results, $trimmed);
     }
 
     drupal_alter('capx_orphan_profile_results', $results);
@@ -72,6 +77,25 @@ class LookupWorkgroupOrphans implements LookupInterface {
     }
 
     return $orphans;
+  }
+
+  /**
+   * Trims out bloat from a profile and return only the profileId in an array.
+   *
+   * @param array $results
+   *   An array of results from the API.
+   *
+   * @return array
+   *   An array keyed/valued with profileId => profileId
+   */
+  private function trimResults($results) {
+    $return = array();
+
+    foreach ($results as $profile) {
+      $return[$profile['profileId']] = $profile['profileId'];
+    }
+
+    return $return;
   }
 
 }
