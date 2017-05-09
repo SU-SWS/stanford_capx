@@ -148,7 +148,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     $this->processAdoptedMultiple($profiles);
 
     // If we have no orphans after all of that just end.
-    if (empty($orphans)) {
+    if (empty($orphaned)) {
       return;
     }
 
