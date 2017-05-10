@@ -154,7 +154,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
 
     // Small patch up fix.
     if (isset($orphans["missing"])) {
-      $orphaned = array_merge($orphaned, $orphans["missing"]);
+      $orphaned = $orphaned + $orphans["missing"];
     }
 
     // If no action is required then just skip over this and go to the adopted.
