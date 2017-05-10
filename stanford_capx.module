@@ -731,15 +731,16 @@ function stanford_capx_profile_update($profile_id, $importer) {
   }
 
   $client = $importer->getClient();
-
   $profile = $client->api('profile')->get($profile_id);
 
   // If profile is not an array that means it is no longer in the API and should
   // be an orphan.
-  watchdog('stanford_capx_profile_force_update', "Could not fetch information from the API.", array(), WATCHDOG_INFO);
-  drupal_set_message(t("FAILED to update. Could not fetch information from the API. Please check that the profile exists."), 'error');
-  drupal_goto();
-  return;
+  if (!is_array($profile)) {
+    watchdog('stanford_capx_profile_force_update', "Could not fetch information from the API.", array(), WATCHDOG_INFO);
+    drupal_set_message(t("FAILED to update. Could not fetch information from the API. Please check that the profile exists."), 'error');
+    drupal_goto();
+    return;
+  }
 
   // Allow altering of the results.
   drupal_alter('capx_preprocess_profile_update', $profile, $importer);
