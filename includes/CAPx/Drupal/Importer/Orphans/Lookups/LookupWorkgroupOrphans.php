@@ -59,14 +59,14 @@ class LookupWorkgroupOrphans implements LookupInterface {
       $client->setPage($page);
       $response = $client->api('profile')->search("privGroups", $groups);
       $trimmed = $this->trimResults($response['values']);
-      $results = array_merge($results, $trimmed);
+      $results = $results + $trimmed;
     }
 
     drupal_alter('capx_orphan_profile_results', $results);
 
     // Loop through the results and unset the profiles from the passed in list.
-    foreach ($results as $index => $profile) {
-      unset($profiles[$profile['profileId']]);
+    foreach ($results as $profileId) {
+      unset($profiles[$profileId]);
     }
 
     // If we have any left over we have profiles that are not in this workgroup.
