@@ -158,7 +158,7 @@ class EntityImporterOrphans implements ImporterOrphansInterface {
     }
 
     // If no action is required then just skip over this and go to the adopted.
-    if ($action !== "nothing") {
+    if ($action !== "nothing" && is_array($orphaned)) {
       $this->processOrphans($orphaned);
     }
 
