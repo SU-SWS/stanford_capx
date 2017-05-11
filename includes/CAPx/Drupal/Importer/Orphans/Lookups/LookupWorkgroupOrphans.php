@@ -54,7 +54,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
 
     // If still not a valid response throw an error.
     if (!isset($response['values']) || !is_array($response['values'])) {
-      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing.", array("%data" => serialize($response)), WATCHDOG_ERROR);
+      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing. %data", array("%data" => serialize($response)), WATCHDOG_ERROR);
       throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
     }
 
