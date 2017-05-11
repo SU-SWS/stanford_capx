@@ -66,6 +66,10 @@ class LookupWorkgroupOrphans implements LookupInterface {
     for ($page = 2; $page <= $response['totalPages']; $page++) {
       $client->setPage($page);
       $response = $client->api('profile')->search("privGroups", $groups);
+      if (!isset($response['values']) || !is_array($response['values'])) {
+        watchdog("LookupWorkgroupOrphans", "Client response did not return any values. Cannot proceed with workgroup orphan check.", array(), WATCHDOG_WARNING);
+        throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
+      }
       $trimmed = $this->trimResults($response['values']);
       $results = $results + $trimmed;
     }
