@@ -54,7 +54,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
 
     // If still not a valid response throw an error.
     if (!isset($response['values']) || !is_array($response['values'])) {
-      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing.", array(), WATCHDOG_WARNING);
+      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing.", array("%data" => serialize($response)), WATCHDOG_ERROR);
       throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
     }
 
@@ -67,7 +67,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
       $client->setPage($page);
       $response = $client->api('profile')->search("privGroups", $groups);
       if (!isset($response['values']) || !is_array($response['values'])) {
-        watchdog("LookupWorkgroupOrphans", "Client response did not return any values. Cannot proceed with workgroup orphan check.", array(), WATCHDOG_WARNING);
+        watchdog("LookupWorkgroupOrphans", "Client response did not return any values. Cannot proceed with workgroup orphan check. %data", array("%data" => serialize($response)), WATCHDOG_ERROR);
         throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
       }
       $trimmed = $this->trimResults($response['values']);
