@@ -60,7 +60,7 @@ class LookupWorkgroupOrphans implements LookupInterface {
 
     // Trim out the information we don't need so that the php variable doesn't
     // bloat and cause OOM errors.
-    $results = $this->trimResults($results);
+    $results = $this->trimResults($response['values']);
 
     // Pull every existing page from CAPx one by one and merge to the results.
     for ($page = 2; $page <= $response['totalPages']; $page++) {
