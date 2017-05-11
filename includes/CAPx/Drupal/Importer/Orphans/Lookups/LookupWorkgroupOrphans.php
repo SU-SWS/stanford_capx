@@ -46,7 +46,17 @@ class LookupWorkgroupOrphans implements LookupInterface {
     $limit = variable_get('stanford_capx_batch_limit', 100);
     $client->setLimit($limit);
     $response = $client->api('profile')->search("privGroups", $groups);
-    $results = $response['values'];
+
+    // Try Twice To Ensure we get a valid response.
+    if (!isset($response['values']) || !is_array($response['values'])) {
+      $response = $client->api('profile')->search("privGroups", $groups);
+    }
+
+    // If still not a valid response throw an error.
+    if (!isset($response['values']) || !is_array($response['values'])) {
+      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing.", array(), WATCHDOG_WARNING);
+      throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
+    }
 
     // Trim out the information we don't need so that the php variable doesn't
     // bloat and cause OOM errors.
