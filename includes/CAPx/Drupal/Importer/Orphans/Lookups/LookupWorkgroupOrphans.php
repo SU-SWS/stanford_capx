@@ -43,19 +43,33 @@ class LookupWorkgroupOrphans implements LookupInterface {
     // another request to the server for each work group.
     // Setting limit of items per call to use the batch limit variable
     // so we don't overload the service.
-    $limit = variable_get('stanford_capx_batch_limit', 100);
+    $limit = variable_get('stanford_capx_batch_limit', 50);
     $client->setLimit($limit);
     $response = $client->api('profile')->search("privGroups", $groups);
-    $results = $response['values'];
+
+    // Try Twice To Ensure we get a valid response.
+    if (!isset($response['values']) || !is_array($response['values'])) {
+      $response = $client->api('profile')->search("privGroups", $groups);
+    }
+
+    // If still not a valid response throw an error.
+    if (!isset($response['values']) || !is_array($response['values'])) {
+      watchdog("LookupWorkgroupOrphans", "Client response was false. Possible connectivity issue. Stopped orphan processing. %data", array("%data" => serialize($response)), WATCHDOG_ERROR);
+      throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
+    }
 
     // Trim out the information we don't need so that the php variable doesn't
     // bloat and cause OOM errors.
-    $results = $this->trimResults($results);
+    $results = $this->trimResults($response['values']);
 
     // Pull every existing page from CAPx one by one and merge to the results.
     for ($page = 2; $page <= $response['totalPages']; $page++) {
       $client->setPage($page);
       $response = $client->api('profile')->search("privGroups", $groups);
+      if (!isset($response['values']) || !is_array($response['values'])) {
+        watchdog("LookupWorkgroupOrphans", "Client response did not return any values. Cannot proceed with workgroup orphan check. %data", array("%data" => serialize($response)), WATCHDOG_ERROR);
+        throw new \Exception("Could not fetch workgroups from api in orphan lookup.", 1);
+      }
       $trimmed = $this->trimResults($response['values']);
       $results = $results + $trimmed;
     }
