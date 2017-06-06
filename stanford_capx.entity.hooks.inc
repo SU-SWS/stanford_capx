@@ -245,13 +245,40 @@ function stanford_capx_entity_update($entity, $type) {
 function stanford_capx_entity_load($entities, $type) {
 
   $ids = array_keys($entities);
-  $meta = &drupal_static(__FUNCTION__, NULL);
+  $meta = &drupal_static(__FUNCTION__, array());
 
-  if (empty($meta)) {
-    $meta = db_select("capx_profiles", 'capx')
+  // Some sites have wwaaayyy too many items in the capx_profiles table for this
+  // to load with an appropriate amount of memory. You can thank Zach Chandler
+  // for finding out this edge case. As such, we will apply two different
+  // stategies for fetching the CAPx metadata. If the amount of profile entries
+  // are over a value then switch from one big cached call to multiple pings of
+  // the database. We are trading PHP memory for hammering the DB with multiple
+  // queries.
+
+  $count = db_select('capx_profiles')
+    ->fields(NULL, array('id'))
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  if ($count > variable_get('stanford_capx_entity_load_limit', 10000)) {
+
+    $query_results = db_select("capx_profiles", 'capx')
       ->fields('capx')
+      ->condition('entity_type', $type)
+      ->condition('entity_id', array_keys($entities))
       ->execute()
       ->fetchAllAssoc('entity_id');
+
+    $meta = $meta + $query_results;
+  }
+  else {
+    if (empty($meta)) {
+      $meta = db_select("capx_profiles", 'capx')
+        ->fields('capx')
+        ->execute()
+        ->fetchAllAssoc('entity_id');
+    }
   }
 
   // Add the capx information if it matches.
