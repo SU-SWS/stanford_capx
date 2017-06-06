@@ -247,6 +247,10 @@ function stanford_capx_entity_load($entities, $type) {
   $ids = array_keys($entities);
   $meta = &drupal_static(__FUNCTION__, array());
 
+  if (!isset($meta[$type])) {
+    $meta[$type] = array();
+  }
+
   // Some sites have wwaaayyy too many items in the capx_profiles table for this
   // to load with an appropriate amount of memory. You can thank Zach Chandler
   // for finding out this edge case. As such, we will apply two different
@@ -262,19 +266,19 @@ function stanford_capx_entity_load($entities, $type) {
     ->fetchField();
 
   if ($count > variable_get('stanford_capx_entity_load_limit', 10000)) {
-
+    $query_entities = array_diff_key($entities, $meta[$type]);
     $query_results = db_select("capx_profiles", 'capx')
       ->fields('capx')
       ->condition('entity_type', $type)
-      ->condition('entity_id', array_keys($entities))
+      ->condition('entity_id', array_keys($query_entities))
       ->execute()
       ->fetchAllAssoc('entity_id');
 
-    $meta = $meta + $query_results;
+    $meta[$type] = $meta[$type] + $query_results;
   }
   else {
-    if (empty($meta)) {
-      $meta = db_select("capx_profiles", 'capx')
+    if (empty($meta[$type])) {
+      $meta[$type] = db_select("capx_profiles", 'capx')
         ->fields('capx')
         ->execute()
         ->fetchAllAssoc('entity_id');
@@ -284,7 +288,7 @@ function stanford_capx_entity_load($entities, $type) {
   // Add the capx information if it matches.
   foreach ($ids as $entity_id) {
     // If we do not find a match then carry on.
-    if (isset($meta[$entity_id]) && $meta[$entity_id]->entity_type == $type) {
+    if (isset($meta[$type][$entity_id]) && $meta[$type][$entity_id]->entity_type == $type) {
       $entities[$entity_id]->capx = (array) $meta[$entity_id];
     }
   }
