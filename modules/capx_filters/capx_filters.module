@@ -340,7 +340,7 @@ function capx_filters_entity_presave($entity, $type) {
   if (!$_capx_filters_updated) {
 
     /* @param CFEntity $entity */
-    $orig_entity = capx_cfe_load_by_machine_name($entity->machine_name, 'importer');
+    $orig_entity = capx_cfe_load_by_machine_name($entity->getMachineName(), 'importer');
 
     if (isset($orig_entity->filters)) {
       $entity->settings['filters'] = $orig_entity->filters;
