@@ -288,7 +288,7 @@ function stanford_capx_entity_load($entities, $type) {
   // Add the capx information if it matches.
   foreach ($ids as $entity_id) {
     // If we do not find a match then carry on.
-    if (isset($meta[$type][$entity_id]) && $meta[$type][$entity_id]->entity_type == $type) {
+    if (isset($meta[$type][$entity_id]) && $meta[$type][$entity_id]->entity_type == $type && isset($entities[$entity_id])) {
       $entities[$entity_id]->capx = (array) $meta[$entity_id];
     }
   }
