@@ -258,7 +258,6 @@ function stanford_capx_entity_load($entities, $type) {
   // are over a value then switch from one big cached call to multiple pings of
   // the database. We are trading PHP memory for hammering the DB with multiple
   // queries.
-
   $count = db_select('capx_profiles')
     ->fields(NULL, array('id'))
     ->countQuery()
