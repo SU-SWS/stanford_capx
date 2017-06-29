@@ -70,9 +70,6 @@ php:
   - '5.6'
 
 sudo: required
-dist: trusty
-
-group: edge
 
 mysql:
   database: drupal
