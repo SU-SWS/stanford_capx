@@ -62,20 +62,14 @@ env:
     - ONLY_TEST=""
     - DEPLOYER_BRANCH=""
     - DRUPAL_PROFILE_BRANCH=""
-    - CLICKY_BRANCH=""
-    - SCRIPTS_BRANCH=""
+    - CLICKY_BRANCH="capx-testing"
+    - SCRIPTS_BRANCH="add-colors"
 
 language: php
 php:
   - '5.6'
 
 sudo: required
-
-cache:
-  directories:
-    - $HOME/.cache
-    - $HOME/.composer/cache
-    - $HOME/.drush/cache
 
 mysql:
   database: drupal
