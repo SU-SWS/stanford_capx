@@ -74,12 +74,6 @@ dist: trusty
 
 group: edge
 
-cache:
-  directories:
-    - $HOME/.cache
-    - $HOME/.composer/cache
-    - $HOME/.drush/cache
-
 mysql:
   database: drupal
   username: root
