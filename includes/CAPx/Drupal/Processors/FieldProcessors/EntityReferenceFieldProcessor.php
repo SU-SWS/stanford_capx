@@ -20,7 +20,7 @@ class EntityReferenceFieldProcessor extends FieldTypeProcessor  {
    * Default implementation of put.
    */
   public function put($relatedEntity) {
-    if(!is_object($relatedEntity) || !$relatedEntity){
+    if (!is_object($relatedEntity) || !$relatedEntity) {
       return;
     }
 
