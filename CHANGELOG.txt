@@ -1,5 +1,9 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
+7.x-3.0-beta8-php54           2017-08-11
+----------------------------------------
+- Bug fix for entity reference field mappings.
+
 Stanford CAPx  7.x-3.0-beta7-php54, 2017-05-15
 ----------------------------------------
 - Improved groupgroups orphan check to reduce OOM errors
