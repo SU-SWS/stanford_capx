@@ -1,4 +1,4 @@
-#[CAPx Webauth](https://github.com/SU-SWS/stanford_capx)
+# [CAPx Webauth](https://github.com/SU-SWS/stanford_capx)
 ##### Version: 7.x-3.0-dev
 
 Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama)
