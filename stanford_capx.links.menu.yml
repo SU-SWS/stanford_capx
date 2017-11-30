@@ -1,0 +1,18 @@
+stanford_capx.admin_config:
+  route_name: stanford_capx.settings
+  title: 'Stanford CAPx'
+  parent: system.admin_config
+  description: 'Configure Capx.'
+  weight: -10
+
+stanford_capx.authentication_credentials:
+  title: CAPx Authentication Credentials
+  route_name: stanford_capx.authentication_credentials
+  parent: stanford_capx.admin_page_list
+  description: 'Configure Capx Authentication Credentials.'
+
+stanford_capx.settings:
+  title: CAPx Settings
+  route_name: stanford_capx.settings
+  parent: stanford_capx.admin_page_list
+  description: 'Configure Capx General Settings.'

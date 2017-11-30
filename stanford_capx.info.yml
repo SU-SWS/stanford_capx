@@ -1,0 +1,10 @@
+name: 'Stanford CAPx'
+type: module
+description: 'Syncs content from cap.stanford.edu to Drupal'
+core: 8.x
+package: Stanford
+version: 8.x-1.0-dev
+# dependencies:
+#   - layout_plugin
+# libraries:
+#   - /example_name

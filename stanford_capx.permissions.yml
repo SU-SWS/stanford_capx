@@ -1,0 +1,7 @@
+# Since the access to our new custom pages will be granted based on special
+# permissions, we need to define what those permissions are here. This ensures
+# that they are available to enable on the permissions administration pages.
+
+'administer stanford_capx':
+  title: Administer Stanford CAPx
+  description: Allow users to set and change configuration settings.

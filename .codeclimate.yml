@@ -64,6 +64,8 @@ engines:
         enabled: false
       CleanCode/BooleanArgumentFlag:
         enabled: false
+      UnusedFormalParameter:
+        enabled: false
     config:
       # https://phpmd.org/rules/index.html
       # The following sets include everything except the controversial set.
@@ -110,7 +112,6 @@ ratings:
   - "**.profile"
   - "**.php"
   - "**.install"
-  - "**.css"
   - "**.scss"
   - "**.sass"
   - "**.js"
@@ -129,3 +130,4 @@ exclude_paths:
 - "spec/"
 - "**/vendor/"
 - "**.api.php"
+- "*.twig"
