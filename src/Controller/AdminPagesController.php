@@ -26,10 +26,11 @@ class AdminPagesController extends ControllerBase {
    * @return [type] [description]
    */
   public function authenticationPage() {
-    $content = "";
-    return [
-      '#markup' => $content,
-    ];
+    $content = [];
+    $content['authform'] = \Drupal::formBuilder()
+      ->getForm('Drupal\stanford_capx\Form\AuthenticationForm');
+
+    return $content;
   }
 
   /**

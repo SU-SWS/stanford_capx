@@ -1,0 +1,4 @@
+oauth: "https://authz.stanford.edu/oauth/token"
+api: "https://api.stanford.edu"
+username: ~
+password: ~
