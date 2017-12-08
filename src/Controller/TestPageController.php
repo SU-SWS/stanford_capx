@@ -42,20 +42,19 @@ class TestPageController extends ControllerBase {
     $auth->authenticate($username, $password);
     $client = new CAPAPI($guzzle, $auth);
 
+    // Fully loaded profile object.
     $profile = $client->api('profile')->get($profileID);
 
-    // var_dump($profile);
-
+    // Populate the links from the profile.
     $links = [];
     foreach ($profile->internetLinks as $key => $v) {
-      dump($v);
       $links[] = [
         'title' => $v->label->text,
-        'url' => $v->url
+        'uri' => $v->url
       ];
     }
 
-    // Create node object with attached file.
+    // Create node object.
     $node = Node::create([
       'type' => 'stanford_person',
       'title' => $profile->displayName,
