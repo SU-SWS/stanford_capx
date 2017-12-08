@@ -13,25 +13,24 @@
 # ("\Drupal\page_example\Controller\PageExampleController") and a method
 # ("description").
 
-# Access to this path is not restricted. This is notated as _access: 'TRUE'.
-stanford_capx.authentication_credentials:
-  path: 'admin/config/stanford/capx/authentication'
-  defaults:
-    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::authenticationPage'
-    _title: 'Authentication Credentials'
-  requirements:
-    _permission: 'administer stanford_capx'
-
 stanford_capx.settings:
-  path: 'admin/config/stanford/capx/settings'
+  path: 'admin/config/capx'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::settingsPage'
     _title: 'CAPx Settings'
   requirements:
     _permission: 'administer stanford_capx'
 
+stanford_capx.authentication_credentials:
+  path: 'admin/config/capx/authentication'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::authenticationPage'
+    _title: 'Authentication Credentials'
+  requirements:
+    _permission: 'administer stanford_capx'
+
 stanford_capx.test:
-  path: 'admin/config/stanford/capx/test'
+  path: 'admin/config/capx/test'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\TestPageController::test'
     _title: 'CAPx Test Page'

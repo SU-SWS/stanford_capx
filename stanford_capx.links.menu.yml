@@ -1,18 +1,18 @@
-stanford_capx.admin_config:
+stanford_capx.settings:
+  title: CAPx Settings
   route_name: stanford_capx.settings
-  title: 'Stanford CAPx'
   parent: system.admin_config
-  description: 'Configure Capx.'
-  weight: -10
+  description: 'Configure CAPx General Settings.'
+  weight: -5
 
 stanford_capx.authentication_credentials:
   title: CAPx Authentication Credentials
   route_name: stanford_capx.authentication_credentials
-  parent: stanford_capx.admin_page_list
-  description: 'Configure Capx Authentication Credentials.'
+  parent: stanford_capx.settings
+  description: 'Configure CAPx Authentication Credentials.'
 
-stanford_capx.settings:
-  title: CAPx Settings
-  route_name: stanford_capx.settings
-  parent: stanford_capx.admin_page_list
-  description: 'Configure Capx General Settings.'
+stanford_capx.test_page:
+  title: CAPx Test Page
+  route_name: stanford_capx.test
+  parent: stanford_capx.settings
+  description: 'CAPx Testing.'

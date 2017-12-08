@@ -131,6 +131,8 @@ class AuthenticationForm extends FormBase {
       ->set("oauth", $authpoint)
       ->set("api", $endpoint)
       ->save();
+
+    drupal_set_message("Connected to the API successfully.");
   }
 
 }
