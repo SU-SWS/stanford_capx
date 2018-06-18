@@ -43,7 +43,7 @@ abstract class FieldProcessorAbstract implements FieldProcessorInterface {
    * @param array $data
    *   An array of data from the CAP API.
    */
-  public function put($data) {
+  public function put(array $data) {
 
     $entity = $this->getEntity();
     $fieldName = $this->getFieldName();

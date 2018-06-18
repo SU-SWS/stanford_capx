@@ -1,17 +1,20 @@
 <?php
-/**
- * @file
- * @author [author] <[email]>
- */
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
 
+/**
+ * Interface FieldProcessorInterface.
+ *
+ * @package CAPx\Drupal\Processors\FieldProcessors
+ */
 interface FieldProcessorInterface {
 
   /**
    * One entry point for them all!
-   * @param  array $data Data from the CAP API.
+   *
+   * @param array $data
+   *   Data from the CAP API.
    */
-  public function put($data);
+  public function put(array $data);
 
 }
