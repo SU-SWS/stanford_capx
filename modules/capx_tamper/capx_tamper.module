@@ -352,7 +352,7 @@ function capx_tamper_feeds_tamper_copy_callback(&$result, &$item_key, &$path, &$
  */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
   $path = trim($path, '$.');
-  // If an index for an item is give, replace brackets with "." to allow
+  // If an index for an item is given, replace brackets with "." to allow
   // recursion.
   $path = str_replace('[', '.', str_replace(']', '', $path));
 
