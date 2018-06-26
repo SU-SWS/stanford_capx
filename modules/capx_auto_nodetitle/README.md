@@ -1,5 +1,5 @@
 #[CAPX Auto Nodetitle](https://github.com/SU-SWS/stanford_capx/tree/7.x-1.x/modules/capx_auto_nodetitle)
-##### Version: 7.x-3.0-dev
+##### Version: 7.x-3.0-beta8
 
 Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama)
 [Changelog.txt](CHANGELOG.txt)
