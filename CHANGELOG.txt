@@ -1,5 +1,15 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
+
+Stanford CAPx   7.x-3.0-beta8, 2018-06-26
+-----------------------------------------
+- Changed composer type to drupal-custom-module from stanford-module
+- Fixed typos
+- Modified check on capx_filters parsing
+- Fixed bug in capx_tampers
+- Added protection for imports with large result sets
+
+
 Stanford CAPx  7.x-3.0-beta7, 2017-05-15
 ----------------------------------------
 - Improved groupgroups orphan check to reduce OOM errors

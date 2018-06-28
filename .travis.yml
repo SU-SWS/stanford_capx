@@ -70,7 +70,7 @@ php:
   - '5.6'
 
 sudo: required
-dist: precise
+# dist: precise
 
 cache:
   directories:
