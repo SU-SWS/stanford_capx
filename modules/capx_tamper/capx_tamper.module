@@ -351,6 +351,8 @@ function capx_tamper_feeds_tamper_copy_callback(&$result, &$item_key, &$path, &$
  *   For wildcard items, change the correct indexed item.
  */
 function capx_tamper_set_data_by_json_path(&$data, $path, $value, $index = 0) {
+  // Sometimes index is passed as null, so lets cast it to integer all the time.
+  $index = (int) $index;
   $path = trim($path, '$.');
   // If an index for an item is given, replace brackets with "." to allow
   // recursion.
