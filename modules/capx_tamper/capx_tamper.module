@@ -428,20 +428,8 @@ function capx_tamper_alter_data($entity, &$data, $field_name) {
   $items = array();
   foreach (capx_tamper_get_mapper_sources($cfe_mapper) as $path) {
     $item = $mapper->getRemoteDataByJsonPath($data, $path);
-    if (strpos($path, '*') !== FALSE) {
-      $index = $mapper->getIndex();
-      if (isset($item[$index])) {
-        $item = $item[$index];
-      }
-    }
-
-    if (is_array($item)) {
-      if (array_filter($item)) {
-        $item = reset($item);
-      }
-      else {
-        $item = NULL;
-      }
+    if (!is_array($item)) {
+      $item = [$item];
     }
     $items[0][$path] = $item;
   }
@@ -461,12 +449,15 @@ function capx_tamper_alter_data($entity, &$data, $field_name) {
       // the feeds tamper plugin directly.
       $pre_callback = 'capx_tamper_' . $plugin['callback'];
       $key = 0;
-      if (function_exists($pre_callback)) {
-        $pre_callback($result, $key, $path, $field, $tamper->settings, $tamper->source);
+      foreach ($field as $delta => &$field_data) {
+        if (function_exists($pre_callback)) {
+          $pre_callback($result, $key, $path, $field_data, $tamper->settings, $tamper->source);
+        }
+        // Call the feeds tamper. Then set that value back into the data array.
+        $plugin['callback']($result, $key, $path, $field_data, $tamper->settings, $tamper->source);
+
+        capx_tamper_set_data_by_json_path($data, $path, $field_data, $delta);
       }
-      // Call the feeds tamper. Then set that value back into the data array.
-      $plugin['callback']($result, $key, $path, $field, $tamper->settings, $tamper->source);
-      capx_tamper_set_data_by_json_path($data, $path, $field, $mapper->getIndex());
     }
   }
 }
