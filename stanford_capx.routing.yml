@@ -36,3 +36,36 @@ stanford_capx.test:
     _title: 'CAPx Test Page'
   requirements:
     _permission: 'administer stanford_capx'
+
+stanford_capx.map:
+  path: 'admin/config/capx/map'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::mapPage'
+    _title: 'CAPx Map'
+  requirements:
+    _permission: 'administer stanford_capx'
+
+stanford_capx.import:
+  path: 'admin/config/capx/import'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::importPage'
+    _title: 'CAPx Import'
+  requirements:
+    _permission: 'administer stanford_capx'
+
+stanford_capx.profiles:
+  path: 'admin/config/capx/profiles'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::profilesPage'
+    _title: 'CAPx Profiles'
+  requirements:
+    _permission: 'administer stanford_capx'
+
+stanford_capx.help:
+  path: 'admin/config/capx/help'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::helpPage'
+    _title: 'CAPx Help'
+  requirements:
+    _permission: 'administer stanford_capx'
+
