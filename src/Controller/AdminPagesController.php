@@ -96,7 +96,7 @@ class AdminPagesController extends ControllerBase {
     $content .= "<ol><li>";
     $url = URL::fromRoute("stanford_capx.authentication_credentials");
     $link = link::fromtextandurl(t("Settings"), $url)->toString();
-    $content .= t("@connect - connect to the cap api using your authentication credentials.", array("@connect" => $link));
+    $content .= t("@connect - Connect to the CAP API using your authentication credentials.", array("@connect" => $link));
     //$content .= t("!connect - Connect to the CAP API using your authentication credentials.", array("!connect" => l(t("Settings"), "admin/config/capx/authentication")));
     $content .= "</li><li>";
     //$content .= t("!mapping - Create a mapping that links CAP fields to your own fields.", array("!mapping" => l(t("Mapping"), "admin/config/capx/map")));
