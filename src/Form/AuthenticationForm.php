@@ -4,13 +4,15 @@ namespace Drupal\stanford_capx\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use SUSWS\APIAuthLib\Auth;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 
 /**
- * Implements an example form.
+ * Implements the CAPx Authentication form.
  */
 class AuthenticationForm extends FormBase {
 
@@ -34,6 +36,13 @@ class AuthenticationForm extends FormBase {
       '#title' => $this->t('Credentials'),
     );
 
+    $url = URL::fromUri("https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP_API&dtemplate=CAP-OAuth-Info");
+    $link = link::fromtextandurl(t("File a HelpSU request"), $url)->toString();
+    $form['credentials']['description'] = array(
+      '#markup' => t('Please enter your authentication information for the CAP API. If you don\'t have these credentials yet you can @helpsu.',
+        array('@helpsu' => $link)),
+    );
+
     $form['credentials']['username'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Username'),
@@ -54,10 +63,15 @@ class AuthenticationForm extends FormBase {
       '#title' => $this->t('Endpoints'),
     );
 
+    $form['endpoints']['description'] = array(
+      '#markup' => t('Endpoint settings for authentication URIs and CAP API'),
+    );
+
     $form['endpoints']['oauth'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('OAuth Server'),
       '#default_value' => $config->get("oauth"),
+      '#description' => t('CAP API authentication URI.'),
       '#size' => 60,
       '#required' => TRUE,
     );
@@ -66,6 +80,7 @@ class AuthenticationForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('API Server'),
       '#default_value' => $config->get("api"),
+      '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
       '#size' => 60,
       '#required' => TRUE,
     );
@@ -132,7 +147,8 @@ class AuthenticationForm extends FormBase {
       ->set("api", $endpoint)
       ->save();
 
-    drupal_set_message("Connected to the API successfully.");
+    $this->messenger()->addMessage("Connected to the API successfully.");
+    //drupal_set_message("Connected to the API successfully.");
   }
 
 }

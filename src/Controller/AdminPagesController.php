@@ -36,7 +36,7 @@ class AdminPagesController extends ControllerBase {
   }
 
   /**
-   * Athentication Credentials Input Page.
+   * Settings Page.
    *
    * @return [type] [description]
    */
