@@ -1,0 +1,34 @@
+stanford_capx.setting:
+  title: Settings
+  route_name: stanford_capx.settings
+  base_route: stanford_capx.settings
+
+stanford_capx.authentication_credentials:
+  title: Authentication
+  route_name: stanford_capx.authentication_credentials
+  base_route: stanford_capx.settings
+  weight: 10
+
+stanford_capx.map:
+  title: Map
+  route_name: stanford_capx.map
+  base_route: stanford_capx.settings
+  weight: 20
+
+stanford_capx.import:
+  title: Import
+  route_name: stanford_capx.import
+  base_route: stanford_capx.settings
+  weight: 30
+
+stanford_capx.profiles:
+  title: Profiles
+  route_name: stanford_capx.profiles
+  base_route: stanford_capx.settings
+  weight: 40
+
+stanford_capx.help:
+  title: Help
+  route_name: stanford_capx.help
+  base_route: stanford_capx.settings
+  weight: 50
