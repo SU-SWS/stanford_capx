@@ -31,6 +31,7 @@ class AuthenticationForm extends FormBase {
     // Get the config.
     $config = \Drupal::config('stanford_capx.settings');
 
+    // Credentials.
     $form['credentials'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Credentials'),
@@ -58,6 +59,7 @@ class AuthenticationForm extends FormBase {
       '#required' => TRUE,
     );
 
+    // Endpoints.
     $form['endpoints'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Endpoints'),
@@ -88,7 +90,7 @@ class AuthenticationForm extends FormBase {
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => $this->t('Authenticate'),
       '#button_type' => 'primary',
     );
 

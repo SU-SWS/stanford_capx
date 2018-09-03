@@ -2,3 +2,7 @@ oauth: "https://authz.stanford.edu/oauth/token"
 api: "https://api.stanford.edu"
 username: ~
 password: ~
+batch_limit: 50
+default_field_format: "basic_html"
+last_orgs_sync: "never"
+last_schema_sync: "never"

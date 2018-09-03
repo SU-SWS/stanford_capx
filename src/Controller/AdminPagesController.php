@@ -41,10 +41,11 @@ class AdminPagesController extends ControllerBase {
    * @return [type] [description]
    */
   public function settingsPage() {
-    $content = "<p>CAPx imports data from the CAP Network at https://cap.stanford.edu/</p>";
-    return [
-      '#markup' => $content,
-    ];
+    $content['#markup'] = "<p>These are the default configuration settings for importing data from the CAP Network at https://cap.stanford.edu/</p>";
+    $content['authform'] = \Drupal::formBuilder()
+                                  ->getForm('Drupal\stanford_capx\Form\SettingsForm');
+
+    return $content;
   }
 
   /**
