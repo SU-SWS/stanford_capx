@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx   7.x-3.0-beta9, 2018-09-07
+-----------------------------------------
+- Address issues with tampers
+
 Stanford CAPx   7.x-3.0-beta8, 2018-06-26
 -----------------------------------------
 - Changed composer type to drupal-custom-module from stanford-module
