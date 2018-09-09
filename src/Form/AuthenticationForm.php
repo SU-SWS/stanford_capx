@@ -70,7 +70,7 @@ class AuthenticationForm extends FormBase {
     );
 
     $form['endpoints']['oauth'] = array(
-      '#type' => 'textfield',
+      '#type' => 'url',
       '#title' => $this->t('OAuth Server'),
       '#default_value' => $config->get("oauth"),
       '#description' => t('CAP API authentication URI.'),
@@ -79,7 +79,7 @@ class AuthenticationForm extends FormBase {
     );
 
     $form['endpoints']['api'] = array(
-      '#type' => 'textfield',
+      '#type' => 'url',
       '#title' => $this->t('API Server'),
       '#default_value' => $config->get("api"),
       '#description' => t('CAP API endpoint URI, only useful when switching between development/production environment.'),
@@ -150,7 +150,6 @@ class AuthenticationForm extends FormBase {
       ->save();
 
     $this->messenger()->addMessage("Connected to the API successfully.");
-    //drupal_set_message("Connected to the API successfully.");
   }
 
 }

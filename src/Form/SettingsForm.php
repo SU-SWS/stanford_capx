@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Filter;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Html;
 use SUSWS\APIAuthLib\Auth;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
@@ -44,10 +45,10 @@ class SettingsForm extends FormBase {
 
     $form['variables']['batch_limit'] = array(
       '#title' => $this->t('Batch, or cron, processing limit'),
-      '#type' => 'textfield',
-      '#default_value' => $config->get("batch_limit"),
+      '#type' => 'number',
+      '#default_value' => $config->get('batch_limit'),
       '#description' => t('This is the number of items to process in one sync operation.'),
-      '#size' => 5,
+      '#size' => 6,
       '#required' => TRUE,
     );
 
@@ -115,58 +116,26 @@ class SettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    /*
-      // Test to see if we can authenticate.
-      $username = $form_state->getValue('username');
-      $password = $form_state->getValue('password');
-      $authpoint = $form_state->getValue('oauth');
 
-      // See if we can fetch a token.
-      $guzzle = new Client(['defaults' => ['auth' => 'oauth']]);
-      $auth = new Auth($guzzle, $authpoint);
-      try {
-        $auth->authenticate($username, $password);
-      }
-      catch (ConnectException $e) {
-        $form_state->setErrorByName('oauth', $this->t('Could not reach oauth server.'));
-        return;
-      }
-      catch (ClientException $e) {
-        $form_state->setErrorByName('username', $this->t('Invalid credentials.'));
-        $form_state->setErrorByName('password', $this->t('Invalid credentials.'));
-        return;
-      }
-
-      if (!$auth->getAuthApiToken()) {
-        $form_state->setErrorByName('username', $this->t('Failed to authenticate.'));
-        $form_state->setErrorByName('password', $this->t('Failed to authenticate.'));
-      }
-
-    */
     }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /*
       // Get the config.
       $config = \Drupal::service('config.factory')
         ->getEditable("stanford_capx.settings");
 
-      // Save new data.
-      $username = $form_state->getValue('username');
-      $password = $form_state->getValue('password');
-      $authpoint = $form_state->getValue('oauth');
-      $endpoint = $form_state->getValue('api');
+      // Get new data.
+      $batch_limit = Html::escape($form_state->getValue('batch_limit'));
+      $default_field_format = Html::escape($form_state->getValue('default_field_format'));
 
-      $config->set("username", $username)
-        ->set("password", $password)
-        ->set("oauth", $authpoint)
-        ->set("api", $endpoint)
+      // Set the new data
+      $config->set('batch_limit', $batch_limit)
+        ->set("default_field_format", $default_field_format)
         ->save();
 
-    */
       $this->messenger()->addMessage("CAPx settings updated successfully.");
     }
 
