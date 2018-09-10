@@ -348,8 +348,6 @@ function stanford_capx_update_7200() {
     db_add_field($table, $field, $spec);
   }
   
-  db_add_field($table, $field, $spec);
-
 }
 
 /**
