@@ -344,7 +344,9 @@ function stanford_capx_update_7200() {
     'default' => '',
   );
 
-  db_add_field($table, $field, $spec);
+  if (!db_field_exists($table, $field)) {
+    db_add_field($table, $field, $spec);
+  }
 
 }
 
