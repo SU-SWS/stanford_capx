@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx   7.x-3.0-beta10, 2018-09-12
+-----------------------------------------
+- Bug fix: do not attempt to add guuid field if it exists
+
 Stanford CAPx   7.x-3.0-beta9, 2018-09-07
 -----------------------------------------
 - Address issues with tampers
