@@ -49,7 +49,7 @@ class AdminPagesController extends ControllerBase {
   }
 
   /**
-   * Map Page.
+   * Mapping Page.
    *
    * @return [type] [description]
    */
@@ -57,6 +57,17 @@ class AdminPagesController extends ControllerBase {
     $content['#markup']  = "<p>After you have connected to CAP, create a Mapping to link CAP’s fields with your fields.</p>";
     $content['mappingsForm'] = \Drupal::formBuilder()
                                       ->getForm('Drupal\stanford_capx\Form\MappingsForm');
+    return $content;
+  }
+  /**
+   * Create Mapping Page.
+   *
+   * @return [type] [description]
+   */
+  public function createMappingPage() {
+    $content['#markup']  = "<p>Create a new mapping to link CAP’s fields with your fields.</p>";
+    $content['createMappingForm'] = \Drupal::formBuilder()
+                                      ->getForm('Drupal\stanford_capx\Form\CreateMappingForm');
     return $content;
   }
 

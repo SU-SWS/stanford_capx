@@ -45,6 +45,14 @@ stanford_capx.mappings:
   requirements:
     _permission: 'administer stanford_capx'
 
+stanford_capx.create_mapping:
+  path: 'admin/config/capx/mappings/create'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::createMappingPage'
+    _title: 'Create new CAPx mapping'
+  requirements:
+    _permission: 'administer stanford_capx'
+
 stanford_capx.import:
   path: 'admin/config/capx/import'
   defaults:
