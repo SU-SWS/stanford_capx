@@ -48,8 +48,11 @@ class SettingsForm extends FormBase {
       '#type' => 'number',
       '#default_value' => $config->get('batch_limit'),
       '#description' => t('This is the number of items to process in one sync operation.'),
-      '#size' => 6,
+      '#min' => 1,
+      '#max' => 1000,
       '#required' => TRUE,
+      '#size' => 10,
+      '#step' => 1,
     );
 
     $options = array();
@@ -116,8 +119,7 @@ class SettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-
-    }
+  }
 
   /**
    * {@inheritdoc}

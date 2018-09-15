@@ -42,7 +42,7 @@ class AdminPagesController extends ControllerBase {
    */
   public function settingsPage() {
     $content['#markup'] = "<p>These are the default configuration settings for importing data from the CAP Network at https://cap.stanford.edu/</p>";
-    $content['authform'] = \Drupal::formBuilder()
+    $content['settingsForm'] = \Drupal::formBuilder()
                                   ->getForm('Drupal\stanford_capx\Form\SettingsForm');
 
     return $content;
@@ -53,11 +53,11 @@ class AdminPagesController extends ControllerBase {
    *
    * @return [type] [description]
    */
-  public function mapPage() {
-    $content = "<p>After you have connected to CAP, create a Mapping to link CAP’s fields with your fields.</p>";
-    return [
-      '#markup' => $content,
-    ];
+  public function mappingsPage() {
+    $content['#markup']  = "<p>After you have connected to CAP, create a Mapping to link CAP’s fields with your fields.</p>";
+    $content['mappingsForm'] = \Drupal::formBuilder()
+                                      ->getForm('Drupal\stanford_capx\Form\MappingsForm');
+    return $content;
   }
 
   /**
