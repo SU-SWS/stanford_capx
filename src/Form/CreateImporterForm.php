@@ -14,15 +14,15 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 
 /**
- * Implements the CAPx CreateMappingForm.
+ * Implements the CAPx CreateImporterForm.
  */
-class CreateMappingForm extends FormBase {
+class CreateImporterForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'stanford_capx_create_mapping';
+    return 'stanford_capx_importer_form';
   }
 
   /**
@@ -34,9 +34,9 @@ class CreateMappingForm extends FormBase {
     //$config = \Drupal::config('stanford_capx.settings');
 
     // Mappings.
-    $form['create_mapping'] = array(
-      '#title' => $this->t('Mapping Title'),
-      '#description' => 'Enter a human-readable name and machine name for this set of mapping configuration.',
+    $form['create_importer'] = array(
+      '#title' => $this->t('Importer name'),
+      '#description' => 'Enter a human-readable name and machine name for this selection of profiles.',
       '#type' => 'fieldset',
     );
 

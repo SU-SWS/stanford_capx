@@ -14,15 +14,15 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 
 /**
- * Implements the CAPx Mappingsform.
+ * Implements the CAPx CreateMappingForm.
  */
-class MappingsForm extends FormBase {
+class ImportMappingForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'stanford_capx_config_mappings';
+    return 'stanford_capx_import_mapping';
   }
 
   /**
@@ -33,14 +33,15 @@ class MappingsForm extends FormBase {
     // Get the config.
     //$config = \Drupal::config('stanford_capx.settings');
 
-    // Mappings.
-    $form['mappings'] = array(
-      '#title' => $this->t('Configure Mappings'),
+    // Import Mapping.
+    $form['import_mapping'] = array(
+      '#title' => $this->t('Code'),
+      '#description' => 'Paste your mapping code for importing',
       '#type' => 'fieldset',
     );
 
     /*
-     $form['mappings']['description'] = array(
+     $form['mapping']['description'] = array(
        '#markup' => t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields"),
      );
 
@@ -141,7 +142,7 @@ class MappingsForm extends FormBase {
         ->save();
 
     */
-      $this->messenger()->addMessage("CAPx mappings updated successfully.");
+      $this->messenger()->addMessage("CAPx mapping updated successfully.");
     }
 
 }

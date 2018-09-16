@@ -17,7 +17,7 @@ stanford_capx.settings:
   path: 'admin/config/capx'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::settingsPage'
-    _title: 'CAPx Settings'
+    _title: 'CAPx'
   requirements:
     _permission: 'administer stanford_capx'
 
@@ -33,31 +33,47 @@ stanford_capx.test:
   path: 'admin/config/capx/test'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\TestPageController::test'
-    _title: 'CAPx Test Page'
+    _title: 'Testing'
   requirements:
-    _permission: 'administer stanford_capx'
+    _permission: 'test stanford_capx'
 
-stanford_capx.mappings:
-  path: 'admin/config/capx/mappings'
+stanford_capx.mapping:
+  path: 'admin/config/capx/mapping'
   defaults:
-    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::mappingsPage'
-    _title: 'CAPx Mappings'
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::mappingPage'
+    _title: 'Mapping'
   requirements:
     _permission: 'administer stanford_capx'
 
 stanford_capx.create_mapping:
-  path: 'admin/config/capx/mappings/create'
+  path: 'admin/config/capx/mapping/create'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::createMappingPage'
     _title: 'Create new CAPx mapping'
   requirements:
     _permission: 'administer stanford_capx'
 
+stanford_capx.import_mapping:
+  path: 'admin/config/capx/mapping/import'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::importMappingPage'
+    _title: 'Import mapping'
+  requirements:
+    _permission: 'administer stanford_capx'
+
+stanford_capx.create_importer:
+  path: 'admin/config/capx/importer/create'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::createImporterPage'
+    _title: 'Create Importer'
+  requirements:
+    _permission: 'administer stanford_capx'
+
 stanford_capx.import:
-  path: 'admin/config/capx/import'
+  path: 'admin/config/capx/importer'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::importPage'
-    _title: 'CAPx Import'
+    _title: 'Import'
   requirements:
     _permission: 'administer stanford_capx'
 
@@ -65,7 +81,7 @@ stanford_capx.profiles:
   path: 'admin/config/capx/profiles'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::profilesPage'
-    _title: 'CAPx Profiles'
+    _title: 'Profiles'
   requirements:
     _permission: 'administer stanford_capx'
 
@@ -73,7 +89,7 @@ stanford_capx.help:
   path: 'admin/config/capx/help'
   defaults:
     _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::helpPage'
-    _title: 'CAPx Help'
+    _title: 'Help'
   requirements:
     _permission: 'administer stanford_capx'
 

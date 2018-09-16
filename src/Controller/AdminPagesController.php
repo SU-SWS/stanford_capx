@@ -53,12 +53,23 @@ class AdminPagesController extends ControllerBase {
    *
    * @return [type] [description]
    */
-  public function mappingsPage() {
+  public function mappingPage() {
+    $link_options = array('attributes' => array('class' => array('btn button')), 'query' => array('destination' => Url::fromRoute('<current>')->toString()));
+    $create_url = URL::fromUri("internal:/admin/config/capx/mapping/create");
+    $create_url->setOptions($link_options);
+    $create_link = Link::fromTextAndUrl(t("Create new Mapping"), $create_url)->toString();
+
+    $import_url = URL::fromUri("internal:/admin/config/capx/mapping/import");
+    $import_url->setOptions($link_options);
+    $import_link = Link::fromTextAndUrl(t("Import Mapping"), $import_url)->toString();
+
     $content['#markup']  = "<p>After you have connected to CAP, create a Mapping to link CAP’s fields with your fields.</p>";
-    $content['mappingsForm'] = \Drupal::formBuilder()
-                                      ->getForm('Drupal\stanford_capx\Form\MappingsForm');
+    $content['#markup']  = "<p>" . $create_link . " " . $import_link . "</p>";
+    $content['mappingForm'] = \Drupal::formBuilder()
+                                      ->getForm('Drupal\stanford_capx\Form\MappingForm');
     return $content;
   }
+
   /**
    * Create Mapping Page.
    *
@@ -71,17 +82,46 @@ class AdminPagesController extends ControllerBase {
     return $content;
   }
 
+ /**
+   * Import Mapping Page.
+   *
+   * @return [type] [description]
+   */
+  public function importMappingPage() {
+    $content['#markup']  = "<p>Import mapping configuration.</p>";
+    $content['importMappingForm'] = \Drupal::formBuilder()
+                                      ->getForm('Drupal\stanford_capx\Form\importMappingForm');
+    return $content;
+  }
+
   /**
    * Import Page.
    *
    * @return [type] [description]
    */
   public function importPage() {
-    $content = "<p>After you have your Mapping configured, create an Importer to chose which profiles you would like to import.</p>";
-    $content .= "<p>Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs</p>";
-    return [
-      '#markup' => $content,
-    ];
+    $link_options = array('attributes' => array('class' => array('btn button')), 'query' => array('destination' => Url::fromRoute('<current>')->toString()));
+    $url = URL::fromUri("internal:/admin/config/capx/importer/create");
+    $url->setOptions($link_options);
+    $link = Link::fromTextAndUrl(t("Create new Importer"), $url)->toString();
+
+    $content['#markup'] = "<p>Importers allow you to chose CAP profiles in bulk by Organizations, or Workgroups, or SunetIDs</p>";
+    $content['#markup'] .= "<p>" . $link . "</p>";
+
+    return $content;
+  }
+
+  /**
+   * Create Importer Page.
+   *
+   * @return [type] [description]
+   */
+  public function createImporterPage() {
+    $content['#markup'] = "<p>After you have a mapping configured, create an importer to chose which profiles you would like to import.</p>";
+    $content['createImporterForm'] = \Drupal::formBuilder()
+                                           ->getForm('Drupal\stanford_capx\Form\createImporterForm');
+
+    return $content;
   }
 
   /**

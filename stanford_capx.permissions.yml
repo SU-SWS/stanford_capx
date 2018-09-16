@@ -5,3 +5,8 @@
 'administer stanford_capx':
   title: Administer Stanford CAPx
   description: Allow users to set and change configuration settings.
+
+'test stanford_capx':
+  title: Test Stanford CAPx
+  description: Allow users to test CAPx functionality.
+
