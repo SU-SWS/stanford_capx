@@ -61,6 +61,14 @@ stanford_capx.import_mapping:
   requirements:
     _permission: 'administer stanford_capx'
 
+stanford_capx.delete_mapping:
+  path: 'admin/config/capx/mapping/delete'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::deleteMappingPage'
+    _title: 'Delete mapping'
+  requirements:
+    _permission: 'administer stanford_capx'
+
 stanford_capx.create_importer:
   path: 'admin/config/capx/importer/create'
   defaults:

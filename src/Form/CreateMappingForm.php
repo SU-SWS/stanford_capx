@@ -29,17 +29,15 @@ class CreateMappingForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $mapping = NULL;
 
     // Get the config.
     //$config = \Drupal::config('stanford_capx.settings');
 
-    // Mappings.
-    $form['create_mapping'] = array(
-      '#title' => $this->t('Mapping Title'),
-      '#description' => 'Enter a human-readable name and machine name for this set of mapping configuration.',
-      '#type' => 'fieldset',
-    );
-
+    $form = array();
+    $form += $this->getMachineNameForm($form, $form_state, $mapping);
+    $form += $this->getEntityMappingForm($form, $form_state, $mapping);
+    $form += $this->getFieldMappingForm($form, $form_state, $mapping);
     /*
      $form['mapping']['description'] = array(
        '#markup' => t("After you have connected to CAP, create a Mapping to link CAP&#8217;s fields with your fields"),
@@ -113,6 +111,33 @@ class CreateMappingForm extends FormBase {
        '#button_type' => 'primary',
      );
    */
+
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Save mapping'),
+      '#button_type' => 'primary',
+    );
+
+    $link_options = array('attributes' => array('class' => array('btn button')), 'query' => array('destination' => Url::fromRoute('<current>')->toString()));
+
+    if (isset($mapping)) {
+      $delete_url = URL::fromUri("internal:/admin/config/capx/mapping/delete");
+      $delete_url->setOptions($link_options);
+      $delete_link = Link::fromTextAndUrl(t("Delete Mapping"), $delete_url)
+                         ->toString();
+      $form['actions']['delete'] = array(
+        '#markup' => "<p>" . $delete_link . "</p>",
+      );
+    }
+
+    $cancel_url = URL::fromUri("internal:/admin/config/capx/mapping");
+    $cancel_link = Link::fromTextAndUrl(t("Cancel"), $cancel_url)
+                       ->toString();
+    $form['actions']['cancel'] = array(
+      '#markup' => "<p>" . $cancel_link . "</p>",
+    );
+
     return $form;
   }
 
@@ -142,7 +167,157 @@ class CreateMappingForm extends FormBase {
         ->save();
 
     */
-      $this->messenger()->addMessage("CAPx mapping updated successfully.");
+    $this->messenger()->addMessage("CAPx mapping updated successfully.");
+  }
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param null $mapping
+   * @return array
+   */
+  private function getMachineNameForm (array $form, FormStateInterface $form_state, $mapping = NULL) {
+    $form['naming'] = array(
+      '#title' => t('Mapping title'),
+      '#type' => 'fieldset',
+      '#collapsed' => FALSE,
+      '#collapsible' => FALSE,
+      '#description' => t('Provide a human-readable name and machine name for this set of mapping configuration.'),
+    );
+
+    $form['naming']['title'] = array(
+      '#type' => 'textfield',
+      '#description' => isset($mapping->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('Please enter a unique name for this mapper'),
+      '#default_value' => isset($mapping->title) ? $mapping->title : '',
+      '#disabled' => isset($mapping->machine_name),
+    );
+
+    $form['naming']['machine-name'] = array(
+      '#type' => 'machine_name',
+      '#title' => t('Machine name'),
+      '#default_value' => isset($mapping->machine_name) ? $mapping->machine_name : '',
+      '#size' => 64,
+      '#maxlength' => 64,
+      '#description' => isset($mapping->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t('A unique name for the mapping. It must only contain lowercase letters, numbers and hyphens.'),
+      '#machine_name' => array(
+        'exists' => 'stanford_capx_mapper_machine_name_exits',
+        'source' => array('naming','title'),
+      ),
+      '#disabled' => isset($mapping->machine_name),
+    );
+
+    return $form;
+
+  }
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param null $mapping
+   * @return array
+   */
+  private function getEntityMappingForm (array $form, FormStateInterface $form_state, $mapping = NULL) {
+
+    /*
+    $entity_types = capx_entity_get_info();
+    $entity_options = array();
+    $bundle_options = array();
+
+    foreach ($entity_types as $entity_name => $values) {
+      $entity_options[$entity_name] = $values['label'];
+      $bundle_options[$entity_name] = array();
+
+      foreach($values['bundles'] as $bundle_machine_name => $bundle_info) {
+        $bundle_options[$entity_name][$bundle_machine_name] = $bundle_info['label'];
+      }
+
     }
 
+    */
+    $form['entity-mapping'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Entity Mapping'),
+      '#description' => t('Select which entity type and bundle you would like to map CAP data into. Please select the entity type first and the bundle type will appear. The entity and bundle has to exist before creating a mapping to it.'),
+      '#collapsed' => FALSE,
+      '#collapsible' => FALSE,
+    );
+
+    /*
+    $form['entity-mapping']['entity-type'] = array(
+      '#type' => 'select',
+      '#title' => t("Select entity type"),
+      '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
+      '#options' => $entity_options,
+      '#default_value' => isset($mapper->entity_type) ? $mapper->entity_type : 'node',
+      '#disabled' => isset($mapper->machine_name),
+    );
+
+    // Build out the bundles options.
+    foreach ($bundle_options as $entity_name => $bundle_opts) {
+
+      $form['entity-mapping']['bundle-'.$entity_name] = array(
+        '#type' => 'select',
+        '#title' => t('Select bundle'),
+        '#description' => isset($mapper->machine_name) ? t("This field has been disabled and cannot change once it has been set.") : t(''),
+        '#options' => $bundle_opts,
+        '#default_value' => isset($mapper->bundle_type) ? $mapper->bundle_type : 'stanford_person',
+        '#states' => array(
+          'visible' => array('select[name="entity-type"]' => array('value' => $entity_name)),
+        ),
+        '#disabled' => isset($mapper->machine_name),
+      );
+
+    }
+
+    $form['entity-mapping']['multiple-entities'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Would you like to create multiple entities per imported bundle for the type of content you're importing?"),
+      '#description' => t('By default, a mapper will create one entity per person. If you wanted to import a persons publications you would need multiple entities per person. Check this box for multiple.'),
+      '#default_value' => isset($mapper->multiple) ? $mapper->multiple : FALSE,
+    );
+
+    $form['entity-mapping']['subquery'] = array(
+      '#type' => 'textfield',
+      '#title' => t("Multiple entity creation sub query"),
+      '#description' => t('Which part of the schema will you be using to create multiple entities. Ie: for publications enter: $.publications.*'),
+      '#default_value' => isset($mapper->subquery) ? $mapper->subquery : '',
+      '#states' => array(
+        'visible' => array(
+          ':input[name="multiple-entities"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['entity-mapping']['guuid-query'] = array(
+      '#type' => 'textfield',
+      '#title' => t("Unique ID of entity"),
+      '#description' => t('Do the entities you are creating have a unique id? For example, publications have a publicationId and $.publications.*.publicationId would be the value to add to this field. If this is provided then CAPx can update the entity in place. If there is no unique ID available then the CAPx module will delete and re-import the entities each time there is a change to the profile.'),
+      '#default_value' => isset($mapper->guuidquery) ? $mapper->guuidquery : '',
+      '#states' => array(
+        'visible' => array(
+          ':input[name="multiple-entities"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+    */
+
+    return $form;
+  }
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param null $mapping
+   */
+
+  private function getFieldMappingForm (array $form, FormStateInterface $form_state, $mapping = NULL) {
+
+    $form['field-mapping'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Field Mapping'),
+      '#collapsed' => FALSE,
+      '#collapsible' => FALSE,
+    );
+    return $form;
+  }
 }

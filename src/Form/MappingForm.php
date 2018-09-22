@@ -105,13 +105,8 @@ class MappingForm extends FormBase {
        '#op' => 'submit',
      );
 
-     $form['actions']['#type'] = 'actions';
-     $form['actions']['submit'] = array(
-       '#type' => 'submit',
-       '#value' => $this->t('Save settings'),
-       '#button_type' => 'primary',
-     );
    */
+
     return $form;
   }
 
@@ -141,7 +136,7 @@ class MappingForm extends FormBase {
         ->save();
 
     */
-      $this->messenger()->addMessage("CAPx mapping updated successfully.");
-    }
+    $this->messenger()->addMessage("CAPx mapping updated successfully.");
+  }
 
 }

@@ -94,6 +94,16 @@ class AdminPagesController extends ControllerBase {
     return $content;
   }
 
+ /**
+   * Delete Mapping Page.
+   *
+   * @return [type] [description]
+   */
+  public function deleteMappingPage() {
+    $content['#markup']  = "<p>Delete mapping.</p>";
+    return $content;
+  }
+
   /**
    * Import Page.
    *
