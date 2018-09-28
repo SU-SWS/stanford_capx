@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - stanford_capx
+name: CAPx Organizations
+vid: capx_organizations
+description: 'Stores organization codes'
+hierarchy: 0
+weight: 0
