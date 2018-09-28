@@ -101,3 +101,11 @@ stanford_capx.help:
   requirements:
     _permission: 'administer stanford_capx'
 
+stanford_capx.sync_organizations:
+  path: 'admin/config/capx/organizations/sync'
+  defaults:
+    _controller: '\Drupal\stanford_capx\Controller\AdminPagesController::organizationSync'
+    _title: 'Getting Org codes'
+  requirements:
+    _permission: 'administer stanford_capx'
+

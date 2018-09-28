@@ -9,6 +9,7 @@ namespace Drupal\stanford_capx\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+Use Drupal\stanford_capx\Includes\Organizations\Orgs;
 
 /**
  * Controller routines for page example routes.
@@ -144,6 +145,17 @@ class AdminPagesController extends ControllerBase {
     return [
       '#markup' => $content,
     ];
+  }
+
+  /**
+   * Organization Sync Page.
+   *
+   * @return [type] [description]
+   */
+  public function organizationSync() {
+    $content['#markup']  = "<p>Syncing organization codes.</p>";
+    Orgs::SyncOrganizations();
+    return $content;
   }
 
   /**

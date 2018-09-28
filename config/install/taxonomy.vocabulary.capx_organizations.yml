@@ -6,6 +6,6 @@ dependencies:
     - stanford_capx
 name: CAPx Organizations
 vid: capx_organizations
-description: 'Stores organization codes'
+description: 'A hierarchy of organization codes and information'
 hierarchy: 0
 weight: 0
