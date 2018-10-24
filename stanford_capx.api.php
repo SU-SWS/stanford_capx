@@ -255,10 +255,9 @@ function hook_capx_field_processor_widget_alter(&$processor, $type, $field_name,
 }
 
 /**
- * hook_capx_preprocess_results_alter
+ * Act on the results from a API server request.
  *
- * Act on the results from a API server request. This is the first chance you
- * get prior to any processing on the item.
+ * This is the first chance you get prior to any processing on the item.
  *
  * @param array $results
  *   An array of results from a request from the server.
