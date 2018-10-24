@@ -285,6 +285,18 @@ function hook_capx_preprocess_profile_update_alter(array &$profile, &$importer) 
 }
 
 /**
+ * Act on the results from a API server request.
+ *
+ * This is the first chance you get prior to any processing on the item.
+ *
+ * @param array $results
+ *   An array of results from a request from the server.
+ */
+function hook_capx_orphan_profile_results_alter(array &$results) {
+
+}
+
+/**
  * hook_capx_find_org_orphans_codes_alter
  *
  * Alter the org code lookup for orphans.
