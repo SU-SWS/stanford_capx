@@ -168,9 +168,9 @@ class EntityImporter implements ImporterInterface {
 
     if (!empty($data)) {
       foreach ($data as $type => $results) {
+        drupal_alter('capx_preprocess_results', $results, $this);
         foreach ($results as $index => $info) {
           // Allow altering of the results.
-          drupal_alter('stanford_capx_preprocess_results', $info, $this);
           $processor = new EntityProcessor($mapper, $info);
           $processor->setEntityImporter($this);
           $processor->execute();
