@@ -40,7 +40,7 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
    * @param DatabaseTransaction $transaction
    *   A DB Object
    */
-  public function save($entity, DatabaseTransaction $transaction = NULL) {
+  public function save($entity, \DatabaseTransaction $transaction = NULL) {
     parent::save($entity, $transaction);
   }
 
