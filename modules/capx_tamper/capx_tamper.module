@@ -8,7 +8,7 @@
 include_once 'views/capx_tamper.views_default_alter.inc';
 
 use \CAPx\Drupal\Util\CAPx;
-use \CAPx\Drupal\Entities\CFEntity;
+
 use \CAPx\Drupal\Mapper\EntityMapper;
 
 define('CAPX_TAMPER', 'admin/config/capx/mapper');
@@ -99,7 +99,7 @@ function capx_tamper_menu() {
  * @param string $mapper_id
  *   Machine name of the Capx Mapper.
  *
- * @return \CAPx\Drupal\Entities\CFEntity
+ * @return CFEntity
  *   CAPx Mapper.
  */
 function capx_tamper_mapper_load($mapper_id) {
@@ -163,7 +163,7 @@ function capx_tamper_entity_insert($entity, $type) {
  */
 function capx_tamper_entity_update($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
-    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
+    /** @var CFEntity $entity */
     $sources = capx_tamper_get_mapper_sources($entity);
     foreach ($entity->tampers as $id => $tamper) {
 
@@ -194,7 +194,7 @@ function capx_tamper_entity_update($entity, $type) {
  */
 function capx_tamper_entity_delete($entity, $type) {
   if ($type == 'capx_cfe' && $entity->type == 'mapper' && isset($entity->tampers)) {
-    /** @var \CAPx\Drupal\Entities\CFEntity $entity */
+    /** @var CFEntity $entity */
     foreach ($entity->tampers as $tamper) {
       capx_tamper_delete_instance($tamper);
     }
@@ -300,7 +300,7 @@ function capx_tamper_delete_instance($tamper) {
  *   Machine name of the mapper to invalidate.
  */
 function capx_tamper_invalidate_etags($mapper_id) {
-  /** @var \CAPx\Drupal\Entities\CFEntity $mapper */
+  /** @var CFEntity $mapper */
   $mapper = capx_tamper_mapper_load($mapper_id);
 
   // Check to be sure the mapper can be loaded. This is getting fired on a

@@ -4,9 +4,7 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
-class CFEntityType extends \Entity {
+class CFEntityType extends Entity {
   public $type;
   public $label;
   public $weight = 0;

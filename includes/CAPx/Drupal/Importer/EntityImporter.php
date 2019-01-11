@@ -12,7 +12,6 @@ use CAPx\Drupal\Mapper\EntityMapper;
 use CAPx\Drupal\Processors\EntityProcessor as EntityProcessor;
 use CAPx\Drupal\Processors\UserProcessor as UserProcessor;
 use CAPx\APILib\HTTPClient;
-use CAPx\Drupal\Entities\CFEntity;
 
 
 class EntityImporter implements ImporterInterface {
@@ -42,7 +41,7 @@ class EntityImporter implements ImporterInterface {
    * @param HTTPClient $client
    *   The HTTPClient to use. Usually GuzzleClient.
    */
-  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
+  public function __construct(\CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
     $mapper->setImporter($importer->getMachineName());
     $this->setImporter($importer);
     $this->setMapper($mapper);

@@ -5,10 +5,10 @@
  * A file to tie into Drupal module and core hooks.
  */
 
-include "includes/CAPx/Drupal/Entities/CFEControllerExportable.php";
-include "includes/CAPx/Drupal/Entities/CFEntity.php";
-include "includes/CAPx/Drupal/Entities/CFEntityType.php";
-include "includes/CAPx/Drupal/Entities/CFEntityTypeController.php";
+require_once "includes/CAPx/Drupal/Entities/CFEControllerExportable.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntity.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntityType.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntityTypeController.php";
 
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Organizations\Orgs as Orgs;

@@ -7,7 +7,6 @@
 namespace CAPx\Drupal\Mapper;
 
 use \Peekmo\JsonPath\JsonStore as JsonParser;
-use CAPx\Drupal\Entities\CFEntity;
 
 abstract class MapperAbstract implements MapperInterface {
 
@@ -32,7 +31,7 @@ abstract class MapperAbstract implements MapperInterface {
    * @param CFEntity $mapper
    *   [description]
    */
-  public function __construct(CFEntity $mapper) {
+  public function __construct(\CFEntity $mapper) {
     $this->setMapper($mapper);
     $this->addConfig($mapper->settings);
   }

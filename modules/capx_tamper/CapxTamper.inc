@@ -4,7 +4,7 @@
  * CAPx Tamper classes to fake feeds importer.
  */
 
-use \CAPx\Drupal\Entities\CFEntity;
+
 
 /**
  * Class CapxTamper.
@@ -23,7 +23,7 @@ class CapxTamper {
   /**
    * CapxTamper constructor.
    *
-   * @param \CAPx\Drupal\Entities\CFEntity $mapper
+   * @param CFEntity $mapper
    *   Mapper in use.
    */
   public function __construct(CFEntity $mapper, CapxTamperParser $parser, CapxTamperProcessor $processor) {

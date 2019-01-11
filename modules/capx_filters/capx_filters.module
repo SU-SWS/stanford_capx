@@ -7,7 +7,6 @@
 
 include_once 'views/capx_filters.views_default_alter.inc';
 
-use CAPx\Drupal\Entities\CFEntity;
 use CAPx\Drupal\Mapper\EntityMapper;
 
 define('CAPX_FILTERS_PAGE', 'admin/config/capx/importer');
@@ -174,7 +173,7 @@ function capx_filters_capx_pre_update_entity_alter(&$entity, &$data, &$mapper) {
  * @return bool
  *   If its valid.
  */
-function capx_filters_valid($data, EntityMapper $entity_mapper, CFEntity $importer) {
+function capx_filters_valid($data, EntityMapper $entity_mapper, \CFEntity $importer) {
   $pass = TRUE;
 
   // If there are no filters we can just pass and move along.

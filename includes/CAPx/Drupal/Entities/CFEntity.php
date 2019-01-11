@@ -4,11 +4,9 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
 use CAPx\Drupal\Util\CAPxImporter;
 
-class CFEntity extends \Entity {
+class CFEntity extends Entity {
 
   /**
    * Constructor of the class.
