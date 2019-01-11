@@ -22,7 +22,7 @@ class HandlerStack
      * Creates a default handler stack that can be used by clients.
      *
      * The returned handler will wrap the provided handler or use the most
-     * appropriate default handler for you system. The returned HandlerStack has
+     * appropriate default handler for your system. The returned HandlerStack has
      * support for cookies, redirects, HTTP error exceptions, and preparing a body
      * before sending.
      *
@@ -62,11 +62,8 @@ class HandlerStack
      */
     public function __invoke(RequestInterface $request, array $options)
     {
-        if (!$this->cached) {
-            $this->cached = $this->resolve();
-        }
+        $handler = $this->resolve();
 
-        $handler = $this->cached;
         return $handler($request, $options);
     }
 
@@ -193,15 +190,19 @@ class HandlerStack
      */
     public function resolve()
     {
-        if (!($prev = $this->handler)) {
-            throw new \LogicException('No handler has been specified');
+        if (!$this->cached) {
+            if (!($prev = $this->handler)) {
+                throw new \LogicException('No handler has been specified');
+            }
+
+            foreach (array_reverse($this->stack) as $fn) {
+                $prev = $fn[0]($prev);
+            }
+
+            $this->cached = $prev;
         }
 
-        foreach (array_reverse($this->stack) as $fn) {
-            $prev = $fn[0]($prev);
-        }
-
-        return $prev;
+        return $this->cached;
     }
 
     /**

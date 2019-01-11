@@ -17,11 +17,16 @@ use Psr\Http\Message\UriInterface;
  */
 class RedirectMiddleware
 {
+    const HISTORY_HEADER = 'X-Guzzle-Redirect-History';
+
+    const STATUS_HISTORY_HEADER = 'X-Guzzle-Redirect-Status-History';
+
     public static $defaultSettings = [
-        'max'       => 5,
-        'protocols' => ['http', 'https'],
-        'strict'    => false,
-        'referer'   => false
+        'max'             => 5,
+        'protocols'       => ['http', 'https'],
+        'strict'          => false,
+        'referer'         => false,
+        'track_redirects' => false,
     ];
 
     /** @var callable  */
@@ -89,7 +94,45 @@ class RedirectMiddleware
         $this->guardMax($request, $options);
         $nextRequest = $this->modifyRequest($request, $options, $response);
 
-        return $this($nextRequest, $options);
+        if (isset($options['allow_redirects']['on_redirect'])) {
+            call_user_func(
+                $options['allow_redirects']['on_redirect'],
+                $request,
+                $response,
+                $nextRequest->getUri()
+            );
+        }
+
+        /** @var PromiseInterface|ResponseInterface $promise */
+        $promise = $this($nextRequest, $options);
+
+        // Add headers to be able to track history of redirects.
+        if (!empty($options['allow_redirects']['track_redirects'])) {
+            return $this->withTracking(
+                $promise,
+                (string) $nextRequest->getUri(),
+                $response->getStatusCode()
+            );
+        }
+
+        return $promise;
+    }
+
+    private function withTracking(PromiseInterface $promise, $uri, $statusCode)
+    {
+        return $promise->then(
+            function (ResponseInterface $response) use ($uri, $statusCode) {
+                // Note that we are pushing to the front of the list as this
+                // would be an earlier response than what is currently present
+                // in the history header.
+                $historyHeader = $response->getHeader(self::HISTORY_HEADER);
+                $statusHeader = $response->getHeader(self::STATUS_HISTORY_HEADER);
+                array_unshift($historyHeader, $uri);
+                array_unshift($statusHeader, $statusCode);
+                return $response->withHeader(self::HISTORY_HEADER, $historyHeader)
+                                ->withHeader(self::STATUS_HISTORY_HEADER, $statusHeader);
+            }
+        );
     }
 
     private function guardMax(RequestInterface $request, array &$options)
@@ -149,6 +192,11 @@ class RedirectMiddleware
             $modify['remove_headers'][] = 'Referer';
         }
 
+        // Remove Authorization header if host is different.
+        if ($request->getUri()->getHost() !== $modify['uri']->getHost()) {
+            $modify['remove_headers'][] = 'Authorization';
+        }
+
         return Psr7\modify_request($request, $modify);
     }
 
@@ -166,9 +214,9 @@ class RedirectMiddleware
         ResponseInterface $response,
         array $protocols
     ) {
-        $location = Psr7\Uri::resolve(
+        $location = Psr7\UriResolver::resolve(
             $request->getUri(),
-            $response->getHeaderLine('Location')
+            new Psr7\Uri($response->getHeaderLine('Location'))
         );
 
         // Ensure that the redirect URI is allowed based on the protocols.
