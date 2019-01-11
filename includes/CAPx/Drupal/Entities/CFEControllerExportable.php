@@ -4,9 +4,7 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
-class CFEControllerExportable extends \EntityAPIControllerExportable {
+class CFEControllerExportable extends EntityAPIControllerExportable {
 
   /**
    * Create a new entity and provide some default values.
@@ -40,7 +38,7 @@ class CFEControllerExportable extends \EntityAPIControllerExportable {
    * @param DatabaseTransaction $transaction
    *   A DB Object
    */
-  public function save($entity, \DatabaseTransaction $transaction = NULL) {
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
     parent::save($entity, $transaction);
   }
 
