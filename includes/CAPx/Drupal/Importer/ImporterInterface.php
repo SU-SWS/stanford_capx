@@ -19,9 +19,9 @@ interface ImporterInterface {
    *
    * @param \CFEntity $importer
    *   [description]
-   * @param CAPx\Drupal\Mapper\EntityMapper $mapper
+   * @param EntityMapper $mapper
    *   [description]
-   * @param CAPx\APILib\HTTPClient $client
+   * @param HTTPClient $client
    *   [description]
    */
   public function __construct(\CFEntity $importer, EntityMapper $mapper, HTTPClient $client);

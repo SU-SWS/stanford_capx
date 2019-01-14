@@ -37,14 +37,14 @@ class EntityImporter implements ImporterInterface {
   /**
    * Constructor class. Sets a number of items.
    *
-   * @param object $importer
+   * @param \CFEntity $importer
    *   The configuration entity importer
-   * @param object $mapper
+   * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
    *   The entity mapper object
-   * @param object $client
-   *   The HTTPClient to use. Usually GuzzleClient.
+   * @param \CAPx\APILib\HTTPClient $client
+   *   The httpclient to use. Usually GuzzleClient.
    */
-  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
+  public function __construct(\CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
     $mapper->setImporter($importer->getMachineName());
     $this->setImporter($importer);
     $this->setMapper($mapper);
