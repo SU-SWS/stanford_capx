@@ -4,8 +4,6 @@
  * CAPx Tamper classes to fake feeds importer.
  */
 
-
-
 /**
  * Class CapxTamper.
  */

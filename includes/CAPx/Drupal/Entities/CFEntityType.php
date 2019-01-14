@@ -4,6 +4,9 @@
  * @author
  */
 
+/**
+ * Entity type class used for importers and mappers.
+ */
 class CFEntityType extends Entity {
   public $type;
   public $label;

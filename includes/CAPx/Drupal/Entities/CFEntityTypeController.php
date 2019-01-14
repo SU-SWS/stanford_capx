@@ -4,6 +4,9 @@
  * @author [author] <[email]>
  */
 
+/**
+ * Controller class for entity type.
+ */
 class CFEntityTypeController extends EntityAPIControllerExportable {
 
   /**

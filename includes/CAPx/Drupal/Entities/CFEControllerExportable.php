@@ -4,6 +4,9 @@
  * @author
  */
 
+/**
+ * Exportable Entity Controller Class for Importers and Mappers.
+ */
 class CFEControllerExportable extends EntityAPIControllerExportable {
 
   /**

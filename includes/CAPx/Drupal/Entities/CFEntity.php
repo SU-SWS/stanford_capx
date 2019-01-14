@@ -6,6 +6,9 @@
 
 use CAPx\Drupal\Util\CAPxImporter;
 
+/**
+ * The configurable entity used for mappers and importers.
+ */
 class CFEntity extends Entity {
 
   /**
