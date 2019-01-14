@@ -593,7 +593,7 @@ class EntityImporter implements ImporterInterface {
   /**
    * The importer configuration entity.
    *
-   * @param CFEntity $importer
+   * @param \CFEntity $importer
    *   A configuration entity importer object
    */
   public function setImporter($importer) {
@@ -603,7 +603,7 @@ class EntityImporter implements ImporterInterface {
   /**
    * The importer configuration entity.
    *
-   * @return CFEntity
+   * @return \CFEntity
    *   The configuration entity importer object
    */
   public function getImporter() {
