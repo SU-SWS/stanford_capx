@@ -17,13 +17,13 @@ interface ImporterInterface {
   /**
    * A __construct description.
    *
-   * @param object $importer
+   * @param \CFEntity $importer
    *   [description]
-   * @param object $mapper
+   * @param CAPx\Drupal\Mapper\EntityMapper $mapper
    *   [description]
-   * @param object $client
+   * @param CAPx\APILib\HTTPClient $client
    *   [description]
    */
-  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client);
+  public function __construct(\CFEntity $importer, EntityMapper $mapper, HTTPClient $client);
 
 }

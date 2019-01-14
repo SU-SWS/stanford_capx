@@ -7,7 +7,6 @@
 
 use \CAPx\Drupal\Util\CAPx;
 
-
 /**
  * Form builder factory function.
  *
