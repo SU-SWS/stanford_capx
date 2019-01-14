@@ -6,8 +6,8 @@
 
 namespace CAPx\Drupal\Importer;
 
-use CAPx\Drupal\Mapper\EntityMapper;
-use CAPx\APILib\HTTPClient;
+use CAPx\Drupal\Mapper\EntityMapper as EntityMapper;
+use CAPx\APILib\HTTPClient as HTTPClient;
 
 /**
  * The interface for entity importers.

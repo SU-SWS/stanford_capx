@@ -9,10 +9,10 @@
 namespace CAPx\Drupal\Importer;
 
 use CAPx\Drupal\Util\CAPx;
-use CAPx\Drupal\Mapper\EntityMapper;
+use CAPx\Drupal\Mapper\EntityMapper as EntityMapper;
 use CAPx\Drupal\Processors\EntityProcessor as EntityProcessor;
 use CAPx\Drupal\Processors\UserProcessor as UserProcessor;
-use CAPx\APILib\HTTPClient;
+use CAPx\APILib\HTTPClient as HTTPClient;
 
 /**
  * Entity importer class is used to run all the CAPx imports.
