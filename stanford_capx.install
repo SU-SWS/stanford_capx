@@ -434,7 +434,7 @@ function stanford_capx_update_7301() {
 
   // Create a new encryption method for this module to use.
   $key_name = "stanford_capx_aes_ssl";
-  $settings = encrypt_get_config($stanford_capx_encrypt_key);
+  $settings = encrypt_get_config($key_name);
 
   // Config already exists. Continue on.
   if (is_array($settings)) {
