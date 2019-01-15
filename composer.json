@@ -9,6 +9,8 @@
             "email": "sheamck@stanford.edu"
         }
     ],
-    "require": {},
+    "require": {
+      "phpseclib/phpseclib": "~2.0"
+    },
     "homepage": "https://github.com/SU-SWS/stanford_capx"
 }

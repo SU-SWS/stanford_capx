@@ -9,7 +9,7 @@ dependencies[] = entity
 dependencies[] = block
 dependencies[] = date
 dependencies[] = date_api
-dependencies[] = encrypt (>= 2.0-beta3)
+dependencies[] = encrypt (>= 2.3)
 dependencies[] = views
 dependencies[] = ctools
 

@@ -410,3 +410,51 @@ function stanford_capx_update_7300() {
   }
 
 }
+
+/**
+ * Upgrade path for PHP 7.2 with encrypt. Create and enable the SSL option.
+ */
+function stanford_capx_update_7301() {
+
+  // Encrypt is required so check to see if it is enabled.
+  if (!module_exists('encrypt')) {
+    module_enable(['encrypt']);
+  }
+
+  // Only run upgrade if on PHP 7.2 or greater.
+  if (PHP_MAJOR_VERSION !== 7 || PHP_MINOR_VERSION < 2) {
+    return;
+  }
+
+  // Set the key if it is not already set.
+  $key = variable_get("encrypt_drupal_variable_key", NULL);
+  if (is_null($key)) {
+    variable_set('encrypt_drupal_variable_key', md5(date() + time() + random_int()));
+  }
+
+  // Create a new encryption method for this module to use.
+  $stanford_capx_encrypt_key = "stanford_capx_aes_ssl";
+  $settings = encrypt_get_config($stanford_capx_encrypt_key);
+
+  // Config already exists. Continue on.
+  if (is_array($settings)) {
+    return;
+  }
+
+  // No config set. Create it.
+  $settings = [
+    'enabled' => 1,
+    'name' => $stanford_capx_encrypt_key,
+    'label' => t('CAPx - AES SSL'),
+    'description' => t('For the Stanford CAPx module.'),
+    'method' => 'openssl',
+    'method_settings' => '',
+    'provider' => 'drupal_variable',
+    'provider_settings' => [
+      'method' => 'variable_contents',
+    ],
+  ];
+
+  encrypt_save_config($settings);
+  variable_set('encrypt_default_config', $stanford_capx_encrypt_key);
+}
