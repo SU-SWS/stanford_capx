@@ -433,7 +433,7 @@ function stanford_capx_update_7301() {
   }
 
   // Create a new encryption method for this module to use.
-  $stanford_capx_encrypt_key = "stanford_capx_aes_ssl";
+  $key_name = "stanford_capx_aes_ssl";
   $settings = encrypt_get_config($stanford_capx_encrypt_key);
 
   // Config already exists. Continue on.
@@ -444,7 +444,7 @@ function stanford_capx_update_7301() {
   // No config set. Create it.
   $settings = [
     'enabled' => 1,
-    'name' => $stanford_capx_encrypt_key,
+    'name' => $key_name,
     'label' => t('CAPx - AES SSL'),
     'description' => t('For the Stanford CAPx module.'),
     'method' => 'openssl',
@@ -456,5 +456,5 @@ function stanford_capx_update_7301() {
   ];
 
   encrypt_save_config($settings);
-  variable_set('encrypt_default_config', $stanford_capx_encrypt_key);
+  variable_set('encrypt_default_config', $key_name);
 }
