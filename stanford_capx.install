@@ -8,7 +8,9 @@ use CAPx\Drupal\Util\CAPxMapper;
 /**
  * Implements hook_install().
  */
-function stanford_capx_install() {}
+function stanford_capx_install() {
+  stanford_capx_install_encrypt_settings();
+}
 
 /**
  * Implements hook_uninstall().
@@ -421,11 +423,23 @@ function stanford_capx_update_7301() {
     module_enable(['encrypt']);
   }
 
-  // Only run upgrade if on PHP 7.2 or greater.
-  if (PHP_MAJOR_VERSION !== 7 || PHP_MINOR_VERSION < 2) {
-    return;
-  }
+  // Install the new encrypt settings.
+  stanford_capx_install_encrypt_settings();
 
+  // Migrate the old encryption to the new encryption. You must be on PHP 7.1
+  // or below for this to work. Once this upgrade hook has been completed you
+  // may safely upgrade to PHP 7.2.
+  $username = decrypt(variable_get('stanford_capx_username', ''));
+  $password = decrypt(variable_get('stanford_capx_password', ''));
+  variable_set('stanford_capx_username', encrypt($username));
+  variable_set('stanford_capx_password', encrypt($password));
+
+}
+
+/**
+ * Create the encryption settings for use in CAPx.
+ */
+function stanford_capx_install_encrypt_settings() {
   // Set the key if it is not already set.
   $key = variable_get("encrypt_drupal_variable_key", NULL);
   if (is_null($key)) {
@@ -433,7 +447,7 @@ function stanford_capx_update_7301() {
   }
 
   // Create a new encryption method for this module to use.
-  $key_name = "stanford_capx_aes_ssl";
+  $key_name = STANFORD_CAPX_ENCRYPT_PROFILE;
   $settings = encrypt_get_config($key_name);
 
   // Config already exists. Continue on.
