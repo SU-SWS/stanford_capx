@@ -1,14 +1,25 @@
 {
-    "name": "su-sws/stanford_capx",
-    "description": "Stanford Career Academic Profiles API integration Module",
-    "type": "drupal-custom-module",
-    "license": "GPL-2.0+",
-    "authors": [
-        {
-            "name": "Shea McKinney",
-            "email": "sheamck@stanford.edu"
-        }
-    ],
-    "require": {},
-    "homepage": "https://github.com/SU-SWS/stanford_capx"
+  "name": "su-sws/stanford_capx",
+  "description": "Stanford Career Academic Profiles API integration Module",
+  "type": "drupal-custom-module",
+  "license": "GPL-2.0+",
+  "authors": [
+      {
+          "name": "Shea McKinney",
+          "email": "sheamck@stanford.edu"
+      }
+  ],
+  "require": {
+    "phpseclib/phpseclib": "~2.0",
+    "drupal/encrypt": "~2.3"
+  },
+  "extra": {
+    "patches": {
+      "drupal/encrypt": {
+        "PHP 7.1 Support, new openSSL plugin: https://www.drupal.org/project/encrypt/issues/2983555":
+        "https://www.drupal.org/files/issues/2018-07-20/encrypt-openssl_integration-2983555-07.patch"
+      }
+    }
+  },
+  "homepage": "https://github.com/SU-SWS/stanford_capx"
 }

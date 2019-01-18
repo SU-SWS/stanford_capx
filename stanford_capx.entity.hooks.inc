@@ -5,6 +5,11 @@
  * A file to tie into Drupal module and core hooks.
  */
 
+require_once "includes/CAPx/Drupal/Entities/CFEControllerExportable.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntity.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntityType.php";
+require_once "includes/CAPx/Drupal/Entities/CFEntityTypeController.php";
+
 use CAPx\Drupal\Util\CAPx;
 use CAPx\Drupal\Organizations\Orgs as Orgs;
 
@@ -18,8 +23,8 @@ function stanford_capx_entity_info() {
     'capx_cfe' => array(
       'label' => t('Configuration Entity'),
       'plural label' => t('Configuration Entities'),
-      'entity class' => '\CAPx\Drupal\Entities\CFEntity',
-      'controller class' => '\CAPx\Drupal\Entities\CFEControllerExportable',
+      'entity class' => 'CFEntity',
+      'controller class' => 'CFEControllerExportable',
       'features controller class' => 'CFEFeaturesController',
       'base table' => 'capx_cfe',
       'fieldable' => TRUE,
@@ -55,8 +60,8 @@ function stanford_capx_entity_info() {
   // hook.
   $return['capx_cfe_type'] = array(
     'label' => t('Configuration Entity Type'),
-    'entity class' => '\CAPx\Drupal\Entities\CFEntityType',
-    'controller class' => '\CAPx\Drupal\Entities\CFEntityTypeController',
+    'entity class' => 'CFEntityType',
+    'controller class' => 'CFEntityTypeController',
     'base table' => 'capx_cfe_type',
     'fieldable' => FALSE,
     'bundle of' => 'capx_cfe',

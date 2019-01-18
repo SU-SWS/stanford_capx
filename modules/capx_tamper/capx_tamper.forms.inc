@@ -7,8 +7,6 @@
  * Mostly taken from feeds_tamper_ui.admin.inc.
  */
 
-use \CAPx\Drupal\Entities\CFEntity;
-
 /**
  * Form builder. Calls the correct form for the action.
  *

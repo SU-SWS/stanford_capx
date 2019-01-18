@@ -4,9 +4,10 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
-class CFEControllerExportable extends \EntityAPIControllerExportable {
+/**
+ * Exportable Entity Controller Class for Importers and Mappers.
+ */
+class CFEControllerExportable extends EntityAPIControllerExportable {
 
   /**
    * Create a new entity and provide some default values.

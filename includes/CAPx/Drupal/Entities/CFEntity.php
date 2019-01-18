@@ -4,11 +4,12 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
 use CAPx\Drupal\Util\CAPxImporter;
 
-class CFEntity extends \Entity {
+/**
+ * The configurable entity used for mappers and importers.
+ */
+class CFEntity extends Entity {
 
   /**
    * Constructor of the class.

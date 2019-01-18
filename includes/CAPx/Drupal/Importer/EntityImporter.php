@@ -7,14 +7,16 @@
  */
 
 namespace CAPx\Drupal\Importer;
+
 use CAPx\Drupal\Util\CAPx;
-use CAPx\Drupal\Mapper\EntityMapper;
+use CAPx\Drupal\Mapper\EntityMapper as EntityMapper;
 use CAPx\Drupal\Processors\EntityProcessor as EntityProcessor;
 use CAPx\Drupal\Processors\UserProcessor as UserProcessor;
-use CAPx\APILib\HTTPClient;
-use CAPx\Drupal\Entities\CFEntity;
+use CAPx\APILib\HTTPClient as HTTPClient;
 
-
+/**
+ * Entity importer class is used to run all the CAPx imports.
+ */
 class EntityImporter implements ImporterInterface {
 
   // Options and configuration array.
@@ -35,14 +37,14 @@ class EntityImporter implements ImporterInterface {
   /**
    * Constructor class. Sets a number of items.
    *
-   * @param CFEntity $importer
+   * @param \CFEntity $importer
    *   The configuration entity importer
-   * @param EntityMapper $mapper
+   * @param \CAPx\Drupal\Mapper\EntityMapper $mapper
    *   The entity mapper object
-   * @param HTTPClient $client
-   *   The HTTPClient to use. Usually GuzzleClient.
+   * @param \CAPx\APILib\HTTPClient $client
+   *   The httpclient to use. Usually GuzzleClient.
    */
-  public function __construct(CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
+  public function __construct(\CFEntity $importer, EntityMapper $mapper, HTTPClient $client) {
     $mapper->setImporter($importer->getMachineName());
     $this->setImporter($importer);
     $this->setMapper($mapper);
@@ -207,6 +209,7 @@ class EntityImporter implements ImporterInterface {
       switch ($type) {
         case "orgCodes":
           $children = $options['child_orgs'];
+
         case "privGroups":
           // Set the results to one per page.
           $httpOptions = $client->setLimit(1);
@@ -214,6 +217,7 @@ class EntityImporter implements ImporterInterface {
           // Fire off request.
           $results = $client->api('profile')->search($type, $options['values'][$k], FALSE, $children);
           break;
+
         case "uids":
           $index = array_search("uids", $options["types"]);
           $results = array();
@@ -589,7 +593,7 @@ class EntityImporter implements ImporterInterface {
   /**
    * The importer configuration entity.
    *
-   * @param CFEntity $importer
+   * @param \CFEntity $importer
    *   A configuration entity importer object
    */
   public function setImporter($importer) {
@@ -599,7 +603,7 @@ class EntityImporter implements ImporterInterface {
   /**
    * The importer configuration entity.
    *
-   * @return CFEntity
+   * @return \CFEntity
    *   The configuration entity importer object
    */
   public function getImporter() {

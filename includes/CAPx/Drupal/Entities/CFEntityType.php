@@ -4,9 +4,10 @@
  * @author
  */
 
-namespace CAPx\Drupal\Entities;
-
-class CFEntityType extends \Entity {
+/**
+ * Entity type class used for importers and mappers.
+ */
+class CFEntityType extends Entity {
   public $type;
   public $label;
   public $weight = 0;

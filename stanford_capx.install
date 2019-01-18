@@ -8,7 +8,9 @@ use CAPx\Drupal\Util\CAPxMapper;
 /**
  * Implements hook_install().
  */
-function stanford_capx_install() {}
+function stanford_capx_install() {
+  stanford_capx_install_encrypt_settings();
+}
 
 /**
  * Implements hook_uninstall().
@@ -409,4 +411,64 @@ function stanford_capx_update_7300() {
     db_add_field("capx_cfe_type", "module", $module_spec);
   }
 
+}
+
+/**
+ * Upgrade path for PHP 7.2 with encrypt. Create and enable the SSL option.
+ */
+function stanford_capx_update_7301() {
+
+  // Encrypt is required so check to see if it is enabled.
+  if (!module_exists('encrypt')) {
+    module_enable(['encrypt']);
+  }
+
+  // Install the new encrypt settings.
+  stanford_capx_install_encrypt_settings();
+
+  // Migrate the old encryption to the new encryption. You must be on PHP 7.1
+  // or below for this to work. Once this upgrade hook has been completed you
+  // may safely upgrade to PHP 7.2.
+  $username = decrypt(variable_get('stanford_capx_username', ''));
+  $password = decrypt(variable_get('stanford_capx_password', ''));
+  variable_set('stanford_capx_username', encrypt($username));
+  variable_set('stanford_capx_password', encrypt($password));
+
+}
+
+/**
+ * Create the encryption settings for use in CAPx.
+ */
+function stanford_capx_install_encrypt_settings() {
+  // Set the key if it is not already set.
+  $key = variable_get("encrypt_drupal_variable_key", NULL);
+  if (is_null($key)) {
+    variable_set('encrypt_drupal_variable_key', md5(date() + time() + random_int()));
+  }
+
+  // Create a new encryption method for this module to use.
+  $key_name = STANFORD_CAPX_ENCRYPT_PROFILE;
+  $settings = encrypt_get_config($key_name);
+
+  // Config already exists. Continue on.
+  if (is_array($settings)) {
+    return;
+  }
+
+  // No config set. Create it.
+  $settings = [
+    'enabled' => 1,
+    'name' => $key_name,
+    'label' => t('CAPx - AES SSL'),
+    'description' => t('For the Stanford CAPx module.'),
+    'method' => 'openssl',
+    'method_settings' => '',
+    'provider' => 'drupal_variable',
+    'provider_settings' => [
+      'method' => 'variable_contents',
+    ],
+  ];
+
+  encrypt_save_config($settings);
+  variable_set('encrypt_default_config', $key_name);
 }

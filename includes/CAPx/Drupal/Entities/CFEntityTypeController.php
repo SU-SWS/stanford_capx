@@ -3,9 +3,11 @@
  * @file
  * @author [author] <[email]>
  */
-namespace CAPx\Drupal\Entities;
 
-class CFEntityTypeController extends \EntityAPIControllerExportable {
+/**
+ * Controller class for entity type.
+ */
+class CFEntityTypeController extends EntityAPIControllerExportable {
 
   /**
    * Create method for the TypeController.

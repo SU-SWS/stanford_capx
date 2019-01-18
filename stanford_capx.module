@@ -51,6 +51,7 @@ $CAP_RESTRICTED_FIELD_PROPERTIES = array(
 
 define('STANFORD_CAPX_FILE_PATH', 'private://stanford_capx');
 define('STANFORD_CAPX_SCHEMA_FILE', 'schema.json');
+define('STANFORD_CAPX_ENCRYPT_PROFILE', 'stanford_capx_aes_ssl');
 
 /**
  * Implements hook_help().
