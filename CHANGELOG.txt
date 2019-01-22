@@ -1,6 +1,13 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta11, 2019-01-22
+-----------------------------------------
+- Upgraded Guzzle to 6.3.3
+- Added documentation to api.php for undocumented hook
+- Rejiggered PHP class namespacing for compatibility with PHP 7.2
+- Added upgrade path for encrypt module to support SSL AES in as mcrypt is deprecated PHP 7.2
+
 Stanford CAPx   7.x-3.0-beta10, 2018-09-12
 -----------------------------------------
 - Bug fix: do not attempt to add guuid field if it exists
