@@ -443,7 +443,7 @@ function stanford_capx_install_encrypt_settings() {
   // Set the key if it is not already set.
   $key = variable_get("encrypt_drupal_variable_key", NULL);
   if (is_null($key)) {
-    variable_set('encrypt_drupal_variable_key', md5(date() + time() + random_int()));
+    variable_set('encrypt_drupal_variable_key', md5(date() + time() + mt_rand()));
   }
 
   // Create a new encryption method for this module to use.
