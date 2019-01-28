@@ -429,10 +429,19 @@ function stanford_capx_update_7301() {
   // Migrate the old encryption to the new encryption. You must be on PHP 7.1
   // or below for this to work. Once this upgrade hook has been completed you
   // may safely upgrade to PHP 7.2.
-  $username = decrypt(variable_get('stanford_capx_username', ''));
-  $password = decrypt(variable_get('stanford_capx_password', ''));
-  variable_set('stanford_capx_username', encrypt($username));
-  variable_set('stanford_capx_password', encrypt($password));
+  try {
+    $username = decrypt(variable_get('stanford_capx_username', ''));
+    $password = decrypt(variable_get('stanford_capx_password', ''));
+    variable_set('stanford_capx_username', encrypt($username));
+    variable_set('stanford_capx_password', encrypt($password));
+  }
+  catch(Exception $e) {
+    // If decrypt and save fails remove the username and password to disable
+    // CAPx.
+    variable_del('stanford_capx_username');
+    variable_del('stanford_capx_password');
+  }
+
 
 }
 
