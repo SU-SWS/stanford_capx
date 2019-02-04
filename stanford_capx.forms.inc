@@ -997,12 +997,22 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   // If there are properties...
   $properties = @$values['field-mapping'][$entity . "-properties"];
   if (!empty($properties)) {
+    foreach($properties as $key => $value) {
+      if(empty($value)) {
+        unset($properties[$key]);
+      }
+    }
     $settings['properties'] = $properties;
   }
 
   // If there are fields...
   $fields = @$values['field-mapping'][$entity . "-" . $bundle . "-fields"];
   if (!empty($fields)) {
+    foreach($fields as $key => $value) {
+      if(empty($value)) {
+        unset($fields[$key]);
+      }
+    }
     $settings['fields'] = $fields;
   }
 
