@@ -998,7 +998,7 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
   $properties = @$values['field-mapping'][$entity . "-properties"];
   if (!empty($properties)) {
     foreach ($properties as $key => $value) {
-      if(empty($value)) {
+      if (empty($value)) {
         unset($properties[$key]);
       }
     }
