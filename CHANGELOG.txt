@@ -1,6 +1,11 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta12, 2019-02-07
+-----------------------------------------
+- Bugfix: Do not save empty values in to unmapped fields
+- Bugfix: OOO issue with encrypt upgrade path. You must decrypt BEFORE changing the key.
+
 Stanford CAPx 7.x-3.0-beta11, 2019-01-22
 -----------------------------------------
 - Upgraded Guzzle to 6.3.3
