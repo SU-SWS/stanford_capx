@@ -6,7 +6,7 @@
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
 
-class EntityReferenceFieldProcessor {
+class EntityReferenceFieldProcessor extends FieldProcessor {
 
   protected $entity;
   protected $fieldName;
@@ -20,6 +20,7 @@ class EntityReferenceFieldProcessor {
    * Default implementation of put.
    */
   public function put($relatedEntity) {
+
     $id = $relatedEntity->getIdentifier();
     $entity = $this->entity;
     $field = $entity->{$this->fieldName};
@@ -39,6 +40,5 @@ class EntityReferenceFieldProcessor {
         break;
     }
   }
-
 
 }

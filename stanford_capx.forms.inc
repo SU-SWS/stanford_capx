@@ -1008,6 +1008,10 @@ function stanford_capx_mapper_form_submit($form, $form_state) {
       if (empty(array_filter($value))) {
         unset($fields[$key]);
       }
+      // Trim out reference fields from the config array.
+      if (isset($value[0]) && $value[0] == "none") {
+        unset($fields[$key]);
+      }
     }
     $settings['fields'] = $fields;
   }
