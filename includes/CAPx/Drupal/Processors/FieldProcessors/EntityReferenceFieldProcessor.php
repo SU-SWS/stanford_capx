@@ -6,7 +6,7 @@
 
 namespace CAPx\Drupal\Processors\FieldProcessors;
 
-class EntityReferenceFieldProcessor extends FieldProcessor {
+class EntityReferenceFieldProcessor {
 
   protected $entity;
   protected $fieldName;
