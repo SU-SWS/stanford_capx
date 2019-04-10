@@ -20,6 +20,7 @@ class EntityReferenceFieldProcessor {
    * Default implementation of put.
    */
   public function put($relatedEntity) {
+
     $id = $relatedEntity->getIdentifier();
     $entity = $this->entity;
     $field = $entity->{$this->fieldName};
@@ -39,6 +40,5 @@ class EntityReferenceFieldProcessor {
         break;
     }
   }
-
 
 }
