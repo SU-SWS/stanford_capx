@@ -1,7 +1,7 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
-Stanford CAPx 7.x-3.0-beta13, 2019-04-17
+Stanford CAPx 7.x-3.0-beta13, 2019-04-30
 -----------------------------------------
 - Bugfix: Do not save empty values in to unmapped reference fields.
 
