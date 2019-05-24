@@ -2099,8 +2099,8 @@ function stanford_capx_schema_format_validation($schema = NULL) {
         $formatted_schema[$name] = stanford_capx_schema_format_validation($property);
       }
     }
-    elseif ($schema['type'] == 'array') {
-      $formatted_schema = array(stanford_capx_schema_format_validation($schema['items']));
+    elseif ($schema['type'] == 'array' && isset($schema['items'])) {
+      $formatted_schema = [stanford_capx_schema_format_validation($schema['items'])];
     }
     else {
       // Leaf element set to a string explaining the data type. E.g. 'integer'.
