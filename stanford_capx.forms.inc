@@ -2083,11 +2083,11 @@ function stanford_capx_form_views_exposed_form_alter(&$form, &$form_state) {
  *
  * @see stanford_capx_mapper_form_validate_element()
  */
-function stanford_capx_schema_format_validation($schema = NULL) {
+function stanford_capx_schema_format_validation($schema = NULL, $recursive = 0) {
   $formatted_schema = array();
 
   // Load the schema when not making a recursive function call (the first call).
-  if (empty($schema)) {
+  if (empty($schema) && $recursive === 0) {
     $schema = stanford_capx_schema_load('array');
   }
 
@@ -2096,11 +2096,11 @@ function stanford_capx_schema_format_validation($schema = NULL) {
     // @TODO: Remove isset() when the schema is fully documented.
     if ($schema['type'] == 'object' && isset($schema['properties'])) {
       foreach ($schema['properties'] as $name => $property) {
-        $formatted_schema[$name] = stanford_capx_schema_format_validation($property);
+        $formatted_schema[$name] = stanford_capx_schema_format_validation($property, 1);
       }
     }
-    elseif ($schema['type'] == 'array') {
-      $formatted_schema = array(stanford_capx_schema_format_validation($schema['items']));
+    elseif ($schema['type'] == 'array' && isset($schema['items'])) {
+      $formatted_schema = [stanford_capx_schema_format_validation($schema['items'], 1)];
     }
     else {
       // Leaf element set to a string explaining the data type. E.g. 'integer'.
