@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta14, 2019-06-03
+-----------------------------------------
+- Bugfix: Fix infinite loop and schema validation issue.
+
 Stanford CAPx 7.x-3.0-beta13, 2019-04-30
 -----------------------------------------
 - Bugfix: Do not save empty values in to unmapped reference fields.
