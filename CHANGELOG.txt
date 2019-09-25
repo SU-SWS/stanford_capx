@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta15, 2019-09-25
+----------------------------------------
+- Bug fix: re-encrypt username and password variables for sites that failed.
+
 Stanford CAPx 7.x-3.0-beta14, 2019-06-03
 -----------------------------------------
 - Bugfix: Fix infinite loop and schema validation issue.

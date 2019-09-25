@@ -443,7 +443,8 @@ function stanford_capx_update_7301() {
  * Upgrade path for PHP 7.2 for those who missed it in 7301.
  */
 function stanford_capx_update_7302() {
-  // We could check the encryption method of the username and password variables here, but it's probably not worth the effort.
+  // We could check the encryption method of the username and password variables
+  // here, but it's probably not worth the effort.
   stanford_capx_update_7301();
 }
 
