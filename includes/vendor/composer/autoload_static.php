@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a
+class ComposerStaticInit1ee16845cf9a8b5384b8efd0076da6fe
 {
     public static $files = array (
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
@@ -31,6 +31,7 @@ class ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a
         'P' => 
         array (
             'Psr\\Http\\Message\\' => 17,
+            'Prophecy\\' => 9,
         ),
         'G' => 
         array (
@@ -68,6 +69,10 @@ class ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
+        'Prophecy\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpspec/prophecy/src/Prophecy',
+        ),
         'GuzzleHttp\\Subscriber\\Oauth\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/oauth-subscriber/src',
@@ -93,10 +98,6 @@ class ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a
     public static $prefixesPsr0 = array (
         'P' => 
         array (
-            'Prophecy\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/phpspec/prophecy/src',
-            ),
             'Peekmo\\JsonPath' => 
             array (
                 0 => __DIR__ . '/..' . '/peekmo/jsonpath/src',
@@ -555,10 +556,10 @@ class ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit4ac7f7880417dc8890a136269c15fb3a::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit1ee16845cf9a8b5384b8efd0076da6fe::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit1ee16845cf9a8b5384b8efd0076da6fe::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit1ee16845cf9a8b5384b8efd0076da6fe::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit1ee16845cf9a8b5384b8efd0076da6fe::$classMap;
 
         }, null, ClassLoader::class);
     }
