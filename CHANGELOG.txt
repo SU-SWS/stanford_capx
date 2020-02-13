@@ -1,6 +1,10 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
+Stanford CAPx 7.x-3.0-beta17, 2020-02-13
+----------------------------------------
+- Bug fix: Set default encryption scheme to CAPx - AES SSL (Machine name: stanford_capx_aes_ssl) at install time.
+
 Stanford CAPx 7.x-3.0-beta16, 2020-02-13
 ----------------------------------------
 - Update included dependencies (and their dependencies):
