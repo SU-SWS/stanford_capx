@@ -1,7 +1,7 @@
 Stanford CAPx x.x-x.x, xxxx-xx-xx
 ---------------------------------
 
-Stanford CAPx 7.x-3.0-beta18, 2020-02-13
+Stanford CAPx 7.x-3.0-beta18, 2020-05-08
 ----------------------------------------
 - Update included dependencies (and their dependencies):
   - guzzlehttp/guzzle
