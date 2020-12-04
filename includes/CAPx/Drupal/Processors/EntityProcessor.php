@@ -62,6 +62,9 @@ class EntityProcessor extends ProcessorAbstract {
 
     $mapper = $this->getMapper();
     $data = $this->getData();
+    if (empty($mapper->getConfigSetting("subquery"))) {
+      throw new \Exception('Subquery must entered to import multiple items');
+    }
     $numEntities = $mapper->getMultipleEntityCountBySubquery($data);
 
     // Let the Orphan cron runs take care of the clean up. We just need to stop.
@@ -112,7 +115,7 @@ class EntityProcessor extends ProcessorAbstract {
     // NO GUUID available. Delete all of the existing entities and replace with
     // new ones.
     if (empty($guuidPath)) {
-      $this->multipleDeleteEntities($entities);
+      $this->multipleDeleteEntities($entityType, array_keys($entities));
       $this->multipleCreateNewEntity($numEntities, $entityType, $bundleType, $data, $mapper);
       return;
     }
