@@ -18,7 +18,7 @@ Install this module like [any other Drupal module](https://www.drupal.org/docume
 
 ## Authentication
 
-Before you get started you will need to have authentication credentials. To get authentication credentials, [file a HelpSU request](https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP_API&dtemplate=CAP-OAuth-Info) to Administrative Applications/CAP Stanford Profiles.
+Before you get started you will need to have authentication credentials. To get authentication credentials, [submit a Help request](https://stanford.service-now.com/it_services?id=sc_cat_item&sys_id=3ecd311a13b832008a9175c36144b069).
 
 ## Configuration
 
