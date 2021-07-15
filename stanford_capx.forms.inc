@@ -2137,7 +2137,7 @@ function stanford_capx_config_auth_settings_form($form, &$form_state) {
   );
 
   $form['auth']['description'] = array(
-    '#markup' => t('Please enter your authentication information for the CAP API. If you don\'t have these credentials yet you can !helpsu.', array('!helpsu' => l("File a HelpSU request", "https://helpsu.stanford.edu/helpsu/3.0/auth/helpsu-form?pcat=CAP_API&dtemplate=CAP-OAuth-Info"))),
+    '#markup' => t('Please enter your authentication information for the CAP API. If you don\'t have these credentials yet you can !helpsu.', array('!helpsu' => l("submit a support request", "https://stanford.service-now.com/it_services?id=sc_cat_item&sys_id=3ecd311a13b832008a9175c36144b069"))),
   );
 
   $form['auth']['stanford_capx_username'] = array(
